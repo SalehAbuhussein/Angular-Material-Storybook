@@ -1,0 +1,5 @@
+.docs-form { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
+.docs-fieldset { border: none; margin: 0; padding: 0; }
+.docs-fieldset legend { font: var(--mat-sys-title-small); padding: 0 0 8px; }
+.docs-column { display: flex; flex-direction: column; gap: 4px; }
+.docs-error { color: var(--mat-sys-error); margin: 0; font: var(--mat-sys-body-small); }

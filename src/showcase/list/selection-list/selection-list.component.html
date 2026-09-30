@@ -1,0 +1,10 @@
+<div class="docs-demo" style="width: 320px">
+  <mat-selection-list (selectionChange)="onChange($event)">
+    @for (task of tasks; track task) {
+      <mat-list-option [value]="task" [selected]="selected().includes(task)">
+        {{ task }}
+      </mat-list-option>
+    }
+  </mat-selection-list>
+  <p>Selected: {{ selected().join(', ') || 'nothing' }}</p>
+</div>

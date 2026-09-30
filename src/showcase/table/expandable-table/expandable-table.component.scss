@@ -1,0 +1,10 @@
+table { width: 100%; }
+tr.detail-row { height: 0; }
+tr.detail-row td { border-bottom-width: 0; padding: 0; }
+.detail {
+  overflow: hidden;
+  height: 0;
+  transition: height 180ms ease;
+}
+.detail--open { height: 56px; }
+.detail p { margin: 0; padding: 16px; color: var(--mat-sys-on-surface-variant); }

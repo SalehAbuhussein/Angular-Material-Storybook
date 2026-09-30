@@ -1,0 +1,10 @@
+<mat-form-field appearance="outline" class="docs-field">
+  <mat-label>State</mat-label>
+  <input matInput [formControl]="control" [matAutocomplete]="auto" />
+  <mat-autocomplete #auto="matAutocomplete" (optionSelected)="onSelected($event)">
+    @for (state of states; track state) {
+      <mat-option [value]="state">{{ state }}</mat-option>
+    }
+  </mat-autocomplete>
+</mat-form-field>
+<p>Picks so far: {{ log().join(', ') || 'none' }}</p>

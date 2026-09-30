@@ -1,0 +1,13 @@
+<div class="docs-demo docs-demo--row">
+  <button
+    matButton="filled"
+    [showProgress]="saving()"
+    [disabled]="saving()"
+    (click)="save()"
+  >
+    {{ saving() ? 'Saving' : 'Save changes' }}
+    <mat-spinner progressIndicator diameter="20" aria-hidden="true" />
+  </button>
+
+  <span role="status">{{ status() }}</span>
+</div>

@@ -1,0 +1,180 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as A11yStories from './cdk-a11y.stories';
+
+<Meta of={A11yStories} />
+
+# Accessibility
+
+**Import:** `import { A11yModule } from '@angular/cdk/a11y';`
+(services such as `LiveAnnouncer` and `FocusMonitor` are injected, not imported
+into a component)
+
+Angular Material uses `@angular/cdk/a11y` on itself. It covers problems you hit
+once an app is more than a form: telling screen reader users about a change they
+cannot see, keeping focus inside an overlay, and knowing whether something was
+focused by keyboard or by mouse.
+
+## Try it
+
+<Example of={A11yStories.Playground} />
+<Controls of={A11yStories.Playground} />
+
+## LiveAnnouncer
+
+A screen reader reads what has focus. Anything that changes elsewhere is silent:
+a filtered table, a saved draft, a removed cart item. `LiveAnnouncer` keeps one
+live region at the end of the document and pushes text into it.
+
+<Example of={A11yStories.LiveAnnouncerInPractice} />
+
+```ts
+private readonly announcer = inject(LiveAnnouncer);
+
+save() {
+  this.announcer.announce('Draft saved', 'polite');
+}
+```
+
+`polite` waits for a gap in speech, `assertive` interrupts. Use `assertive` only
+for things that stop people from continuing, such as an error that undoes their
+last action. `announce()` returns a promise that resolves once the message is in
+the live region, which is useful before navigating away.
+
+Announce the outcome, not the mechanics. "Removed. Cart has 2 items." helps.
+"State updated" does not.
+
+## Focus traps
+
+A dialog is only modal if Tab cannot leave it. `cdkTrapFocus` cycles focus
+between the first and last focusable elements inside its host. Bind it to a
+boolean so the trap turns off when the panel closes.
+
+<Example of={A11yStories.FocusTrap} />
+
+```html
+<div [cdkTrapFocus]="open()" [cdkTrapFocusAutoCapture]="open()">
+  …
+</div>
+```
+
+`cdkTrapFocusAutoCapture` moves focus into the region when it activates and
+restores it to the previously focused element when it goes away. Without it the
+trap is active but focus is still outside, which feels broken.
+
+`MatDialog` already does this. Use `cdkTrapFocus` for your own overlays,
+expanding panels and off-canvas menus.
+
+## FocusMonitor
+
+`FocusMonitor` reports *how* an element was focused: `'mouse'`, `'keyboard'`,
+`'touch'`, `'program'`, or `null` when it lost focus. That lets you show a focus
+ring for keyboard users without flashing one on every click.
+
+<Example of={A11yStories.MonitoringFocus} />
+
+```ts
+private readonly focusMonitor = inject(FocusMonitor);
+private readonly destroyRef = inject(DestroyRef);
+private readonly target = viewChild.required<ElementRef<HTMLElement>>('target');
+
+constructor() {
+  afterNextRender(() => {
+    const element = this.target().nativeElement;
+    this.focusMonitor.monitor(element)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((origin) => this.origin.set(origin));
+    this.destroyRef.onDestroy(() => this.focusMonitor.stopMonitoring(element));
+  });
+}
+```
+
+Always pair `monitor` with `stopMonitoring`. The service keeps a reference to
+every element it watches, so skipping the cleanup leaks the element.
+
+It also adds `.cdk-focused` plus `.cdk-mouse-focused`, `.cdk-keyboard-focused`,
+`.cdk-touch-focused` or `.cdk-program-focused` to the element. Those classes are
+often enough, with no subscription.
+
+## cdkMonitorSubtreeFocus
+
+The directive form handles monitoring and cleanup. `cdkMonitorElementFocus`
+watches one element, and `cdkMonitorSubtreeFocus` watches the element and
+everything inside it. Both emit `cdkFocusChange`.
+
+<Example of={A11yStories.MonitoringASubtree} />
+
+```html
+<div cdkMonitorSubtreeFocus (cdkFocusChange)="origin.set($event)">…</div>
+```
+
+## High contrast
+
+Windows high contrast mode replaces your colours with the user's. Backgrounds,
+shadows and borders drawn with `background-image` disappear, so components that
+rely on them become invisible.
+
+<Example of={A11yStories.HighContrastHelpers} />
+
+Two helpers:
+
+- `HighContrastModeDetector.getHighContrastMode()` returns
+  `HighContrastMode.NONE`, `BLACK_ON_WHITE` or `WHITE_ON_BLACK`. Importing
+  `A11yModule` also adds `cdk-high-contrast-active` and a black-on-white or
+  white-on-black class to the body.
+- The Sass mixin wraps rules in `@media (forced-colors: active)`:
+
+```scss
+@use '@angular/cdk';
+
+.my-card {
+  @include cdk.high-contrast() {
+    outline: solid 1px;
+  }
+}
+```
+
+The usual fix is an outline. Outlines survive forced colours, and box shadows do
+not.
+
+## API you will use
+
+| Name | Kind | What it does |
+| --- | --- | --- |
+| `LiveAnnouncer.announce(message, politeness?, duration?)` | service | Speaks a message through a live region |
+| `LiveAnnouncer.clear()` | service | Empties the live region |
+| `cdkAriaLive` | directive | Turns an element's own content into a live region |
+| `cdkTrapFocus` | directive | Enables or disables the trap |
+| `cdkTrapFocusAutoCapture` | directive input | Moves focus in, and restores it on destroy |
+| `FocusMonitor.monitor(element, checkChildren?)` | service | `Observable<FocusOrigin>` |
+| `FocusMonitor.focusVia(element, origin)` | service | Focuses an element as if from that origin |
+| `FocusMonitor.stopMonitoring(element)` | service | Required cleanup |
+| `cdkMonitorElementFocus` / `cdkMonitorSubtreeFocus` | directives | The directive form, with `(cdkFocusChange)` |
+| `HighContrastModeDetector.getHighContrastMode()` | service | `NONE`, `BLACK_ON_WHITE` or `WHITE_ON_BLACK` |
+
+## Accessibility
+
+The CDK does not give you semantics. It adds no roles, names nothing, and does
+not make a `div` focusable. You still write the `role="dialog"`, the
+`aria-modal`, the `aria-label` and the `tabindex`. The CDK handles the behaviour
+around them.
+
+## Common mistakes
+
+1. **Announcing everything.** Constant chatter is as bad as silence. Announce
+   outcomes people cannot see, not every keystroke.
+2. **`assertive` by default.** It interrupts whatever is being read. Reserve it
+   for things that should interrupt.
+3. **A focus trap with no way out.** Trapping focus in a panel that has no close
+   control leaves keyboard users stuck. Always provide Escape or a close button.
+4. **`monitor` without `stopMonitoring`.** The element is retained and the
+   subscription lives on after the component is destroyed.
+5. **Testing high contrast by squinting.** Turn on forced colours in the
+   operating system. Anything drawn with a shadow or a background image
+   disappears, which shows you what to fix.
+
+## Related
+
+- [Drag and Drop](?path=/docs/cdk-drag-and-drop--docs) which needs an announced keyboard alternative
+- [Clipboard](?path=/docs/cdk-clipboard--docs) where a copy needs confirming out loud
+- [Responsive Layout](?path=/docs/cdk-responsive-layout--docs) for keeping focus across layout changes

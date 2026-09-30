@@ -1,0 +1,9 @@
+<mat-form-field appearance="outline" class="docs-field">
+  <mat-label>Team</mat-label>
+  <mat-select [(ngModel)]="selected" [compareWith]="compareById">
+    @for (team of teams; track team.id) {
+      <mat-option [value]="team">{{ team.name }}</mat-option>
+    }
+  </mat-select>
+</mat-form-field>
+<p>Selected id: {{ selected.id }}</p>

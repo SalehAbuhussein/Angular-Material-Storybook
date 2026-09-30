@@ -1,0 +1,207 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Foundations/Density" />
+
+# Density
+
+Density is one number that shrinks the height of every interactive Material
+component at once. It runs from `0`, the comfortable default, down to `-5`, the
+tightest. There are no positive values.
+
+```scss
+@include mat.theme((density: -2));
+```
+
+That is the whole API. The rest of this page covers when to use it and what it
+costs.
+
+## What the number does
+
+Density only changes vertical size and the padding that follows from it. It never
+changes font size, colour, border radius, or horizontal padding. Text stays the
+same size while the box around it gets shorter.
+
+Each step is roughly 4px on most components:
+
+| Component | 0 | -1 | -2 | -3 | -4 | -5 |
+| --- | --- | --- | --- | --- | --- | --- |
+| Form field height | 56px | 52px | 48px | 44px | 40px | 36px |
+| Button height | 40px | 36px | 32px | 28px | 28px | 28px |
+| Icon button hit area | 40px | 36px | 32px | 28px | 24px | 24px |
+| Checkbox and radio hit area | 40px | 36px | 32px | 28px | 28px | 28px |
+| Table row height | 52px | 48px | 44px | 40px | 36px | 36px |
+| Table header height | 56px | 52px | 48px | 44px | 40px | 40px |
+| Toolbar height | 64px | 60px | 56px | 52px | 52px | 52px |
+| Tab height | 48px | 44px | 40px | 36px | 32px | 32px |
+| Single-line list item | 48px | 44px | 40px | 36px | 32px | 24px |
+| Expansion header (collapsed) | 48px | 44px | 40px | 36px | 36px | 36px |
+| Chip height | 32px | 28px | 24px | 24px | 24px | 24px |
+| Paginator height | 56px | 52px | 48px | 40px | 40px | 40px |
+
+Each component clamps at its own floor, which is why several rows repeat a value
+at the bottom of the scale: buttons and checkboxes at -3, tables and tabs at -4,
+form fields, lists, icon buttons, and paginators at -5. Chips bottom out at -2.
+At `-5` each component sits at its own minimum, so the UI is not uniformly tiny
+and the vertical rhythm between components changes.
+
+A form field also hides its floating label at -2 (48px) and below. A filled
+field stops displaying the label once there is no room for it, so give a dense
+form a placeholder or an external label.
+
+## Two things density costs you
+
+Touch targets. At density 0, buttons, checkboxes, radios, and icon buttons carry
+an invisible 48px touch target that satisfies the WCAG target size guideline.
+From -2 downward that touch target is removed. On a touch device the control is
+harder to hit and smaller than the recommended minimum.
+
+Scanability. Tighter rows put more data on screen and make a row harder to track
+across columns. Below -2 a table needs stronger row separation, alternating
+backgrounds, or both, to stay readable.
+
+## When to use it
+
+Use negative density where the user works with many rows at once using a mouse:
+an admin table, a data grid, a filter sidebar, a log viewer, a settings panel
+with thirty fields.
+
+Do not use it on marketing pages, mobile layouts, onboarding flows, dialogs, or
+anything touched more than clicked. Do not use it to squeeze a badly designed
+layout onto a screen. If a form does not fit, the fix is fewer fields or a
+step-by-step flow, not smaller fields.
+
+Practical defaults:
+
+| Context | Density |
+| --- | --- |
+| Public site, mobile app, onboarding | `0` |
+| General application screens | `0` or `-1` |
+| Dense admin tables and data grids | `-2` |
+| Toolbars and filter bars beside a dense table | `-2` |
+| An internal tool where every user has a mouse and a big screen | `-3` |
+| Anything lower | Only after testing it with real users |
+
+## Applying it globally
+
+Set the scale in the root theme:
+
+```scss
+@use '@angular/material' as mat;
+
+html {
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$azure-palette,
+        tertiary: mat.$blue-palette,
+      ),
+      typography: Roboto,
+      density: -1,
+    )
+  );
+}
+```
+
+Every Material component in the app changes. Nothing else in the config is
+affected.
+
+## Applying it to one region
+
+`mat.theme()` writes CSS variables to whatever selector contains it, and CSS
+variables inherit, so you can scope density to part of the page. Pass only the
+`density` key so colour and typography keep coming from the root theme:
+
+```scss
+@use '@angular/material' as mat;
+
+.dense-table {
+  @include mat.theme((density: -2));
+}
+```
+
+```html
+<section class="dense-table">
+  <table mat-table [dataSource]="rows">
+    <!-- columns -->
+  </table>
+  <mat-paginator [pageSizeOptions]="[25, 50, 100]" />
+</section>
+```
+
+Everything inside `.dense-table` renders dense. Everything outside keeps the app
+default.
+
+You can nest this, for example a dense page with one comfortable region:
+
+```scss
+.dense-page {
+  @include mat.theme((density: -2));
+}
+
+.dense-page .primary-actions {
+  @include mat.theme((density: 0));
+}
+```
+
+The nearest ancestor with the variables set wins, as with any inherited CSS
+property.
+
+## Overlays do not inherit it
+
+Dialogs, menus, select panels, autocomplete panels, and tooltips render in the
+CDK overlay container attached to `<body>`, not inside the element that opened
+them. A region-scoped density block does not reach them.
+
+When a dialog needs to match a dense region, give it a panel class and theme that
+class:
+
+```ts
+this.dialog.open(EditRowDialog, { panelClass: 'dense-dialog' });
+```
+
+```scss
+.dense-dialog {
+  @include mat.theme((density: -2));
+}
+```
+
+Put that rule in a global stylesheet, not in a component's styles. Component
+style encapsulation does not reach the overlay container either.
+
+## Overriding one component instead
+
+When only one component is the problem, a per-component override is more precise
+than moving the whole scale. It sets the density tokens directly:
+
+```scss
+.compact-filters {
+  @include mat.form-field-overrides((container-height: 44px));
+  @include mat.button-overrides((filled-container-height: 32px));
+}
+```
+
+That leaves every other component alone. Token names come from
+`node_modules/@angular/material/<component>/_m3-<component>.scss`, in the
+`density` map of `get-density-tokens`.
+
+One gap: slide toggle defines density tokens, but `mat.theme((density: ...))`
+does not emit them, so a slide toggle stays the same size across the scale. Use
+`mat.slide-toggle-overrides()` if you need it smaller.
+
+## Common mistakes
+
+1. Using `-3` or lower on a touch interface. The touch target padding is gone
+   below -2 and the controls fall under the recommended minimum size.
+2. Expecting text to shrink. Density does not touch typography. For smaller
+   text, step down the type scale as well.
+3. Setting density on a component's own element. The variables need to be on
+   an ancestor. Wrap the region in a `div` with the class.
+4. Wondering why the dialog stayed comfortable. Overlays attach to `<body>`.
+   Use `panelClass` and a global style rule.
+5. Losing the floating label. At -2 and below a filled form field stops
+   displaying its label. Check dense forms still have a visible label.
+
+## Related
+
+- [Theming](?path=/docs/foundations-theming--docs)
+- [Typography](?path=/docs/foundations-typography--docs)

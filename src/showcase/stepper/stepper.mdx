@@ -1,0 +1,175 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as StepperStories from './stepper.stories';
+
+<Meta of={StepperStories} />
+
+# Stepper
+
+**Import:** `import { MatStepperModule } from '@angular/material/stepper';`
+
+A stepper splits a long task into ordered steps and shows how far along someone
+is. Use it when the task has a real sequence, such as checkout, onboarding or a
+setup wizard. If the panels are independent, use [Tabs](?path=/docs/navigation-tabs--docs)
+instead.
+
+```html
+<mat-stepper>
+  <mat-step label="Cart">
+    <button matButton="filled" matStepperNext>Next</button>
+  </mat-step>
+  <mat-step label="Payment">...</mat-step>
+</mat-stepper>
+```
+
+## Try it
+
+<Example of={StepperStories.Playground} />
+<Controls of={StepperStories.Playground} />
+
+## Horizontal and vertical
+
+`orientation="vertical"` puts the content under each label, which handles long
+forms and narrow screens much better. `labelPosition` and `headerPosition` apply
+only while the stepper is horizontal.
+
+<Example of={StepperStories.VerticalStepper} />
+
+```html
+<mat-stepper orientation="vertical">
+```
+
+Older templates use `<mat-horizontal-stepper>` and `<mat-vertical-stepper>`. Both
+still work, but `<mat-stepper orientation>` is the current form and the only one
+you can switch at runtime.
+
+## Navigation buttons
+
+`matStepperNext` and `matStepperPrevious` are directives for `<button>`. They move
+the stepper with no code in your component. Inside a `<form>` they default to
+`type="submit"`, which usually suits Next and never suits Back.
+
+## Linear steppers and forms
+
+`linear` stops someone jumping ahead. `[stepControl]` decides what counts as
+"complete". Give the step its own `FormGroup`, and while that group is invalid
+the stepper refuses to advance, marks the controls touched, and shows the error
+state in the header.
+
+<Example of={StepperStories.LinearWithForms} />
+
+```ts
+readonly account = this.fb.nonNullable.group({
+  email: ['', [Validators.required, Validators.email]],
+});
+```
+
+```html
+<mat-stepper linear>
+  <mat-step [stepControl]="account" label="Account">
+    <form [formGroup]="account">
+      <mat-form-field appearance="outline">
+        <mat-label>Email</mat-label>
+        <input matInput formControlName="email" />
+      </mat-form-field>
+      <button matButton="filled" matStepperNext>Next</button>
+    </form>
+  </mat-step>
+</mat-stepper>
+```
+
+Without a form, set `[completed]` yourself from a signal.
+
+## Editable and optional steps
+
+`editable` defaults to `true`, so people can go back and change an answer. Set it
+to `false` for a step that cannot be undone, such as a charged payment. `optional`
+marks a step that a linear stepper lets you skip, and adds an "Optional" caption
+under the label.
+
+<Example of={StepperStories.EditableAndOptionalSteps} />
+
+```html
+<mat-step label="Confirm identity" [editable]="false">...</mat-step>
+<mat-step label="Referral code" optional>...</mat-step>
+```
+
+## Custom step icons
+
+Each header shows an icon for the step's state. Override any of them once, on the
+stepper, with `<ng-template matStepperIcon="...">`. The template gets `index`,
+`active` and `optional` as context.
+
+<Example of={StepperStories.CustomStepIcons} />
+
+```html
+<mat-stepper>
+  <ng-template matStepperIcon="done"><mat-icon>check_circle</mat-icon></ng-template>
+  <ng-template matStepperIcon="edit"><mat-icon>create</mat-icon></ng-template>
+  ...
+</mat-stepper>
+```
+
+The state names are `number`, `edit`, `done` and `error`.
+
+## Completing a flow
+
+Forms are optional. Drive `completed` from signals, advance with `next()`, and
+call `reset()` to go back to the start. `reset()` also clears any form data in
+the steps.
+
+<Example of={StepperStories.CompletingAFlow} />
+
+```html
+<mat-stepper linear #stepper (selectionChange)="current.set($event.selectedIndex)">
+  <mat-step label="Review" [completed]="reviewed()">
+    <button matButton="filled" (click)="reviewed.set(true); stepper.next()">Looks good</button>
+  </mat-step>
+</mat-stepper>
+```
+
+## API you will use
+
+| Name | On | Type | Notes |
+| --- | --- | --- | --- |
+| `orientation` | `mat-stepper` | `'horizontal' \| 'vertical'` | Switchable at runtime. |
+| `linear` | `mat-stepper` | `boolean` | Blocks a step until the previous ones are complete. |
+| `selectedIndex` | `mat-stepper` | `number` | Two-way through `selectedIndexChange`. |
+| `selectionChange` | `mat-stepper` | `EventEmitter<StepperSelectionEvent>` | Carries the previous and selected step and index. |
+| `labelPosition` / `headerPosition` | `mat-stepper` | `'bottom' \| 'end'` / `'top' \| 'bottom'` | Horizontal only. |
+| `stepControl` | `mat-step` | `AbstractControl` | The form group that decides whether the step is done. |
+| `completed` | `mat-step` | `boolean` | Use when there is no form. |
+| `editable` | `mat-step` | `boolean` | Defaults to `true`. |
+| `optional` | `mat-step` | `boolean` | Skippable in a linear stepper. |
+| `matStepperNext` / `matStepperPrevious` | `button` | directive | Moves the stepper with no component code. |
+| `matStepLabel` | `ng-template` | directive | Rich label instead of the `label` string. |
+| `matStepContent` | `ng-template` | directive | Renders the step body only when it is first opened. |
+
+## Accessibility
+
+The headers are a `tablist` of `tab` buttons controlling `tabpanel` bodies. Arrow
+keys, Home and End move between headers, and completed, optional and editable
+states are announced from `MatStepperIntl` strings. Override those strings to
+translate them:
+
+```ts
+providers: [{ provide: MatStepperIntl, useClass: MyStepperIntl }];
+```
+
+You supply a meaningful `label` on every step, an `aria-label` on the stepper
+when the page has more than one, and validation messages inside the step
+content, not only a red header.
+
+## Common mistakes
+
+1. **`linear` with no `stepControl` and no `completed`.** A step with neither is never complete, so Next does nothing and the stepper looks broken.
+2. **Back buttons that submit the form.** `matStepperPrevious` inside a `<form>` defaults to `type="submit"`. Write `<button matButton matStepperPrevious type="button">`.
+3. **Leaving `editable` on for irreversible steps.** People go back and re-submit a payment. Set `[editable]="false"` once the step has side effects.
+4. **A horizontal stepper with five long labels.** The header wraps and scrolls badly on phones. Use `orientation="vertical"`, or switch on a breakpoint.
+5. **Using a stepper for unordered panels.** If the steps can be done in any order, use tabs.
+
+## Related
+
+- [Tabs](?path=/docs/navigation-tabs--docs) when the panels have no order
+- [Button](?path=/docs/buttons-and-indicators-button--docs) for the Next and Back buttons
+- [Sidenav](?path=/docs/navigation-sidenav--docs) for navigation around the whole app

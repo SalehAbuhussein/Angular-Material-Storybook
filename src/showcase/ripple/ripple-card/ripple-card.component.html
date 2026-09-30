@@ -1,0 +1,26 @@
+<div class="docs-demo docs-demo--row">
+  @for (plan of plans; track plan.name) {
+    <div
+      matRipple
+      tabindex="0"
+      role="button"
+      [attr.aria-label]="'Choose the ' + plan.name + ' plan'"
+      (keydown.enter)="choose(plan.name)"
+      (keydown.space)="choose(plan.name)"
+      (click)="choose(plan.name)"
+      style="
+        cursor: pointer;
+        width: 160px;
+        padding: 16px;
+        border-radius: var(--mat-sys-corner-medium);
+        background: var(--mat-sys-surface-container);
+        color: var(--mat-sys-on-surface);
+      "
+    >
+      <mat-icon aria-hidden="true">{{ plan.icon }}</mat-icon>
+      <div><strong>{{ plan.name }}</strong></div>
+      <div>{{ plan.price }}</div>
+    </div>
+  }
+</div>
+<p>Chosen: {{ chosen }}</p>

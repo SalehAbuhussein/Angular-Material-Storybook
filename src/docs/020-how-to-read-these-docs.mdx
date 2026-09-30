@@ -1,0 +1,119 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Start Here/How to Read These Docs" />
+
+# How to read these docs
+
+Every component page has the same seven parts. Once you know them you can jump
+to the part you need.
+
+## Anatomy of a component page
+
+Title and import line. Right under the heading is the import you need, for
+example `import { MatSelectModule } from '@angular/material/select';`. Copy it
+into the `imports` array of your standalone component and every snippet on the
+page compiles.
+
+Opening paragraph. One or two sentences on what the component is and when to
+reach for it. The "when" is the useful part. Several components overlap (select
+versus autocomplete, dialog versus bottom sheet, tabs versus stepper), and this
+paragraph says which side of the line the component sits on.
+
+Try it. A live example plus its Controls table. Start here: thirty seconds of
+poking at inputs teaches more than a paragraph about them. The Controls table is
+also the fastest inventory of a component's main inputs, with types and defaults.
+
+Concept sections. One heading per idea, each with prose, an example, and a
+copyable snippet. These explain why: why a form field needs a `<mat-label>`, why
+a select with objects needs `[compareWith]`, why a dialog returns an observable.
+They run from most to least common, so they get more specialised as you go down.
+
+API you will use. A table of the four to eight inputs and outputs that
+matter. For the complete list, including every lifecycle method and protected
+member, go to [material.angular.dev](https://material.angular.dev). These pages
+leave things out on purpose.
+
+Accessibility. Two halves: what the component handles for you (roles, focus
+management, keyboard shortcuts, live region announcements) and what you still
+supply (usually a label, sometimes a heading level or a description). Read the
+second half before shipping. It is short and it is the part nobody guesses
+correctly.
+
+Common mistakes. Three to five numbered items, each a real mistake with the fix.
+If a component behaves strangely, read this section first. It covers the silent
+failures, the ones that produce no console error.
+
+Related. Links to sibling pages. Follow these when a component turns out to be
+the wrong tool.
+
+## What the accessibility panel tells you
+
+The Accessibility tab in the panel below the canvas runs
+[axe-core](https://github.com/dequelabs/axe-core) against the rendered story and
+sorts the results into three groups.
+
+Violations are rules that failed. Each row expands to the failing element, a
+plain-language description, and a link to the rule's documentation. You should
+see none on these pages. If you see one, the example is wrong; please report it.
+
+Passes are rules that ran and succeeded. They are mostly reassurance, and a
+checklist of what axe covers.
+
+Incomplete are rules axe could not decide. Colour contrast against a gradient or
+a translucent overlay lands here, as does anything axe cannot compute
+statically. These need a human; they are not failures.
+
+**The caveat: axe finds roughly a third of real accessibility problems.** It will
+tell you a button has no accessible name. It will not tell you the name is
+"click here", that your focus order jumps across the page, or that your error
+message is signalled only by colour. Treat the panel as a linter, not a pass
+mark, and test with the keyboard.
+
+A practical habit: after you build a form or a dialog, put the mouse down and
+complete the whole flow with Tab, Shift+Tab, Enter, Space, Escape, and the arrow
+keys. Every Material component supports that. If you get stuck, the bug is
+almost always in how you composed the components, not in a component.
+
+## Use the light and dark switch
+
+The paintbrush toolbar switch flips the canvas between light and dark. Check both
+before you ship a component. Contrast bugs, invisible borders, and hardcoded
+colours each show in only one theme.
+
+## Twenty minutes if you are in a hurry
+
+You have a form to build this afternoon and no time for a library tour. Do this.
+
+1. Theming, first two sections only (4 minutes). Learn what `mat.theme()`
+   emits and what `var(--mat-sys-primary)` is. Skip palette generation and
+   per-component overrides until you need them.
+   [Theming](?path=/docs/foundations-theming--docs)
+2. Icons, "Ligature icons" only (2 minutes). You need `<mat-icon>` on almost
+   every screen, plus the `aria-hidden` rule at the end of the page.
+   [Icons](?path=/docs/foundations-icons--docs)
+3. Button (3 minutes). Five appearances, one rule for picking between them.
+   [Button](?path=/docs/buttons-and-indicators-button--docs)
+4. Form Field and Input (6 minutes). Read this one properly. Form field is the
+   wrapper every text-like control lives inside, and most Material confusion
+   starts here.
+5. Select (3 minutes). Covers the `[value]` and `[compareWith]` pattern that
+   also applies to radio groups and autocomplete.
+6. The page for whatever else your screen needs (2 minutes). Read its "Try it"
+   and "Common mistakes" sections and nothing else.
+
+That is enough to build a real form. Come back for density, dark mode, and the
+CDK when you need them.
+
+## Conventions used throughout
+
+Code blocks are copy-paste runnable. If a snippet needs a provider or an import
+beyond the one at the top of the page, the snippet says so.
+
+Colours in examples are always CSS variables such as `var(--mat-sys-primary)`,
+never hex values, so the examples follow the toolbar switch.
+
+Components are standalone. That is the default in Angular 22, so you will not see
+`standalone: true` anywhere.
+
+Cross-links point at other pages in this Storybook. Links to
+material.angular.dev appear only where these pages stop short.

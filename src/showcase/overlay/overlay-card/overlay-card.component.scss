@@ -1,0 +1,11 @@
+:host {
+  display: block;
+  min-width: 260px;
+  padding: 16px;
+  border-radius: var(--mat-sys-corner-medium);
+  background: var(--mat-sys-surface-container-high);
+  color: var(--mat-sys-on-surface);
+  box-shadow: var(--mat-sys-level3);
+  font: var(--mat-sys-body-medium);
+}
+p { margin: 0; }

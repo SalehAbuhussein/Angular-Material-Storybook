@@ -1,0 +1,124 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as BrutalistStories from './brutalist.stories';
+
+<Meta of={BrutalistStories} />
+
+# Neo brutalist console
+
+Flat fills, 3px black rules, hard offset shadows, zero radius and a loud display
+face. Every control is stock Angular Material with its tokens overridden.
+
+## Try it
+
+Filter the queue, switch scope, kill a row, press DEPLOY. Then change the accent
+from the controls: the whole palette moves on two custom properties.
+
+<Example of={BrutalistStories.Playground} />
+<Controls of={BrutalistStories.Playground} />
+
+## How this works
+
+Material 3 components read CSS custom properties, not hardcoded colours. A
+scoped block of overrides restyles the real component without forking it,
+copying its markup, or fighting `::ng-deep`.
+
+```scss
+.brut {
+  --ink: #0b0b0d;
+  --paper: #f4f1e8;
+  --accent: #d6f34b;
+
+  // System tokens: these reach every Material component inside .brut
+  --mat-sys-primary: var(--ink);
+  --mat-sys-on-primary: var(--paper);
+  --mat-sys-corner-medium: 0;
+  --mat-sys-corner-full: 0;
+}
+```
+
+There are two layers:
+
+- System tokens (`--mat-sys-*`) are theme-wide. Setting `--mat-sys-corner-full: 0` squares off every pill in the subtree at once.
+- Component tokens (`--mat-<component>-*`) target one component. Use them to make chips square without touching buttons.
+
+```scss
+.tag {
+  --mat-chip-container-shape-radius: 0;
+  --mat-chip-elevated-container-color: var(--paper);
+  --mat-chip-label-text-font: 'Space Grotesk', sans-serif;
+  --mat-chip-outline-width: 0;
+}
+.tag--failed { --mat-chip-elevated-container-color: var(--accent-2); }
+```
+
+As ordinary custom properties, they cascade and update live. The accent
+switcher sets two variables on one element and every descendant repaints, with
+no rebuild and no theme service.
+
+## Finding the token names
+
+This is the fiddly part, and guessing wastes hours. The names are in the Sass
+source, one file per component:
+
+```bash
+grep -oE "chip-[a-z0-9-]+" node_modules/@angular/material/chips/_m3-chip.scss | sort -u
+```
+
+Prefix what you find with `--mat-`. So `chip-elevated-container-color` becomes
+`--mat-chip-elevated-container-color`.
+
+Two traps, both of which cost a render on this page:
+
+- `--mdc-*` names are from older versions. In v22 chips are `--mat-chip-*`, not `--mdc-chip-*`. The old names silently do nothing.
+- Form fields split by appearance. Outline styling lives under `--mat-form-field-outlined-*`, not a generic text-field prefix.
+
+## What still gives Material away
+
+Two details survive a colour change:
+
+1. Pill shapes. `--mat-sys-corner-full: 0` kills them globally, but some components have their own shape token, like `--mat-button-toggle-shape`.
+2. The selection checkmark on a button toggle group. It is markup, not a token, so it needs an input:
+
+```html
+<mat-button-toggle-group hideSingleSelectionIndicator>
+```
+
+<Example of={BrutalistStories.HotAccent} />
+<Example of={BrutalistStories.SkyAccent} />
+
+## API you will use
+
+| Member | Type | What it does |
+| --- | --- | --- |
+| `--mat-sys-*` | CSS custom property | Theme-wide tokens. Set them on any element to retheme that subtree. |
+| `--mat-<component>-*` | CSS custom property | One component's tokens. Names come from its `_m3-*.scss`. |
+| `--mat-sys-corner-full` | length | Set to `0` to square every pill in the subtree. |
+| `--mat-button-toggle-shape` | length | The toggle group's own corner, which `corner-full` does not cover. |
+| `hideSingleSelectionIndicator` | boolean input | Removes the checkmark from a selected toggle. |
+| `--mat-chip-container-shape-radius` | length | Square chips. |
+| `--mat-table-row-item-label-text-font` | font | Swaps the table body to a monospace face. |
+
+## Accessibility
+
+Brutalism is loud, which makes it easy to fail quietly:
+
+- Contrast still applies. Acid on black passes comfortably; acid on white does not. Check every pairing; a bright palette is not automatically safe.
+- **Keep focus rings visible.** No radius and heavy borders make it tempting to remove outlines. Do not. Material's focus indicators are token-driven, so restyle them instead.
+- Uppercase belongs in CSS, not in the content. `text-transform: uppercase` keeps the accessible name in normal case. Labels typed in capitals make screen readers spell some of them out.
+- Pressed states need to survive. The DEPLOY button translates on `:active`, which is visual feedback only. Disabled state is still the real Material token.
+
+## Common mistakes
+
+1. Reaching for `::ng-deep`. If a token exists, it is the supported path and survives upgrades. `::ng-deep` is deprecated and breaks on internal DOM changes.
+2. Using `--mdc-*` names from a blog post. They are the old naming. Grep the Sass in your installed version instead.
+3. Overriding tokens globally when you meant one screen. Scope them to a class, as `.brut` does here, or the rest of the app changes too.
+4. Forgetting that some things are markup. Checkmarks, ripples and icons are structure. Tokens will not remove them; inputs will.
+5. Rebuilding components from scratch. You lose focus management, keyboard handling and ARIA, which Material gives you for free.
+
+## Related
+
+- [Color and Variables](?path=/docs/foundations-color-and-variables--docs) for the full token reference
+- [Theming](?path=/docs/foundations-theming--docs) for `mat.theme()` and the overrides mixins
+- [Glass Dashboard](?path=/docs/beyond-material-glass-dashboard--docs) for the opposite aesthetic from the same tokens
+- [Data Table Page](?path=/docs/full-layouts-data-table-page--docs) for the neutral version of this screen

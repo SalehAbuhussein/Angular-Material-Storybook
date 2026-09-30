@@ -1,0 +1,146 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as UtilityClassStories from './utility-classes.stories';
+
+<Meta of={UtilityClassStories} />
+
+# Utility classes
+
+**Use:** `<div class="mat-bg-surface-container mat-corner-md">`
+
+Angular Material can turn its most used tokens into ready-made CSS classes.
+Each class is one line of CSS that reads a `--mat-sys-*` variable, so
+`.mat-bg-primary` is exactly `background-color: var(--mat-sys-primary)`. They
+only read tokens, so they follow the theme, the palette and dark mode like every
+Material component.
+
+## Turn them on
+
+The classes are opt in. Add this once to `src/styles.scss`, after your
+`mat.theme()` call:
+
+```scss
+@use '@angular/material' as mat;
+
+@include mat.system-classes();
+```
+
+This Storybook includes it already. The app in this repo does not yet.
+
+## Build your own
+
+Every class is in a dropdown below, one dropdown per group. Pick one class from
+each, or "(none)" to leave a group out. The preview and the markup under it
+update as you pick, and "Show code" gives you the same markup to copy.
+
+When the text color does not suit the background, a note tells you which one
+does. Flip the toolbar between light and dark, and cycle the palette button,
+to check your combination in every theme.
+
+<Example of={UtilityClassStories.BuildYourOwn} />
+<Controls of={UtilityClassStories.BuildYourOwn} />
+
+## The groups
+
+| Group | Classes | What they set |
+| --- | --- | --- |
+| Background | `mat-bg-primary`, `mat-bg-surface-container`, ... 15 in all | `background-color` |
+| Text color | `mat-text-on-surface`, `mat-text-primary`, ... 13 in all | `color` |
+| Typography | `mat-font-display-lg` down to `mat-font-label-sm`, 15 in all | `font` and `letter-spacing` |
+| Corners | `mat-corner-xs`, `-sm`, `-md`, `-lg`, `-xl`, `-full` | `border-radius` |
+| Border | `mat-border`, `mat-border-subtle` | a 1px solid `border` |
+| Shadow | `mat-shadow-1` to `mat-shadow-5` | `box-shadow` |
+
+They never set padding, margin, width or display. Layout stays in your own CSS.
+
+## Every class, with a real example
+
+Each card below shows one class in a piece of UI you would build, what to use
+it for, and the exact markup. Most examples combine classes from several
+groups, because that is how you use them: a background, its text color, a
+type style and a corner. The padding comes from the example frame, since the
+classes set none.
+
+### Backgrounds
+
+A background class and a text class come in pairs. Text on `mat-bg-X` uses
+`mat-text-on-X`. The surface containers all take `mat-text-on-surface`, and
+`mat-bg-inverse-surface` takes `mat-text-inverse-on-surface`.
+
+The five `surface-container` steps are one ladder, from `lowest` (lightest in
+light mode) to `highest`. Pick by how raised the box should feel, not by the
+shade you want: the order flips in dark mode.
+
+<Example of={UtilityClassStories.BackgroundExamples} />
+
+### Text colors
+
+Three jobs: normal text (`on-surface`), quieter text (`on-surface-variant`),
+and text that means something (`primary`, `secondary`, `error`, `disabled`).
+The rest are the `on-*` partners of the background classes.
+
+<Example of={UtilityClassStories.TextColorExamples} />
+
+### Typography
+
+The names shorten the size to `-lg`, `-md` and `-sm`. Each class sets
+`font: var(--mat-sys-<style>)` and the matching tracking.
+
+| Family | Use it for |
+| --- | --- |
+| `display` | One big number or word, once per screen |
+| `headline` | Page, section and dialog titles |
+| `title` | Card titles, list items, table headers |
+| `body` | Paragraphs and normal text |
+| `label` | Buttons, tags, badges |
+
+<Example of={UtilityClassStories.TypographyExamples} />
+
+### Corners
+
+Smaller and short-lived things get smaller corners. The bigger the surface,
+the rounder it gets.
+
+<Example of={UtilityClassStories.CornerExamples} />
+
+### Borders and shadows
+
+A border separates things on the same level. A shadow lifts one thing above
+the rest. Higher numbers are for things that float or move.
+
+<Example of={UtilityClassStories.BorderAndShadowExamples} />
+
+## Recipes
+
+Three common combinations. Open "Show code" on any of them for the markup.
+
+<Example of={UtilityClassStories.FilledCard} />
+<Example of={UtilityClassStories.ErrorBox} />
+<Example of={UtilityClassStories.PillLabel} />
+
+## Classes or tokens?
+
+Use a class when you are styling an element in a template and one fits. Use
+`var(--mat-sys-*)` in your component's CSS when you need a token that has no
+class, such as `outline-variant` as a text color, or when you combine it with
+your own layout rules. Both read the same variables, so you can mix them.
+
+There are no tertiary classes: `mat.system-classes()` has no `mat-bg-tertiary`
+or `mat-text-tertiary`. For a tertiary highlight, write the tokens yourself:
+
+```css
+.new-tag {
+  background: var(--mat-sys-tertiary-container);
+  color: var(--mat-sys-on-tertiary-container);
+}
+```
+
+[Primary, secondary and tertiary](?path=/docs/foundations-color-and-variables--docs#primary-secondary-and-tertiary)
+explains when tertiary is the right choice.
+
+## Related
+
+- [Color and Variables](?path=/docs/foundations-color-and-variables--docs) for every token these classes wrap
+- [Typography](?path=/docs/foundations-typography--docs) for the type scale
+- [Theming](?path=/docs/foundations-theming--docs) for `mat.theme()`
+- The source: `node_modules/@angular/material/core/tokens/_classes.scss`

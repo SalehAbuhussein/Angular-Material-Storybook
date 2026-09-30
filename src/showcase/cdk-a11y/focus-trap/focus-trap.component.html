@@ -1,0 +1,18 @@
+<div class="docs-demo">
+  <button matButton="filled" (click)="open.set(true)">Open the panel</button>
+
+  <div class="panel" [cdkTrapFocus]="open()" [cdkTrapFocusAutoCapture]="open()">
+    <h3>Confirm the deletion</h3>
+    <p>Tab around. Focus cycles inside this panel while it is open.</p>
+    <label>
+      Type the project name
+      <input class="field" aria-label="Project name" />
+    </label>
+    <div class="docs-demo docs-demo--row">
+      <button matButton (click)="open.set(false)">Cancel</button>
+      <button matButton="filled" (click)="open.set(false)">Delete</button>
+    </div>
+  </div>
+
+  <button matButton="outlined">A button outside the trap</button>
+</div>

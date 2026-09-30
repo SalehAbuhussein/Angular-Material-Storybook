@@ -1,0 +1,81 @@
+:host { display: block; }
+
+.pane {
+  display: grid;
+  grid-template-columns: 340px minmax(0, 1fr);
+  box-sizing: border-box;
+  overflow: hidden;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--mat-sys-corner-medium);
+  background: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+}
+.pane--narrow { grid-template-columns: 1fr; }
+
+.list {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-right: 1px solid var(--mat-sys-outline-variant);
+}
+.pane--narrow .list { border-right: none; }
+.items { flex: 1; overflow: auto; padding: 0; }
+
+.detail { display: flex; flex-direction: column; min-height: 0; }
+.detail__body { flex: 1; overflow: auto; padding: 20px 24px; }
+
+.bar {
+  min-height: 64px;
+  gap: 8px;
+  background: var(--mat-sys-surface-container-low);
+}
+.bar__title {
+  font: var(--mat-sys-title-medium);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.spacer { flex: 1 1 auto; }
+.search { width: 100%; }
+
+.subject { font: var(--mat-sys-body-medium); }
+.muted { color: var(--mat-sys-on-surface-variant); margin: 0; }
+.time { font: var(--mat-sys-label-small); color: var(--mat-sys-on-surface-variant); }
+.item--unread .subject { font-weight: 700; }
+
+.from { display: flex; align-items: center; gap: 12px; padding-bottom: 12px; }
+.from__name { margin: 0; font: var(--mat-sys-title-small); }
+.from mat-chip { margin-left: auto; }
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--mat-sys-corner-full);
+  background: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+  font: var(--mat-sys-title-medium);
+}
+
+.body { margin: 16px 0 24px; font: var(--mat-sys-body-large); max-width: 62ch; }
+
+.reply { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; max-width: 62ch; }
+.reply__field { width: 100%; }
+
+.empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 48px 24px;
+  text-align: center;
+}
+.empty p { margin: 0; }
+.empty mat-icon {
+  font-size: 40px;
+  width: 40px;
+  height: 40px;
+  color: var(--mat-sys-on-surface-variant);
+}

@@ -1,0 +1,5 @@
+<p class="lead">
+  Group <code>{{ group() }}</code> has {{ swatches().length }} tokens. Every tile reads its
+  colour from the CSS variable, so switching the toolbar theme repaints all of them.
+</p>
+<docs-swatch-grid [swatches]="swatches()" />

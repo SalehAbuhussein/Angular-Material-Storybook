@@ -1,0 +1,191 @@
+:host { display: block; }
+
+.glass {
+  --tint: 255, 255, 255;
+  --c1: #7c5cff;
+  --c2: #00d4ff;
+  --c3: #ff5ea8;
+  --ink: #f2f4ff;
+  --dim: rgba(242, 244, 255, 0.62);
+
+  position: relative;
+  box-sizing: border-box;
+  overflow: hidden;
+  background: #0a0a16;
+  color: var(--ink);
+  font-family: 'Outfit', system-ui, sans-serif;
+
+  /* One scoped override reaches every Material component below. */
+  --mat-sys-primary: var(--c2);
+  --mat-sys-on-primary: #05060f;
+  --mat-sys-on-surface: var(--ink);
+  --mat-sys-on-surface-variant: var(--dim);
+}
+.glass--dusk  { --c1: #7c5cff; --c2: #00d4ff; --c3: #ff5ea8; }
+.glass--reef  { --c1: #00ffa3; --c2: #00b4ff; --c3: #b3ff3c; }
+.glass--ember { --c1: #ff7a29; --c2: #ffd166; --c3: #ff2e6b; }
+
+/* Aurora ------------------------------------------------------------- */
+.aura { position: absolute; inset: -20%; filter: blur(70px); opacity: 0.85; }
+.blob { position: absolute; border-radius: 50%; }
+.blob--1 { width: 46%; height: 60%; left: -6%; top: -12%; background: var(--c1); }
+.blob--2 { width: 44%; height: 58%; right: -4%; top: 4%; background: var(--c2); opacity: 0.8; }
+.blob--3 { width: 50%; height: 56%; left: 22%; bottom: -22%; background: var(--c3); opacity: 0.7; }
+
+.shell {
+  position: relative;
+  height: 100%;
+  overflow: auto;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+/* Header ------------------------------------------------------------- */
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 22px;
+}
+.title { display: flex; align-items: center; gap: 12px; margin-right: auto; }
+.title mat-icon { color: var(--c2); }
+h1 { margin: 0; font-size: 26px; font-weight: 600; letter-spacing: -0.02em; }
+.sub { margin: 0; color: var(--dim); font-size: 13px; }
+.center { text-align: center; }
+
+.seg {
+  border: 1px solid rgba(var(--tint), 0.22);
+  border-radius: 999px;
+  overflow: hidden;
+  backdrop-filter: blur(14px);
+  --mat-button-toggle-background-color: rgba(var(--tint), 0.06);
+  --mat-button-toggle-text-color: var(--dim);
+  --mat-button-toggle-selected-state-background-color: rgba(var(--tint), 0.92);
+  --mat-button-toggle-selected-state-text-color: #0a0a16;
+  --mat-button-toggle-divider-color: rgba(var(--tint), 0.18);
+  --mat-button-toggle-label-text-font: 'Outfit', sans-serif;
+  --mat-button-toggle-label-text-weight: 600;
+  --mat-button-toggle-height: 38px;
+  --mat-button-toggle-shape: 999px;
+}
+
+.cta {
+  border: 1px solid rgba(var(--tint), 0.3);
+  backdrop-filter: blur(14px);
+  --mat-button-filled-container-color: rgba(var(--tint), 0.14);
+  --mat-button-filled-label-text-color: var(--ink);
+  --mat-button-filled-container-shape: 999px;
+  --mat-button-filled-label-text-font: 'Outfit', sans-serif;
+  --mat-button-filled-label-text-weight: 600;
+}
+
+/* Frosted panes ------------------------------------------------------ */
+.cards {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr;
+  grid-template-areas: 'hero ring ctl' 'wide wide wide';
+  gap: 18px;
+}
+@media (max-width: 980px) {
+  .cards { grid-template-columns: 1fr; grid-template-areas: 'hero' 'ring' 'ctl' 'wide'; }
+}
+
+.pane {
+  position: relative;
+  padding: 18px 20px;
+  border: 1px solid rgba(var(--tint), 0.18);
+  border-radius: 22px;
+  background: rgba(var(--tint), 0.08);
+  backdrop-filter: blur(22px) saturate(140%);
+  box-shadow: 0 18px 50px rgba(5, 6, 15, 0.45);
+  color: var(--ink);
+  overflow: hidden;
+  --mat-sys-level1: none;
+}
+/* The hairline highlight along the top edge is what sells the glass. */
+.pane::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(var(--tint), 0.7), transparent);
+}
+.pane--hero { grid-area: hero; }
+.pane--wide { grid-area: wide; }
+
+.pane__label {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.pane__value { margin: 8px 0 4px; font-size: 40px; font-weight: 300; letter-spacing: -0.03em; }
+.pane__value span { font-size: 15px; color: var(--dim); }
+.pane__row { display: flex; align-items: center; gap: 14px; }
+
+.spark { display: block; width: 100%; height: 80px; color: var(--c2); }
+
+.slider {
+  flex: 1;
+  --mat-slider-handle-color: var(--ink);
+  --mat-slider-active-track-color: var(--c2);
+  --mat-slider-inactive-track-color: rgba(var(--tint), 0.24);
+  --mat-slider-label-container-color: rgba(var(--tint), 0.92);
+  --mat-slider-label-label-text-color: #0a0a16;
+}
+
+/* Conic ring, driven by a custom property. */
+.ring-wrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 132px;
+  height: 132px;
+  margin: 14px auto 10px;
+}
+.ring {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background:
+    conic-gradient(var(--c2) calc(var(--pct) * 1%), rgba(var(--tint), 0.14) 0);
+  mask: radial-gradient(circle, transparent 54%, #000 55%);
+  -webkit-mask: radial-gradient(circle, transparent 54%, #000 55%);
+}
+.ring__num {
+  position: absolute;
+  font-size: 28px;
+  font-weight: 300;
+  line-height: 1;
+}
+.ring__num small { font-size: 14px; color: var(--dim); }
+
+.switches { display: flex; flex-direction: column; gap: 10px; margin: 14px 0 10px; }
+mat-slide-toggle {
+  font-size: 14px;
+  --mat-slide-toggle-selected-track-color: var(--c2);
+  --mat-slide-toggle-selected-handle-color: #0a0a16;
+  --mat-slide-toggle-selected-hover-track-color: var(--c2);
+  --mat-slide-toggle-selected-focus-track-color: var(--c2);
+  --mat-slide-toggle-selected-pressed-track-color: var(--c2);
+  --mat-slide-toggle-unselected-track-color: rgba(255, 255, 255, 0.16);
+  --mat-slide-toggle-unselected-handle-color: rgba(255, 255, 255, 0.75);
+  --mat-slide-toggle-label-text-color: var(--ink);
+}
+
+.nodes { padding: 6px 0 0; }
+.node__name { font-weight: 500; }
+.node__meta { display: flex; align-items: center; gap: 8px; color: var(--dim); font-size: 13px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.dot--healthy { background: #4ade80; box-shadow: 0 0 10px #4ade80; }
+.dot--warm { background: #fbbf24; box-shadow: 0 0 10px #fbbf24; }
+.dot--hot { background: #fb7185; box-shadow: 0 0 10px #fb7185; }
+
+.load {
+  height: 3px;
+  margin: 0 16px 10px;
+  border-radius: 3px;
+  --mat-progress-bar-active-indicator-color: var(--c2);
+  --mat-progress-bar-track-color: rgba(255, 255, 255, 0.12);
+}

@@ -1,0 +1,12 @@
+<mat-button-toggle-group
+  multiple
+  aria-label="Text formatting"
+  [value]="initialFormat"
+  (valueChange)="format.set($event)">
+  <mat-button-toggle value="bold" aria-label="Bold"><mat-icon>format_bold</mat-icon></mat-button-toggle>
+  <mat-button-toggle value="italic" aria-label="Italic"><mat-icon>format_italic</mat-icon></mat-button-toggle>
+  <mat-button-toggle value="underline" aria-label="Underline">
+    <mat-icon>format_underlined</mat-icon>
+  </mat-button-toggle>
+</mat-button-toggle-group>
+<p>Active: {{ format().join(', ') || 'none' }}</p>

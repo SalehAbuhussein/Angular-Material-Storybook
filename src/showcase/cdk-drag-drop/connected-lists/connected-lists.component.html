@@ -1,0 +1,33 @@
+<div class="docs-demo docs-demo--row">
+  <div class="column">
+    <h3>Backlog</h3>
+    <div
+      id="backlog"
+      class="list"
+      cdkDropList
+      [cdkDropListData]="backlog()"
+      [cdkDropListConnectedTo]="['sprint']"
+      (cdkDropListDropped)="drop($event)"
+    >
+      @for (item of backlog(); track item) {
+        <div class="item" cdkDrag>{{ item }}</div>
+      }
+    </div>
+  </div>
+
+  <div class="column">
+    <h3>This sprint</h3>
+    <div
+      id="sprint"
+      class="list"
+      cdkDropList
+      [cdkDropListData]="sprint()"
+      [cdkDropListConnectedTo]="['backlog']"
+      (cdkDropListDropped)="drop($event)"
+    >
+      @for (item of sprint(); track item) {
+        <div class="item" cdkDrag>{{ item }}</div>
+      }
+    </div>
+  </div>
+</div>

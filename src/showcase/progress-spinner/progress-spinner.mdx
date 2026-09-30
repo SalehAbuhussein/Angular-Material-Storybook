@@ -1,0 +1,131 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as SpinnerStories from './progress-spinner.stories';
+
+<Meta of={SpinnerStories} />
+
+# Progress spinner
+
+**Import:** `import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';`
+
+A circular indicator for work attached to one control or one small region. It is
+a fixed square, so unlike a progress bar it does not stretch to its container.
+
+```html
+<mat-spinner diameter="40" aria-label="Loading results" />
+```
+
+## Try it
+
+<Example of={SpinnerStories.Playground} />
+<Controls of={SpinnerStories.Playground} />
+
+## Two modes
+
+`determinate` draws an arc for `value`, a number from 0 to 100. `indeterminate`
+spins with no value.
+
+<Example of={SpinnerStories.Modes} />
+
+## mat-progress-spinner or mat-spinner
+
+They are one component with two selectors. The component checks its own tag name
+in the constructor: `<mat-spinner>` starts in `indeterminate`,
+`<mat-progress-spinner>` starts in `determinate`. Everything else is identical.
+
+<Example of={SpinnerStories.MatSpinnerShorthand} />
+
+Use `<mat-spinner>` when you have no percentage, and `<mat-progress-spinner>`
+with a `value` when you do.
+
+## Sizing
+
+`diameter` is the width and height of the SVG in pixels and defaults to 100.
+`strokeWidth` is the ring thickness and defaults to a tenth of the diameter, so
+small spinners stay proportional on their own.
+
+<Example of={SpinnerStories.Sizing} />
+
+```html
+<mat-spinner diameter="20" strokeWidth="2" aria-label="Loading" />
+```
+
+Set the size with the inputs, not with CSS `width` and `height`. The component
+computes the SVG `viewBox` and the dash offset from `diameter`, so a CSS override
+scales a wrongly drawn circle.
+
+## Inside a button while saving
+
+`MatButton` supports this case. Set `showProgress` and project an indicator into
+the button's `progressIndicator` slot; the button positions it and fades the
+label.
+
+<Example of={SpinnerStories.InsideAButton} />
+
+```ts
+@Component({
+  selector: 'app-save-button',
+  imports: [MatButtonModule, MatProgressSpinnerModule],
+  template: `
+    <button matButton="filled" [showProgress]="saving()" [disabled]="saving()" (click)="save()">
+      {{ saving() ? 'Saving' : 'Save changes' }}
+      <mat-spinner progressIndicator diameter="20" aria-hidden="true" />
+    </button>
+  `,
+})
+export class SaveButton {
+  readonly saving = signal(false);
+
+  save(): void {
+    this.saving.set(true);
+    // ...then this.saving.set(false) when the request settles
+  }
+}
+```
+
+Disable the button while the work runs, and keep a label in place so the control
+does not change width. A button that shrinks to a spinner moves everything next
+to it.
+
+## Loading a panel
+
+<Example of={SpinnerStories.LoadingAPanel} />
+
+Pair the spinner with a line of text. A bare spinner tells people to wait but not
+what for.
+
+## API you will use
+
+| Input | Type | What it does |
+| --- | --- | --- |
+| `mode` | `'determinate' \| 'indeterminate'` | Arc for a value, or a continuous spin |
+| `value` | `number` | Percentage complete, 0 to 100. Clamped, and ignored in `indeterminate` |
+| `diameter` | `number` | Size of the SVG in pixels. Default `100` |
+| `strokeWidth` | `number` | Ring thickness in pixels. Defaults to `diameter / 10` |
+| `color` | `'primary' \| 'accent' \| 'warn'` | M2 themes only. In M3, style with CSS custom properties |
+
+## Accessibility
+
+The component sets `role="progressbar"`, `aria-valuemin="0"`, and
+`aria-valuemax="100"`, and sets `aria-valuenow` only in `determinate` mode. The
+missing value in `indeterminate` signals "unknown duration".
+
+Add the name yourself with `aria-label` or `aria-labelledby`. When the spinner
+sits inside a control that already has a label, such as the save button above,
+mark the spinner `aria-hidden="true"` instead so the button is announced once.
+
+Announce the result when the work finishes. The spinner vanishing is invisible to
+a screen reader unless something in a live region says "Saved".
+
+## Common mistakes
+
+1. Sizing with CSS: `width` and `height` scale a circle drawn for a different `viewBox`. Use `diameter`.
+2. Setting `value` on `<mat-spinner>`: that element starts in `indeterminate`, so the value is ignored. Use `<mat-progress-spinner>`.
+3. No accessible name: `role="progressbar"` with nothing else announces an unnamed progress bar.
+4. Replacing the button label with a spinner: the button changes width and the action becomes unreadable. Use `showProgress` and keep the text.
+5. A spinner for a whole-page load: use an [indeterminate progress bar](?path=/docs/buttons-and-indicators-progress-bar--docs) or a skeleton instead. A spinner belongs to a control.
+
+## Related
+
+- [Progress Bar](?path=/docs/buttons-and-indicators-progress-bar--docs) for region and page level progress
+- [Button](?path=/docs/buttons-and-indicators-button--docs) for `showProgress` and the `progressIndicator` slot

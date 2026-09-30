@@ -1,0 +1,162 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as MenuStories from './menu.stories';
+
+<Meta of={MenuStories} />
+
+# Menu
+
+**Import:** `import { MatMenuModule } from '@angular/material/menu';`
+
+A menu is a list of actions that opens next to the control that asked for it.
+Declare the panel once with `<mat-menu>` and point at it from a trigger. The
+panel renders into an overlay at the end of the document, so its place in the
+template does not affect where it appears.
+
+```html
+<button matButton [matMenuTriggerFor]="menu">Actions</button>
+<mat-menu #menu>
+  <button mat-menu-item>Rename</button>
+</mat-menu>
+```
+
+## Try it
+
+<Example of={MenuStories.Playground} />
+<Controls of={MenuStories.Playground} />
+
+## Items are buttons and links
+
+`mat-menu-item` is an attribute selector, and it expects a `<button>` or an `<a>`.
+Use an anchor when the item navigates, a button when it does something. Anything
+else drops out of the keyboard order and out of the menu's arrow-key handling.
+
+<Example of={MenuStories.BasicMenu} />
+
+```html
+<mat-menu #account>
+  <button mat-menu-item>Profile</button>
+  <a mat-menu-item routerLink="/billing">Billing</a>
+  <mat-divider />
+  <button mat-menu-item>Sign out</button>
+</mat-menu>
+```
+
+## Icons and shortcuts
+
+`<mat-icon>` inside an item is projected into a leading slot, so you need no
+wrapper. A keyboard shortcut is plain text. Put it in a trailing span and push it
+over with flex.
+
+<Example of={MenuStories.IconsAndShortcuts} />
+
+```html
+<button mat-menu-item>
+  <mat-icon>content_copy</mat-icon>
+  <span>Copy</span>
+  <span class="menu-spacer"></span>
+  <span class="menu-shortcut">Ctrl+C</span>
+</button>
+```
+
+The shortcut text is decoration. Register the real key handler yourself, on the
+host that owns the action.
+
+## Nested menus
+
+Put `[matMenuTriggerFor]` on a menu item to make it a submenu trigger. The
+submenu opens on hover or the right arrow key and closes on the left arrow key.
+The parent stays open while you are inside it.
+
+<Example of={MenuStories.NestedMenus} />
+
+```html
+<mat-menu #root>
+  <button mat-menu-item [matMenuTriggerFor]="people">People</button>
+</mat-menu>
+<mat-menu #people>
+  <button mat-menu-item>Ada Lovelace</button>
+</mat-menu>
+```
+
+Two levels is the practical limit. Past that, people lose the panel before they
+reach the item.
+
+## One menu, many rows
+
+A list of 200 rows does not need 200 menus. Declare one, wrap its items in
+`<ng-template matMenuContent>`, and hand the row to the trigger through
+`[matMenuTriggerData]`. The template is created on open, with that row's data in
+context.
+
+<Example of={MenuStories.PassingData} />
+
+```html
+@for (file of files; track file) {
+  <button matIconButton [matMenuTriggerFor]="rowMenu" [matMenuTriggerData]="{ file }">
+    <mat-icon>more_vert</mat-icon>
+  </button>
+}
+
+<mat-menu #rowMenu>
+  <ng-template matMenuContent let-file="file">
+    <button mat-menu-item (click)="rename(file)">Rename {{ file }}</button>
+  </ng-template>
+</mat-menu>
+```
+
+Without `matMenuContent` the items are created once, when the menu is declared,
+and every trigger shows the same stale row.
+
+## Context menus
+
+`matContextMenuTriggerFor` is a separate directive. It listens for `contextmenu`
+on its host, cancels the browser menu and opens the panel at the pointer.
+
+<Example of={MenuStories.ContextMenu} />
+
+```html
+<div [matContextMenuTriggerFor]="context" [matContextMenuTriggerData]="{ target: id }">
+  Right-click me
+</div>
+```
+
+Always offer another way to reach the same actions. Touch and keyboard users
+have no right click.
+
+## API you will use
+
+| Name | On | Type | Notes |
+| --- | --- | --- | --- |
+| `matMenuTriggerFor` | trigger | `MatMenu` | The panel to open. |
+| `matMenuTriggerData` | trigger | `object` | Context for the `matMenuContent` template. |
+| `menuOpened` / `menuClosed` | trigger | `EventEmitter<void>` | Load data lazily on open. |
+| `xPosition` / `yPosition` | `mat-menu` | `'before' \| 'after'` / `'above' \| 'below'` | Preferred side. The overlay still flips to stay on screen. |
+| `overlapTrigger` | `mat-menu` | `boolean` | Defaults to `false`. |
+| `aria-label` | `mat-menu` | `string` | Names the panel for screen readers. |
+| `closed` | `mat-menu` | `EventEmitter<'click' \| 'keydown' \| 'tab'>` | Tells you why it closed. |
+| `matContextMenuTriggerFor` | any element | `MatMenu` | Right-click trigger. Required input. |
+
+## Accessibility
+
+The trigger gets `aria-haspopup` and `aria-expanded`. The panel gets
+`role="menu"` and its items get `role="menuitem"`. Arrow keys move between
+items, Escape closes, and focus returns to the trigger on close.
+
+You supply an `aria-label` on the panel when the trigger is icon-only, an
+`aria-label` on the trigger button itself, and a real `<a>` for any item that
+navigates.
+
+## Common mistakes
+
+1. **`<div mat-menu-item>`.** No focus, no keyboard, no role. Use `<button>` or `<a>`.
+2. **One menu per row without `matMenuContent`.** Every trigger opens the same instance and acts on the wrong record. Use the template and `matMenuTriggerData`.
+3. **Styling the panel from the parent component's stylesheet.** It renders in an overlay outside the component, so view encapsulation blocks you. Pass a class with `[class]` on `<mat-menu>` and style it globally.
+4. **A context menu as the only path to an action.** Keyboard and touch users cannot reach it. Mirror it in a visible menu.
+5. **Deep nesting.** Three levels of submenu is a maze. Flatten it, or use a dialog.
+
+## Related
+
+- [Toolbar](?path=/docs/navigation-toolbar--docs) for the bar that usually holds the trigger
+- [Button](?path=/docs/buttons-and-indicators-button--docs) for the trigger itself
+- [Sidenav](?path=/docs/navigation-sidenav--docs) when the list is navigation rather than actions

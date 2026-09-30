@@ -1,0 +1,13 @@
+<div class="docs-demo docs-demo--row">
+  <button
+    matIconButton
+    aria-label="Open inbox"
+    [matBadge]="count()"
+    [matBadgeHidden]="count() === 0"
+    [matBadgeDescription]="count() + ' unread messages'"
+  >
+    <mat-icon>mail</mat-icon>
+  </button>
+  <button matButton="outlined" (click)="count.set(count() + 1)">Receive message</button>
+  <button matButton (click)="count.set(0)">Mark all read</button>
+</div>

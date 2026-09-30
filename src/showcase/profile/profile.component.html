@@ -1,0 +1,137 @@
+<div class="page" [style.height.px]="height()">
+  <header class="hero">
+    <div class="avatar" aria-hidden="true">{{ initials() }}</div>
+
+    <div class="hero__text">
+      <h1>{{ name() }}</h1>
+      <p class="muted">{{ form.getRawValue().title }} &middot; {{ form.getRawValue().location }}</p>
+      <div class="tags">
+        <mat-chip [disableRipple]="true">Angular</mat-chip>
+        <mat-chip [disableRipple]="true">Design systems</mat-chip>
+        <mat-chip [disableRipple]="true">Accessibility</mat-chip>
+      </div>
+    </div>
+
+    <div class="hero__actions">
+      @if (!editing()) {
+        <button matButton="outlined" (click)="startEdit()">
+          <mat-icon>edit</mat-icon> Edit profile
+        </button>
+      }
+      <button matButton="filled" (click)="toggleFollow()">
+        <mat-icon>{{ following() ? 'check' : 'add' }}</mat-icon>
+        {{ following() ? 'Following' : 'Follow' }}
+      </button>
+      <button matIconButton [matMenuTriggerFor]="more" aria-label="More profile actions">
+        <mat-icon>more_vert</mat-icon>
+      </button>
+    </div>
+  </header>
+
+  <div class="stats" role="list">
+    <div role="listitem"><strong>128</strong><span class="muted">Commits</span></div>
+    <div role="listitem"><strong>31</strong><span class="muted">Reviews</span></div>
+    <div role="listitem"><strong>3</strong><span class="muted">Projects</span></div>
+    <div role="listitem"><strong>{{ followers() }}</strong><span class="muted">Followers</span></div>
+  </div>
+
+  <mat-tab-group class="tabs">
+    <mat-tab label="About">
+      <div class="pad">
+        <mat-card appearance="outlined" class="card">
+          <mat-card-header>
+            <mat-card-title>Details</mat-card-title>
+            @if (editing()) {
+              <mat-card-subtitle>Editing</mat-card-subtitle>
+            }
+          </mat-card-header>
+
+          <mat-card-content>
+            <!-- Read and edit are the same data, so the card swaps its body
+                 rather than pushing the user to a separate screen. -->
+            @if (editing()) {
+              <form [formGroup]="form" class="fields">
+                <mat-form-field appearance="outline">
+                  <mat-label>Name</mat-label>
+                  <input matInput formControlName="name" />
+                  @if (form.controls.name.invalid && form.controls.name.touched) {
+                    <mat-error>A name is required</mat-error>
+                  }
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Job title</mat-label>
+                  <input matInput formControlName="title" />
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Location</mat-label>
+                  <input matInput formControlName="location" />
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>About</mat-label>
+                  <textarea matInput rows="3" formControlName="bio"></textarea>
+                </mat-form-field>
+              </form>
+            } @else {
+              <dl class="read">
+                <div><dt>Name</dt><dd>{{ form.getRawValue().name }}</dd></div>
+                <div><dt>Job title</dt><dd>{{ form.getRawValue().title }}</dd></div>
+                <div><dt>Location</dt><dd>{{ form.getRawValue().location }}</dd></div>
+                <div><dt>About</dt><dd>{{ form.getRawValue().bio }}</dd></div>
+              </dl>
+            }
+          </mat-card-content>
+
+          @if (editing()) {
+            <mat-card-actions align="end">
+              <button matButton (click)="cancelEdit()">Cancel</button>
+              <button matButton="filled" [disabled]="form.invalid" (click)="saveEdit()">Save</button>
+            </mat-card-actions>
+          }
+        </mat-card>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Activity">
+      <div class="pad">
+        <mat-card appearance="outlined" class="card">
+          <mat-list>
+            @for (event of activity; track event.title) {
+              <mat-list-item>
+                <mat-icon matListItemIcon>{{ event.icon }}</mat-icon>
+                <span matListItemTitle>{{ event.title }}</span>
+                <span matListItemLine class="muted">{{ event.ago }}</span>
+              </mat-list-item>
+            }
+          </mat-list>
+        </mat-card>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Projects">
+      <div class="pad">
+        <div class="projects">
+          @for (p of projects; track p.name) {
+            <mat-card appearance="outlined">
+              <mat-card-header>
+                <mat-card-title>{{ p.name }}</mat-card-title>
+                <mat-card-subtitle>{{ p.role }}</mat-card-subtitle>
+              </mat-card-header>
+              <mat-card-content>
+                <p class="muted">{{ p.items }} open items</p>
+              </mat-card-content>
+            </mat-card>
+          }
+        </div>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>
+
+<mat-menu #more>
+  <button mat-menu-item><mat-icon>share</mat-icon> Share profile</button>
+  <button mat-menu-item><mat-icon>flag</mat-icon> Report</button>
+  <button mat-menu-item><mat-icon>block</mat-icon> Block</button>
+</mat-menu>

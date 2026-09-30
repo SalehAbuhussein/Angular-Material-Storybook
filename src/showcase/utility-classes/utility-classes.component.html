@@ -1,0 +1,10 @@
+<div class="stage">
+  <div class="specimen" [class]="classes()">{{ text() }}</div>
+</div>
+@if (pairWarning(); as want) {
+  <p class="hint mat-bg-error-container mat-text-on-error-container mat-corner-sm">
+    Text on <code>{{ bg() }}</code> should use <code>{{ want }}</code>. Pick it in the text
+    color dropdown.
+  </p>
+}
+<pre class="code mat-bg-surface-container mat-corner-sm mat-border-subtle">{{ html() }}</pre>

@@ -1,0 +1,142 @@
+<div class="shell">
+  <nav class="nav" aria-label="Shop sections">
+    <mat-icon class="nav__logo" aria-hidden="true">diamond</mat-icon>
+    @for (d of destinations; track d.label) {
+      <button
+        type="button"
+        class="nav__item"
+        [attr.aria-current]="section() === d.label ? 'page' : null"
+        (click)="section.set(d.label)"
+      >
+        <span class="nav__indicator" matRipple>
+          <mat-icon aria-hidden="true">{{ d.icon }}</mat-icon>
+        </span>
+        <span class="nav__label">{{ d.label }}</span>
+      </button>
+    }
+  </nav>
+
+  <main class="main">
+    <div class="titlebar">
+      <button matIconButton class="back" aria-label="Back to Tops">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <h1>Flow Shirt Blouse</h1>
+      <p class="price">$240</p>
+    </div>
+
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <ol>
+        <li>{{ section() }}</li>
+        <li aria-hidden="true">›</li>
+        <li>LMBRJK</li>
+        <li aria-hidden="true">›</li>
+        <li aria-current="page">Tops</li>
+      </ol>
+    </nav>
+
+    <div class="gallery" tabindex="0" aria-label="Product photos" role="region">
+      @for (s of shots; track s.kind) {
+        <div class="shot" [class]="'shot shot--' + s.kind" role="img" [attr.aria-label]="s.alt + ', ' + color()">
+          <demo-shirt-art [color]="swatchOf(color())" [view]="s.view" [crop]="s.kind !== 'full'" />
+        </div>
+      }
+    </div>
+
+    <div class="info">
+      <p class="desc">
+        Pinstriped cornflower blue cotton blouse takes you on a walk to the park or just down
+        the hall.
+      </p>
+
+      <div class="field">
+        <span class="field__label" id="size-label">Size</span>
+        <mat-chip-listbox
+          aria-labelledby="size-label"
+          [hideSingleSelectionIndicator]="true"
+          [value]="size()"
+          (change)="size.set($event.value ?? size())"
+        >
+          @for (s of sizes; track s) {
+            <mat-chip-option [value]="s">{{ s }}</mat-chip-option>
+          }
+        </mat-chip-listbox>
+      </div>
+
+      <div class="field" role="radiogroup" aria-labelledby="color-label">
+        <span class="field__label" id="color-label">Color</span>
+        <div class="swatches">
+          @for (c of colors; track c.name) {
+            <label class="swatch" [class.swatch--on]="color() === c.name">
+              <input
+                type="radio"
+                name="product-color"
+                [value]="c.name"
+                [checked]="color() === c.name"
+                (change)="color.set(c.name)"
+              />
+              <span class="swatch__dot" [style.background]="c.value"></span>
+              <span class="visually-hidden">{{ c.name }}</span>
+            </label>
+          }
+        </div>
+        <span class="swatch-name">{{ color() }}</span>
+      </div>
+
+      <div class="actions">
+        <button matButton="tonal" class="add" (click)="add()">Add to shopping basket</button>
+        <button
+          matIconButton
+          class="fav"
+          [attr.aria-pressed]="favourite()"
+          [attr.aria-label]="favourite() ? 'Remove from favourites' : 'Add to favourites'"
+          (click)="favourite.set(!favourite())"
+        >
+          <mat-icon>{{ favourite() ? 'favorite' : 'favorite_border' }}</mat-icon>
+        </button>
+      </div>
+
+      <mat-accordion multi class="panels">
+        <mat-expansion-panel class="panel">
+          <mat-expansion-panel-header>
+            <mat-panel-title>More details</mat-panel-title>
+          </mat-expansion-panel-header>
+          <p>100% cotton poplin. Relaxed fit with a dropped shoulder and a curved hem.</p>
+          <p>Machine wash cold. Line dry.</p>
+        </mat-expansion-panel>
+        <mat-expansion-panel class="panel" [expanded]="showReviews()">
+          <mat-expansion-panel-header>
+            <mat-panel-title>Ratings and reviews</mat-panel-title>
+          </mat-expansion-panel-header>
+          <div class="review">
+            <span class="stars" role="img" aria-label="5 out of 5 stars">
+              @for (i of [1, 2, 3, 4, 5]; track i) {
+                <mat-icon aria-hidden="true">star</mat-icon>
+              }
+            </span>
+            <p>
+              Perfect transition piece, just need more options. I've been living in this blouse
+              since it arrived. As someone who is constantly going from video calls to meeting
+              friends, it's been a lifesaver.
+            </p>
+          </div>
+        </mat-expansion-panel>
+      </mat-accordion>
+    </div>
+  </main>
+
+  <button
+    type="button"
+    class="basket"
+    matRipple
+    [attr.aria-label]="'Shopping basket, ' + basket().length + ' items'"
+  >
+    <mat-icon aria-hidden="true">shopping_basket</mat-icon>
+    @for (item of basketPreview(); track $index) {
+      <span class="basket__thumb"><demo-shirt-art [color]="swatchOf(item.color)" view="60 60 280 290" /></span>
+    }
+    @if (basketExtra() > 0) {
+      <span>+{{ basketExtra() }}</span>
+    }
+  </button>
+</div>

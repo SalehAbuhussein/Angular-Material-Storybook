@@ -1,0 +1,10 @@
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 4px 4px 16px;
+  border-radius: var(--mat-sys-corner-medium);
+  background: var(--mat-sys-surface-container-high);
+}
+code { font-family: monospace; }
+.log { color: var(--mat-sys-on-surface-variant); margin: 0; }

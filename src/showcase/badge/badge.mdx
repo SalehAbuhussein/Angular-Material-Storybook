@@ -1,0 +1,124 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as BadgeStories from './badge.stories';
+
+<Meta of={BadgeStories} />
+
+# Badge
+
+**Import:** `import { MatBadgeModule } from '@angular/material/badge';`
+
+A badge is a small count or status marker pinned to the corner of something else.
+It is a directive, so you attach it to the element it describes.
+
+```html
+<button matIconButton aria-label="Open inbox" matBadge="4">
+  <mat-icon>inbox</mat-icon>
+</button>
+```
+
+## Try it
+
+<Example of={BadgeStories.Playground} />
+<Controls of={BadgeStories.Playground} />
+
+## Where a badge can go
+
+The host can be anything: an icon button, a word in a sentence, a normal button.
+The directive measures the host and positions the bubble against its box.
+
+<Example of={BadgeStories.OnDifferentHosts} />
+
+## Position and overlap
+
+`matBadgePosition` takes one vertical word (`above`, `below`), one horizontal
+word (`before`, `after`), or both separated by a space. `before` and `after`
+follow the reading direction, so they flip in right-to-left layouts.
+
+`matBadgeOverlap` defaults to `true`, which sits the badge on top of the host.
+Set it to `false` for text hosts, where an overlapping bubble covers a letter.
+
+<Example of={BadgeStories.PositionAndOverlap} />
+
+```html
+<span matBadge="New" matBadgeOverlap="false" matBadgeSize="small">Releases</span>
+```
+
+## Sizes
+
+<Example of={BadgeStories.Sizes} />
+
+## Hiding an empty badge
+
+A badge showing "0" is noise. The directive treats a falsy value as nothing to
+show, so it hides itself when the content is empty or the number zero. For any
+other rule, bind `matBadgeHidden` to the condition that means "nothing to
+report": muted threads, a collapsed section, a panel that is already open.
+
+<Example of={BadgeStories.HiddenWhenEmpty} />
+
+```ts
+@Component({
+  selector: 'app-inbox-button',
+  imports: [MatBadgeModule, MatButtonModule, MatIconModule],
+  template: `
+    <button
+      matIconButton
+      aria-label="Open inbox"
+      [matBadge]="count()"
+      [matBadgeHidden]="count() === 0"
+      [matBadgeDescription]="count() + ' unread messages'"
+    >
+      <mat-icon>mail</mat-icon>
+    </button>
+  `,
+})
+export class InboxButton {
+  readonly count = signal(3);
+}
+```
+
+## API you will use
+
+| Input | Type | What it does |
+| --- | --- | --- |
+| `matBadge` | `string \| number \| null` | The content of the bubble |
+| `matBadgePosition` | `'above'\|'below'\|'before'\|'after'` or a vertical plus horizontal pair | Corner the badge sits in. Default `above after` |
+| `matBadgeSize` | `'small' \| 'medium' \| 'large'` | Bubble size. Default `medium` |
+| `matBadgeOverlap` | `boolean` | Whether the bubble sits on the host or beside it. Default `true` |
+| `matBadgeHidden` | `boolean` | Hides the bubble without removing the host |
+| `matBadgeDisabled` | `boolean` | Applies the disabled badge styling |
+| `matBadgeDescription` | `string` | Text announced by screen readers via `aria-describedby` |
+| `matBadgeColor` | `'primary' \| 'accent' \| 'warn'` | M2 themes only. It has no effect in a Material 3 theme; style the badge with CSS instead |
+
+## Accessibility
+
+The badge content is rendered as decorative markup, so a screen reader does not
+reliably read "4" as part of the button's name. `matBadgeDescription` fixes that.
+Angular Material wires it up through `AriaDescriber` and points
+`aria-describedby` at it.
+
+Write the description as a full phrase. "4 unread messages" is useful; "4" on
+its own tells nobody anything. Bind the description and the count from the same
+source so they stay in sync.
+
+Colour alone must not carry the meaning. If a red badge signals an error state,
+the description has to say so.
+
+Do not put a badge on an `<mat-icon aria-hidden="true">`. The directive logs a
+warning, because the count would be attached to an element assistive technology
+skips. Put the badge on the button around the icon instead.
+
+## Common mistakes
+
+1. `<mat-badge>`: there is no badge element. It is the `matBadge` attribute directive on the host.
+2. No `matBadgeDescription`: screen reader users hear the button name with no hint that anything is waiting.
+3. Passing the count as a string: `[matBadge]="'0'"` is a non-empty string, so the badge shows. Pass the number and the zero hides itself.
+4. Overlapping a text host: text needs `matBadgeOverlap="false"`, otherwise the bubble covers the last character.
+5. Expecting `matBadgeColor` to work in M3: the input is M2-only. In a Material 3 theme, override the badge's own CSS custom properties instead.
+
+## Related
+
+- [Icon](?path=/docs/buttons-and-indicators-icon--docs) for the icon under the badge
+- [Button](?path=/docs/buttons-and-indicators-button--docs) for the host element
+- [Tooltip](?path=/docs/buttons-and-indicators-tooltip--docs) for showing the same count on hover

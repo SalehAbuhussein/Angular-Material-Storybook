@@ -1,0 +1,172 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as DragDropStories from './cdk-drag-drop.stories';
+
+<Meta of={DragDropStories} />
+
+# Drag and drop
+
+**Import:** `import { DragDropModule } from '@angular/cdk/drag-drop';`
+(or import the individual directives: `CdkDrag`, `CdkDropList`, ...)
+
+The CDK gives you behaviour and no styling. `cdkDrag` makes an element
+draggable, `cdkDropList` makes a container sortable, and the drop event tells you
+what moved where. You update your data, which is why every example ends with
+`moveItemInArray` or `transferArrayItem`.
+
+```html
+<div cdkDropList (cdkDropListDropped)="drop($event)">
+  @for (item of items(); track item) {
+    <div cdkDrag>{{ item }}</div>
+  }
+</div>
+```
+
+## Try it
+
+<Example of={DragDropStories.Playground} />
+<Controls of={DragDropStories.Playground} />
+
+## Reordering one list
+
+The drop event carries `previousIndex` and `currentIndex`. `moveItemInArray`
+applies them to your array. It mutates in place, so with a signal either work on
+a copy or copy afterwards to trigger a re-render.
+
+<Example of={DragDropStories.ReorderAList} />
+
+```ts
+drop(event: CdkDragDrop<string[]>) {
+  this.items.update((current) => {
+    const next = [...current];
+    moveItemInArray(next, event.previousIndex, event.currentIndex);
+    return next;
+  });
+}
+```
+
+Nothing moves until you update the data. The CDK animates the drag and then
+snaps the element back. The array change is what sticks.
+
+## Moving between lists
+
+Give each list an `id` and point `cdkDropListConnectedTo` at the ids it accepts.
+Put the backing array in `cdkDropListData` so the drop event returns it as
+`container.data` and `previousContainer.data`.
+
+<Example of={DragDropStories.TransferBetweenLists} />
+
+```ts
+drop(event: CdkDragDrop<string[]>) {
+  if (event.previousContainer === event.container) {
+    moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
+  } else {
+    transferArrayItem(
+      event.previousContainer.data,
+      event.container.data,
+      event.previousIndex,
+      event.currentIndex,
+    );
+  }
+}
+```
+
+Connections are one way. If items should move both ways, each list names the
+other. With more than two lists, put `cdkDropListGroup` on a common ancestor to
+connect every list inside it.
+
+## Handles, preview and placeholder
+
+By default the whole element is the drag target, which makes inputs and buttons
+inside it hard to use. `cdkDragHandle` narrows the grab area to one child.
+
+During a drag there are two extra elements: the preview that follows the
+pointer, and the placeholder that holds the space in the list. You can replace
+both with `ng-template` directives.
+
+<Example of={DragDropStories.HandlesPreviewAndPlaceholder} />
+
+```html
+<div cdkDrag>
+  <mat-icon cdkDragHandle>drag_indicator</mat-icon>
+  <input [value]="row" aria-label="Row label" />
+
+  <div *cdkDragPreview>{{ row }}</div>
+  <div *cdkDragPlaceholder>Drop here</div>
+</div>
+```
+
+Without custom templates you still get both, with the classes
+`.cdk-drag-preview` and `.cdk-drag-placeholder`. Styling those is often enough.
+
+## A kanban board
+
+`cdkDropListGroup` wraps the columns, so every list is connected without ids.
+Each column binds its own array to `cdkDropListData` and shares one drop handler.
+
+<Example of={DragDropStories.KanbanBoard} />
+
+```html
+<div cdkDropListGroup>
+  @for (column of columns(); track column.name) {
+    <div cdkDropList [cdkDropListData]="column.cards" (cdkDropListDropped)="drop($event)">
+      @for (card of column.cards; track card.title) {
+        <article cdkDrag>{{ card.title }}</article>
+      }
+    </div>
+  }
+</div>
+```
+
+Give empty columns a minimum height, or there is nothing to drop onto.
+
+## API you will use
+
+| Name | Where | What it does |
+| --- | --- | --- |
+| `cdkDrag` | directive | Makes the element draggable |
+| `cdkDragData` | `cdkDrag` input | Data attached to the item, read as `event.item.data` |
+| `cdkDragLockAxis` | `cdkDrag` input | `'x'`, `'y'` or `null` |
+| `cdkDragBoundary` | `cdkDrag` input | Selector for the element the drag cannot leave |
+| `cdkDropList` | directive | Sortable container |
+| `cdkDropListData` | `cdkDropList` input | The array behind the list |
+| `cdkDropListConnectedTo` | `cdkDropList` input | Ids of lists that accept these items |
+| `cdkDropListOrientation` | `cdkDropList` input | `'vertical'`, `'horizontal'` or `'mixed'` |
+| `cdkDropListEnterPredicate` | `cdkDropList` input | `(drag, drop) => boolean`, rejects items |
+| `cdkDropListDropped` | `cdkDropList` output | Emits `CdkDragDrop` with both indexes and both containers |
+| `cdkDragHandle` | directive | Restricts the grab area |
+| `cdkDragPreview` / `cdkDragPlaceholder` | `ng-template` directives | Replace the dragged and the reserved element |
+| `moveItemInArray` / `transferArrayItem` | functions | Apply the drop to your arrays |
+
+## Accessibility
+
+Drag and drop is pointer-only. The CDK does not add keyboard support, and there
+is no standard keyboard pattern for reordering a list that people already know.
+Treat dragging as a shortcut, never the only route:
+
+- Provide a keyboard path for the same operation: move up and move down buttons,
+  or a "move to column" menu on each card.
+- Announce the result with `LiveAnnouncer`, for example
+  "Ship the migration moved to In progress, position 2".
+- Keep focus on the item after a move instead of losing it to the document.
+- Label the handle. `cdkDragHandle` on an icon needs an accessible name if the
+  handle is also a button.
+
+## Common mistakes
+
+1. **Expecting the list to reorder itself.** The CDK animates only. Nothing
+   persists until you change the array in the drop handler.
+2. **Mutating an array inside a signal.** Nothing re-renders.
+   `moveItemInArray` mutates. Copy the array, or copy after the call.
+3. **Connecting lists one way.** Items go from A to B but not back, because only
+   A names B in `cdkDropListConnectedTo`.
+4. **No `cdkDropListData`.** `event.container.data` is `undefined` and the drop
+   handler has nothing to work with.
+5. **Dragging from the whole card when it contains inputs.** Add a
+   `cdkDragHandle`, or people cannot select text or click a button.
+
+## Related
+
+- [Accessibility](?path=/docs/cdk-accessibility--docs) for announcing moves with `LiveAnnouncer`
+- [Responsive Layout](?path=/docs/cdk-responsive-layout--docs) for switching a board to a single column on small screens
+- [Table](?path=/docs/data-table-table--docs) for reorderable table rows

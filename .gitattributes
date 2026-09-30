@@ -1,0 +1,9 @@
+# Store every text file with LF line endings, whatever the OS that commits it.
+* text=auto eol=lf
+
+# Binary files: never touch their bytes.
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff binary
+*.woff2 binary

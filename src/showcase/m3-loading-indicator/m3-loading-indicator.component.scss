@@ -1,0 +1,21 @@
+:host {
+  display: inline-block;
+}
+.box {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+}
+.box--contained {
+  background: var(--mat-sys-primary-container);
+}
+svg {
+  width: 100%;
+  height: 100%;
+}
+path {
+  fill: var(--mat-sys-primary);
+}
+.box--contained path {
+  fill: var(--mat-sys-on-primary-container);
+}

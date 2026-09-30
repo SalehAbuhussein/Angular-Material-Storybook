@@ -1,0 +1,130 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as PaginationStories from './pagination.stories';
+
+<Meta of={PaginationStories} />
+
+# Pagination
+
+**Import:** `import { MatPaginatorModule } from '@angular/material/paginator';`
+
+`mat-paginator` shows a range label, a page size select and next and previous
+buttons, and emits an event when someone asks for a different page. It never
+slices data. `MatTableDataSource` does that, or you do it in the `page` handler.
+
+```html
+<mat-paginator [length]="100" [pageSize]="10" [pageSizeOptions]="[5, 10, 25]" />
+```
+
+## Try it
+
+<Example of={PaginationStories.Playground} />
+<Controls of={PaginationStories.Playground} />
+
+## The three inputs that matter
+
+- `length` is the total number of items, not the number on the page. It drives
+  the range label and decides when the next button goes grey.
+- `pageSize` is the current page size. Give it a starting value.
+- `pageSizeOptions` fills the size select. Leave it out and the select is hidden.
+
+`pageIndex` is zero based, so the first page is `0`.
+
+<Example of={PaginationStories.Compact} />
+
+## Wiring it to MatTableDataSource
+
+Assign the paginator to `dataSource.paginator`. The data source then sets
+`length` from the row count and slices the rendered rows.
+
+<Example of={PaginationStories.WithMatTableDataSource} />
+
+```ts
+import { Component, effect, viewChild } from '@angular/core';
+import { MatPaginator } from '@angular/material/paginator';
+import { MatTableDataSource } from '@angular/material/table';
+
+export class TicketsTable {
+  readonly dataSource = new MatTableDataSource(TICKETS);
+  private readonly paginator = viewChild(MatPaginator);
+
+  constructor() {
+    effect(() => {
+      this.dataSource.paginator = this.paginator() ?? null;
+    });
+  }
+}
+```
+
+Do not set `length` yourself in this setup. The data source overwrites it, and a
+hardcoded value fights with filtering.
+
+## Server-side paging
+
+When the server holds the data, the table has one page at a time. Set `length`
+from the total the server reports, keep `pageIndex` and `pageSize` in signals,
+and refetch in the `page` handler.
+
+<Example of={PaginationStories.ServerSidePaging} />
+
+```ts
+onPage(event: PageEvent) {
+  this.pageIndex.set(event.pageIndex);
+  this.pageSize.set(event.pageSize);
+  // then refetch with those values
+}
+```
+
+`PageEvent` carries `pageIndex`, `previousPageIndex`, `pageSize` and `length`.
+Reset `pageIndex` to `0` whenever a filter or a sort changes, otherwise you ask
+for page 7 of a result set that now has two pages.
+
+## API you will use
+
+| Name | Type | What it does |
+| --- | --- | --- |
+| `length` | input `number` | Total number of items |
+| `pageSize` | input `number` | Items per page |
+| `pageSizeOptions` | input `number[]` | Sizes in the select |
+| `pageIndex` | input `number` | Current page, zero based |
+| `hidePageSize` | input `boolean` | Hides the page size select |
+| `showFirstLastButtons` | input `boolean` | Adds first and last page buttons |
+| `disabled` | input `boolean` | Disables every control |
+| `page` | output `PageEvent` | Emits on any page or size change |
+
+`MatPaginatorIntl` is an injectable holding every string the paginator renders
+(`itemsPerPageLabel`, `nextPageLabel`, `getRangeLabel`). Provide your own
+subclass to translate them.
+
+## Accessibility
+
+The paginator renders real buttons with labels from `MatPaginatorIntl` and
+disables them at the ends of the range. The page size select is a `mat-select`
+with its own label.
+
+What you still have to supply:
+
+- `aria-label` on `mat-paginator` saying what is being paged, because several
+  paginators on one page otherwise sound identical.
+- Translated `MatPaginatorIntl` strings for a non-English app.
+- A live region or a focus move if a page change replaces content far from the
+  paginator. Nothing announces the new page content automatically.
+
+## Common mistakes
+
+1. **Setting `length` to the page size.** `length` is the total. If it equals the
+   rows you render, the next button is always disabled.
+2. **Assigning `dataSource.paginator` in the constructor without an effect.** The
+   view query is not resolved yet, so the data source never gets it.
+3. **Leaving `pageIndex` where it was after filtering.** Reset to `0` when the
+   result set changes, or people land on an empty page.
+4. **Slicing the rows yourself while also using `MatTableDataSource`.** You page
+   an already paged array and show a handful of rows.
+5. **Omitting `pageSizeOptions` and expecting the select.** No options means no
+   select. That is often what you want, but it surprises people.
+
+## Related
+
+- [Table](?path=/docs/data-table-table--docs) for the table itself
+- [Sorting](?path=/docs/data-table-sorting--docs) for sorting the same data source
+- [Filter and Selection](?path=/docs/data-table-filter-and-selection--docs) for filtering across pages

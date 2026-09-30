@@ -1,0 +1,174 @@
+// Storybook-only canvas styles. Nothing here ships with your app.
+@use '@angular/material' as mat;
+
+// The toolbar palette switch (scheme.ts). Only color tokens are re-emitted, so
+// typography and density stay as src/styles.scss sets them. Setting it on body
+// also covers the CDK overlay container, where dialogs and menus render.
+// Quoted keys: unquoted green and orange are Sass colors, not strings.
+$docs-palettes: (
+  'violet': mat.$violet-palette,
+  'rose': mat.$rose-palette,
+  'green': mat.$green-palette,
+  'orange': mat.$orange-palette,
+);
+
+// Tertiary stays the app's blue. Leaving it out would make tertiary a copy of
+// primary, because mat.theme() defaults tertiary to the primary palette.
+@each $name, $palette in $docs-palettes {
+  body[data-palette='#{$name}'] {
+    @include mat.theme((color: (primary: $palette, tertiary: mat.$blue-palette)));
+  }
+}
+
+// The .mat-bg-*, .mat-text-*, .mat-font-* ... utility classes, for the
+// Foundations/Utility Classes page. An app opts in with the same line in
+// its own styles.scss; src/styles.scss does not include it yet.
+@include mat.system-classes();
+
+.sb-show-main {
+  background-color: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-medium);
+}
+
+// A neutral frame so wide components (tables, sidenavs) are not cramped.
+.docs-demo {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 8px;
+}
+
+.docs-demo--row {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.docs-surface {
+  width: 100%;
+  min-width: 320px;
+  border-radius: var(--mat-sys-corner-medium);
+  background: var(--mat-sys-surface-container-low);
+}
+
+// Used by the Snack Bar docs to show that `panelClass` needs a GLOBAL rule:
+// the snackbar renders in the CDK overlay container, outside your component.
+.docs-snack-bar-success {
+  --mat-snack-bar-button-color: var(--mat-sys-inverse-primary);
+
+  .mdc-snackbar__surface {
+    background-color: var(--mat-sys-tertiary);
+  }
+}
+
+// The file tabs above a component's source (code-tabs.ts), styled with tokens
+// so they follow the light/dark switch.
+.docs-code-tabs {
+  margin: 1rem 0 1.5rem;
+
+  .docblock-source {
+    margin-top: 0;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+  }
+}
+
+.docs-code-tabs__bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 4px 4px 0;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-bottom: 0;
+  border-radius: var(--mat-sys-corner-small) var(--mat-sys-corner-small) 0 0;
+  background: var(--mat-sys-surface-container);
+}
+
+.docs-code-tabs__tab {
+  padding: 8px 14px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--mat-sys-on-surface-variant);
+  font: 500 0.8125rem/1.2 'Roboto Mono', ui-monospace, monospace;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--mat-sys-on-surface);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: -2px;
+  }
+}
+
+.docs-code-tabs__tab--active {
+  border-bottom-color: var(--mat-sys-primary);
+  color: var(--mat-sys-primary);
+}
+
+// ---------------------------------------------------------------------------
+// Docs page readability.
+//
+// Storybook's defaults give inline code a 1%-opacity background, so API tables
+// read as plain prose. These rules use the same --mat-sys-* tokens as the rest
+// of the docs, so they follow the light/dark switch.
+// ---------------------------------------------------------------------------
+// The class is repeated to out-specify Storybook's own emotion styles, which
+// are injected after this stylesheet.
+.sbdocs-content.sbdocs-content {
+  // Inline code: `matButton`, `--mat-sys-primary`, and the API table cells.
+  code:not(pre code) {
+    padding: 2px 6px;
+    border: 1px solid var(--mat-sys-outline-variant);
+    border-radius: var(--mat-sys-corner-extra-small);
+    background: var(--mat-sys-surface-container-high);
+    color: var(--mat-sys-primary);
+    font-size: 0.85em;
+    white-space: nowrap;
+  }
+
+  // The first column of an API table is the member name; keep it prominent.
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0 1.5rem;
+    font-size: 0.95em;
+
+    th {
+      padding: 0.6rem 0.75rem;
+      border-bottom: 2px solid var(--mat-sys-outline-variant);
+      background: var(--mat-sys-surface-container-low);
+      color: var(--mat-sys-on-surface);
+      text-align: left;
+      font-weight: 600;
+    }
+
+    td {
+      padding: 0.55rem 0.75rem;
+      border-bottom: 1px solid var(--mat-sys-outline-variant);
+      vertical-align: top;
+    }
+
+    tbody tr:hover td {
+      background: var(--mat-sys-surface-container-low);
+    }
+
+    // Descriptions wrap; names should not.
+    td:not(:first-child) code {
+      white-space: normal;
+    }
+  }
+
+  // Blockquotes are used for the "rule of thumb" callouts.
+  blockquote {
+    margin: 1rem 0;
+    padding: 0.5rem 1rem;
+    border-left: 4px solid var(--mat-sys-primary);
+    background: var(--mat-sys-surface-container-low);
+    border-radius: 0 var(--mat-sys-corner-small) var(--mat-sys-corner-small) 0;
+  }
+}

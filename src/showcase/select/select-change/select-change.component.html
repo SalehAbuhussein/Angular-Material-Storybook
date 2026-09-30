@@ -1,0 +1,9 @@
+<mat-form-field appearance="outline" class="docs-field">
+  <mat-label>Environment</mat-label>
+  <mat-select (selectionChange)="last.set($event.value)">
+    @for (env of envs; track env) {
+      <mat-option [value]="env">{{ env }}</mat-option>
+    }
+  </mat-select>
+</mat-form-field>
+<p>Last selectionChange: {{ last() ?? 'nothing yet' }}</p>

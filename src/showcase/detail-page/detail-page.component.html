@@ -1,0 +1,136 @@
+<div class="page" [style.height.px]="height()">
+  <header class="head">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <ol>
+        <li><a href="#orders">Orders</a></li>
+        <li aria-hidden="true">/</li>
+        <li><a href="#sept">September</a></li>
+        <li aria-hidden="true">/</li>
+        <li aria-current="page">#4821</li>
+      </ol>
+    </nav>
+
+    <div class="head__row">
+      <div class="head__title">
+        <h1>Order #4821</h1>
+        <!-- Status is text in a chip, never colour alone. -->
+        <mat-chip [class]="'chip chip--' + status().toLowerCase()" [disableRipple]="true">
+          {{ status() }}
+        </mat-chip>
+      </div>
+
+      <div class="head__actions">
+        <button matButton="outlined" (click)="note('Invoice downloaded')">
+          <mat-icon>receipt_long</mat-icon> Invoice
+        </button>
+        <button matButton="filled" (click)="advance()" [disabled]="status() === 'Cancelled'">
+          <mat-icon>local_shipping</mat-icon> {{ nextAction() }}
+        </button>
+        <button matIconButton [matMenuTriggerFor]="more" aria-label="More actions">
+          <mat-icon>more_vert</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <p class="muted">Placed 18 September 2026 by Dana Whitfield</p>
+  </header>
+
+  <div class="body" [class.body--stacked]="stacked()">
+    <main class="main">
+      <mat-tab-group>
+        <mat-tab label="Items">
+          <table mat-table [dataSource]="lines" class="lines">
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef>Item</th>
+              <td mat-cell *matCellDef="let row">
+                <div class="stack">
+                  <span>{{ row.name }}</span>
+                  <span class="muted">{{ row.sku }}</span>
+                </div>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="qty">
+              <th mat-header-cell *matHeaderCellDef class="num">Qty</th>
+              <td mat-cell *matCellDef="let row" class="num">{{ row.qty }}</td>
+            </ng-container>
+            <ng-container matColumnDef="price">
+              <th mat-header-cell *matHeaderCellDef class="num">Price</th>
+              <td mat-cell *matCellDef="let row" class="num">{{ row.price | number: '1.2-2' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="total">
+              <th mat-header-cell *matHeaderCellDef class="num">Total</th>
+              <td mat-cell *matCellDef="let row" class="num">
+                {{ row.qty * row.price | number: '1.2-2' }}
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="cols"></tr>
+            <tr mat-row *matRowDef="let row; columns: cols"></tr>
+          </table>
+
+          <div class="totals">
+            <div><span class="muted">Subtotal</span><span>{{ subtotal() | number: '1.2-2' }}</span></div>
+            <div><span class="muted">Shipping</span><span>{{ shipping | number: '1.2-2' }}</span></div>
+            <mat-divider />
+            <div class="totals__grand">
+              <span>Total</span><span>{{ subtotal() + shipping | number: '1.2-2' }}</span>
+            </div>
+          </div>
+        </mat-tab>
+
+        <mat-tab label="Timeline">
+          <mat-list>
+            @for (event of timeline; track event.title) {
+              <mat-list-item>
+                <mat-icon matListItemIcon>{{ event.icon }}</mat-icon>
+                <span matListItemTitle>{{ event.title }}</span>
+                <span matListItemLine [innerHTML]="event.meta"></span>
+              </mat-list-item>
+            }
+          </mat-list>
+        </mat-tab>
+
+        <mat-tab label="Notes">
+          <p class="pad muted">No internal notes on this order yet.</p>
+        </mat-tab>
+      </mat-tab-group>
+    </main>
+
+    <aside class="rail" aria-label="Order details">
+      <mat-card appearance="outlined">
+        <mat-card-header><mat-card-title>Customer</mat-card-title></mat-card-header>
+        <mat-card-content class="meta">
+          <div><span class="muted">Name</span><span>Dana Whitfield</span></div>
+          <div><span class="muted">Email</span><span>dana&#64;northwind.dev</span></div>
+          <div><span class="muted">Orders</span><span>14 lifetime</span></div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card appearance="outlined">
+        <mat-card-header><mat-card-title>Shipping</mat-card-title></mat-card-header>
+        <mat-card-content class="meta">
+          <div><span class="muted">Method</span><span>Express, 2 day</span></div>
+          <div><span class="muted">Address</span><span>18 Rainer St, Amman</span></div>
+          <div><span class="muted">Tracking</span><span>1Z999AA1</span></div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card appearance="outlined">
+        <mat-card-header><mat-card-title>Fulfilment</mat-card-title></mat-card-header>
+        <mat-card-content>
+          <p class="muted">{{ progressLabel() }}</p>
+          <mat-progress-bar
+            mode="determinate"
+            [value]="progress()"
+            [attr.aria-label]="progressLabel()" />
+        </mat-card-content>
+      </mat-card>
+    </aside>
+  </div>
+</div>
+
+<mat-menu #more>
+  <button mat-menu-item (click)="note('Order duplicated')"><mat-icon>content_copy</mat-icon> Duplicate</button>
+  <button mat-menu-item (click)="note('Refund started')"><mat-icon>undo</mat-icon> Refund</button>
+  <mat-divider />
+  <button mat-menu-item (click)="cancel()"><mat-icon>block</mat-icon> Cancel order</button>
+</mat-menu>

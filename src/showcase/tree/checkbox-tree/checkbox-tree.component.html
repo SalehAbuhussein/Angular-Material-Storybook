@@ -1,0 +1,28 @@
+<div class="docs-demo" style="min-width: 320px">
+  <mat-tree #tree="matTree" [dataSource]="data" [childrenAccessor]="childrenAccessor">
+    <mat-tree-node *matTreeNodeDef="let node" matTreeNodePadding>
+      <span style="display: inline-block; width: 40px"></span>
+      <mat-checkbox [checked]="isChecked(node)" (change)="select(node, $event.checked)">
+        {{ node.name }}
+      </mat-checkbox>
+    </mat-tree-node>
+
+    <mat-tree-node
+      *matTreeNodeDef="let node; when: hasChild"
+      matTreeNodePadding
+      [isExpandable]="true"
+    >
+      <button matIconButton matTreeNodeToggle [attr.aria-label]="'Toggle ' + node.name">
+        <mat-icon>{{ tree.isExpanded(node) ? 'expand_more' : 'chevron_right' }}</mat-icon>
+      </button>
+      <mat-checkbox
+        [checked]="isChecked(node)"
+        [indeterminate]="isPartial(node)"
+        (change)="select(node, $event.checked)"
+      >
+        {{ node.name }}
+      </mat-checkbox>
+    </mat-tree-node>
+  </mat-tree>
+  <p>Selected files: {{ selectedFiles().join(', ') || 'none' }}</p>
+</div>

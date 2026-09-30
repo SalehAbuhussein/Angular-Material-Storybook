@@ -1,0 +1,155 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as AutocompleteStories from './autocomplete.stories';
+
+<Meta of={AutocompleteStories} />
+
+# Autocomplete
+
+**Import:** `import { MatAutocompleteModule } from '@angular/material/autocomplete';`
+
+An autocomplete is a normal `matInput` with a suggestion panel attached. The
+input owns the value; the panel only offers shortcuts. So filtering is your
+code, the control can hold a string you typed, and nothing forces a choice
+unless you ask for it.
+
+```html
+<mat-form-field>
+  <mat-label>State</mat-label>
+  <input matInput [formControl]="control" [matAutocomplete]="auto" />
+  <mat-autocomplete #auto="matAutocomplete">
+    <mat-option value="Alaska">Alaska</mat-option>
+  </mat-autocomplete>
+</mat-form-field>
+```
+
+The `#auto="matAutocomplete"` template reference is how the input finds the
+panel. Forget it and the panel never opens.
+
+## Try it
+
+<Example of={AutocompleteStories.Playground} />
+<Controls of={AutocompleteStories.Playground} />
+
+## Filtering with signals
+
+Turn the control's `valueChanges` into a signal with `toSignal`, then derive the
+option list with `computed`. There is no subscription to manage.
+
+<Example of={AutocompleteStories.FilteringWithSignals} />
+
+```ts
+readonly control = new FormControl('');
+private readonly query = toSignal(this.control.valueChanges, { initialValue: '' });
+
+readonly filtered = computed(() => {
+  const q = (this.query() ?? '').toLowerCase();
+  return STATES.filter((state) => state.toLowerCase().includes(q));
+});
+```
+
+```html
+<mat-autocomplete #auto="matAutocomplete">
+  @for (state of filtered(); track state) {
+    <mat-option [value]="state">{{ state }}</mat-option>
+  } @empty {
+    <mat-option disabled>No match</mat-option>
+  }
+</mat-autocomplete>
+```
+
+`@empty` is the cheapest way to avoid an empty panel flashing open.
+
+## displayWith
+
+When option values are objects, the control ends up holding an object and the
+input would render `[object Object]`. `displayWith` maps the value back to text.
+
+<Example of={AutocompleteStories.DisplayWith} />
+
+```ts
+displayUser = (user: User | string | null) =>
+  typeof user === 'string' ? user : (user?.name ?? '');
+```
+
+```html
+<mat-autocomplete #auto="matAutocomplete" [displayWith]="displayUser">
+```
+
+Handle the string case. Between keystrokes the control holds raw text, not a
+`User`, and the same function runs on it.
+
+## requireSelection
+
+By default the control keeps whatever was typed, even "Califor". Add
+`requireSelection` and the input clears on blur unless an option was chosen, so
+the value is always one of your options or `null`.
+
+<Example of={AutocompleteStories.RequireSelection} />
+
+Use it whenever the value is an id or an object. Leave it off when free text is
+a legitimate answer, such as a tag field.
+
+## optionSelected
+
+`optionSelected` emits a `MatAutocompleteSelectedEvent` with `source` (the
+panel) and `option` (the `MatOption`). Use it for side effects such as loading
+detail, navigating, or resetting a dependent field.
+
+<Example of={AutocompleteStories.OptionSelected} />
+
+```ts
+onSelected(event: MatAutocompleteSelectedEvent) {
+  this.log.update((current) => [...current, event.option.value]);
+}
+```
+
+Do not use it to keep the form value in sync. The control already has it.
+
+## API you will use
+
+| Name | Type | What it does |
+| --- | --- | --- |
+| `[matAutocomplete]` | `MatAutocomplete` | On the input. Points at the panel's template reference. |
+| `displayWith` | `(value) => string` | Turns an option value into the text shown in the input. |
+| `requireSelection` | `boolean` | Clears unmatched text on blur. |
+| `autoActiveFirstOption` | `boolean` | Highlights the first option so Enter picks it. |
+| `autoSelectActiveOption` | `boolean` | Writes the highlighted option into the input while arrowing. |
+| `panelWidth` | `string \| number` | `auto` sizes to content; otherwise matches the input. |
+| `optionSelected` | `EventEmitter<MatAutocompleteSelectedEvent>` | Fires after a user pick. |
+| `opened` / `closed` | `EventEmitter<void>` | Panel lifecycle. |
+
+## Accessibility
+
+The input gets `role="combobox"` with `aria-expanded`, `aria-controls`, and
+`aria-activedescendant` pointing at the highlighted option. Arrow keys, Enter,
+and Escape are handled.
+
+What you still supply:
+
+- A `<mat-label>` or `aria-label` on the input.
+- A visible "no results" option, so the empty state is announced rather than
+  silently closing the panel.
+- Debouncing for server-backed filtering, so results do not thrash while the
+  screen reader is reading them.
+
+## Common mistakes
+
+1. Missing the template reference exportAs. `#auto` alone is not enough.
+   Write `#auto="matAutocomplete"`.
+2. Assuming the value is always an option. Without `requireSelection` the
+   control holds whatever was typed. Either add it or validate.
+3. A `displayWith` that only handles objects. It also runs on the raw string
+   the user is typing, which throws or blanks the input.
+4. Filtering inside the template. Calling a filter method from `@for` re-runs
+   it every change detection cycle. Use a `computed`.
+5. Using it as a required dropdown. If free text is never valid and the list
+   is short, [Select](?path=/docs/form-controls-select--docs) is simpler and has
+   the right semantics.
+
+## Related
+
+- [Input](?path=/docs/form-controls-input--docs) for the control underneath
+- [Select](?path=/docs/form-controls-select--docs) for a fixed, short list
+- [Chips](?path=/docs/form-controls-chips--docs) for picking several values as tags
+- [Form Field](?path=/docs/form-controls-form-field--docs) for the wrapper

@@ -1,0 +1,96 @@
+:host {
+  display: block;
+}
+.skip {
+  position: absolute;
+  inset-inline-start: -999px;
+  z-index: 10;
+  padding: 8px 16px;
+  background: var(--mat-sys-primary);
+  color: var(--mat-sys-on-primary);
+  border-radius: var(--mat-sys-corner-small);
+  font: var(--mat-sys-label-large);
+}
+.skip:focus {
+  inset-inline-start: 8px;
+  top: 8px;
+}
+.shell {
+  background: var(--mat-sys-surface);
+}
+.drawer {
+  width: 240px;
+  background: var(--mat-sys-surface-container);
+  border-inline-end: 1px solid var(--mat-sys-outline-variant);
+}
+.drawer--rail {
+  width: 72px;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 64px;
+  padding-inline: 20px;
+  color: var(--mat-sys-primary);
+}
+.brand__name {
+  font: var(--mat-sys-title-medium);
+  color: var(--mat-sys-on-surface);
+}
+.bar {
+  background: var(--mat-sys-surface-container-low);
+  color: var(--mat-sys-on-surface);
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+.bar__title {
+  font: var(--mat-sys-title-medium);
+  margin-inline-start: 8px;
+}
+.bar__spacer {
+  flex: 1 1 auto;
+}
+.main {
+  padding: 24px;
+}
+.main:focus {
+  outline: none;
+}
+.outlet {
+  border: 1px dashed var(--mat-sys-outline-variant);
+  border-radius: var(--mat-sys-corner-large);
+  padding: 24px;
+  background: var(--mat-sys-surface-container-lowest);
+}
+.outlet__title {
+  margin: 0 0 4px;
+  font: var(--mat-sys-headline-small);
+  color: var(--mat-sys-on-surface);
+}
+.outlet__hint {
+  margin: 0 0 20px;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+.outlet__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+.tile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: var(--mat-sys-corner-medium);
+  background: var(--mat-sys-surface-container);
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-label-large);
+}
+.tile--active {
+  background: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+}

@@ -1,0 +1,18 @@
+<div class="docs-demo">
+  <div
+    matRipple
+    #target="matRipple"
+    [matRippleDisabled]="true"
+    style="
+      width: 260px;
+      height: 90px;
+      display: grid;
+      place-items: center;
+      border-radius: var(--mat-sys-corner-medium);
+      background: var(--mat-sys-surface-container);
+    "
+  >
+    Clicks here do nothing
+  </div>
+  <button matButton="filled" (click)="ping()">Launch a ripple</button>
+</div>

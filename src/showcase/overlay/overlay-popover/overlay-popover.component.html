@@ -1,0 +1,23 @@
+<div class="docs-demo">
+  <button
+    matIconButton
+    aria-label="Show help"
+    cdkOverlayOrigin
+    #help="cdkOverlayOrigin"
+    (click)="isOpen.set(!isOpen())">
+    <mat-icon>help</mat-icon>
+  </button>
+
+  <ng-template
+    cdkConnectedOverlay
+    [cdkConnectedOverlayOrigin]="help"
+    [cdkConnectedOverlayOpen]="isOpen()"
+    [cdkConnectedOverlayHasBackdrop]="true"
+    cdkConnectedOverlayBackdropClass="cdk-overlay-transparent-backdrop"
+    (backdropClick)="isOpen.set(false)"
+    (overlayKeydown)="onKeydown($event)">
+    <div class="docs-overlay-panel" role="dialog" aria-label="Help">
+      <p>An overlay is just a floating element the CDK positions for you.</p>
+    </div>
+  </ng-template>
+</div>

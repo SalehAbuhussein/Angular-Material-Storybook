@@ -1,0 +1,10 @@
+<mat-chip-set aria-label="Editable labels">
+  @for (label of labels(); track label) {
+    <mat-chip-row [editable]="true" (edited)="rename(label, $event.value)" (removed)="remove(label)">
+      {{ label }}
+      <button matChipRemove [attr.aria-label]="'Remove ' + label">
+        <mat-icon>cancel</mat-icon>
+      </button>
+    </mat-chip-row>
+  }
+</mat-chip-set>

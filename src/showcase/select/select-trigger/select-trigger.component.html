@@ -1,0 +1,14 @@
+<mat-form-field appearance="outline" class="docs-field">
+  <mat-label>Toppings</mat-label>
+  <mat-select [(ngModel)]="picked" multiple>
+    <mat-select-trigger>
+      {{ picked[0] ?? '' }}
+      @if (picked.length > 1) {
+        <span class="docs-more">(+{{ picked.length - 1 }} more)</span>
+      }
+    </mat-select-trigger>
+    @for (topping of toppings; track topping) {
+      <mat-option [value]="topping">{{ topping }}</mat-option>
+    }
+  </mat-select>
+</mat-form-field>

@@ -1,0 +1,13 @@
+<div class="docs-demo docs-demo--row">
+  <button
+    matButton="filled"
+    matTooltip="You have unsaved changes"
+    [matTooltipDisabled]="!dirty()"
+  >
+    Save
+  </button>
+  <button matButton="outlined" (click)="dirty.set(!dirty())">
+    {{ dirty() ? 'Mark clean' : 'Mark dirty' }}
+  </button>
+  <span>Tooltip is {{ dirty() ? 'enabled' : 'disabled' }}</span>
+</div>

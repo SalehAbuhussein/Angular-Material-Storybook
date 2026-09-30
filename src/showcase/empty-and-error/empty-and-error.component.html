@@ -1,0 +1,98 @@
+<div class="page" [style.height.px]="height()">
+  @if (offline()) {
+    <!-- A banner, not a dialog. The app still works, it is just stale. -->
+    <div class="offline" role="status">
+      <mat-icon>cloud_off</mat-icon>
+      <span>You are offline. Showing data from {{ lastSync }}.</span>
+      <button matButton (click)="offlineOverride.set(false)">Dismiss</button>
+    </div>
+  }
+
+  <mat-toolbar class="bar">
+    <span class="bar__title">Invoices</span>
+    <span class="spacer"></span>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="search">
+      <mat-icon matIconPrefix>search</mat-icon>
+      <input
+        matInput
+        [ngModel]="query()"
+        (ngModelChange)="query.set($event)"
+        placeholder="Search"
+        aria-label="Search invoices" />
+    </mat-form-field>
+  </mat-toolbar>
+
+  <div class="body">
+    @switch (state()) {
+      @case ('loading') {
+        <!-- Skeletons, not a spinner: they keep the page the right shape so
+             nothing jumps when the real rows arrive. -->
+        <div class="skeletons" aria-busy="true" aria-live="polite" aria-label="Loading invoices">
+          @for (row of [1, 2, 3, 4]; track row) {
+            <div class="skeleton">
+              <div class="skeleton__line skeleton__line--title"></div>
+              <div class="skeleton__line skeleton__line--sub"></div>
+            </div>
+          }
+        </div>
+      }
+
+      @case ('error') {
+        <div class="state" role="alert">
+          <mat-icon class="state__icon state__icon--error">error_outline</mat-icon>
+          <h2>Could not load invoices</h2>
+          <p class="muted">
+            The server returned a 503. Nothing has been lost, and retrying usually works.
+          </p>
+          <div class="state__actions">
+            <button matButton="filled" (click)="retry()">
+              <mat-icon>refresh</mat-icon> Try again
+            </button>
+            <button matButton>Contact support</button>
+          </div>
+          <p class="tiny muted">Reference: REQ-8f21c0</p>
+        </div>
+      }
+
+      @case ('empty') {
+        <div class="state">
+          <mat-icon class="state__icon">receipt_long</mat-icon>
+          <h2>No invoices yet</h2>
+          <p class="muted">
+            Invoices you create appear here. Your first one takes about a minute.
+          </p>
+          <div class="state__actions">
+            <button matButton="filled"><mat-icon>add</mat-icon> Create invoice</button>
+            <button matButton>Import from CSV</button>
+          </div>
+        </div>
+      }
+
+      @case ('no-results') {
+        <div class="state">
+          <mat-icon class="state__icon">search_off</mat-icon>
+          <h2>No invoices match "{{ query() }}"</h2>
+          <p class="muted">Check the spelling, or clear the search to see all 4 invoices.</p>
+          <div class="state__actions">
+            <button matButton="filled" (click)="query.set('')">Clear search</button>
+          </div>
+        </div>
+      }
+
+      @default {
+        <mat-card appearance="outlined" class="card">
+          <mat-list>
+            @for (invoice of results(); track invoice.id) {
+              <mat-list-item>
+                <mat-icon matListItemIcon>receipt</mat-icon>
+                <span matListItemTitle>{{ invoice.client }} &middot; {{ invoice.id }}</span>
+                <span matListItemLine class="muted">{{ invoice.due }}</span>
+                <span matListItemMeta>{{ invoice.amount }}</span>
+              </mat-list-item>
+            }
+          </mat-list>
+        </mat-card>
+      }
+    }
+  </div>
+</div>

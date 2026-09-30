@@ -1,0 +1,142 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as EditorialStories from './editorial.stories';
+
+<Meta of={EditorialStories} />
+
+# Editorial reader
+
+The anti-dashboard: a serif display face, one measured column, a marginal rail,
+paper tones and a drop cap. The list, chips, slider, divider and reading
+progress bar are all Angular Material.
+
+## Try it
+
+Scroll and the hairline progress bar fills. Drag the measure slider in the rail
+and the article reflows live.
+
+<Example of={EditorialStories.Playground} />
+<Controls of={EditorialStories.Playground} />
+
+## Type does most of the work
+
+Before any component token, three type decisions carry this layout:
+
+```scss
+.hed {
+  font-size: clamp(42px, 6vw, 74px);
+  font-weight: 900;
+  line-height: 0.95;          // display type wants less than 1
+  letter-spacing: -0.03em;    // and tighter tracking
+}
+.hed em { font-style: italic; font-weight: 400; color: var(--accent); }
+```
+
+`line-height: 0.95` is what reads as editorial. Body copy needs 1.6 or more,
+but a 74px headline set at 1.5 looks like an error message. Rule of thumb: as
+type gets bigger, leading and tracking both get tighter.
+
+One italic word in an upright headline adds more character than any amount of
+colour.
+
+## The drop cap is three lines
+
+```scss
+.lead::first-letter {
+  float: left;
+  font-size: 62px;
+  line-height: 0.82;
+  padding: 6px 10px 0 0;
+  color: var(--accent);
+}
+```
+
+`::first-letter` is a real pseudo-element with no markup cost, and it handles
+punctuation correctly. Nudge `line-height` until the cap sits on the baseline of
+the third line. There is no formula; you look at it.
+
+## Measure, bound to a signal
+
+Line length is the most under-used typographic control on the web. Between 45
+and 75 characters is comfortable. Much past that, the eye loses its place on
+the return sweep.
+
+```html
+<div class="mag" [style.--measure]="measure()">
+```
+
+```scss
+.column { max-width: calc(var(--measure) * 1ch); }
+```
+
+**Bind the number, not a length.** `[style.--measure.ch]` writes `66ch`, and
+then `calc(66ch * 1ch)` multiplies two lengths, which is invalid CSS. The
+browser drops the declaration silently, the column keeps its old width, and
+nothing tells you why. Bind `66` and multiply by `1ch` in the stylesheet.
+
+## Reading progress from a scroll handler
+
+```ts
+onScroll(event: Event): void {
+  const el = event.target as HTMLElement;
+  const max = el.scrollHeight - el.clientHeight;
+  this.progress.set(max <= 0 ? 0 : Math.round((el.scrollTop / max) * 100));
+}
+```
+
+The guard matters. On a short article, or before layout settles, `max` is `0` and
+the division yields `NaN`, which `mat-progress-bar` renders as a full bar on an
+unscrolled page.
+
+Styled as a 2px hairline pinned to the top, with a transparent track:
+
+```scss
+.read {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  --mat-progress-bar-track-color: transparent;
+}
+```
+
+<Example of={EditorialStories.Sepia} />
+<Example of={EditorialStories.Night} />
+
+Five custom properties change between the three stocks. The accent lifts from
+`#a8442a` to `#e08a5f` on night, because the darker red would not hold contrast
+against dark paper. Inverting a palette takes more than flipping two values.
+
+## API you will use
+
+| Member | Type | What it does |
+| --- | --- | --- |
+| `--mat-chip-outline-width` | length | `1px` with a transparent fill gives an outline chip. |
+| `--mat-list-list-item-one-line-container-height` | length | Tightens list rows. The default is sized for touch. |
+| `--mat-list-list-item-leading-space` | length | `0` removes the built-in gutter so a table of contents aligns to the text. |
+| `--mat-progress-bar-track-color` | color | `transparent` turns a progress bar into a hairline indicator. |
+| `--mat-slider-label-container-color` | color | The bubble on a `discrete` slider. |
+| `[style.--customProp]` | style binding | Binds a raw number. Add units in the stylesheet, not the binding. |
+| `::first-letter` | pseudo-element | A drop cap with no extra markup. |
+
+## Accessibility
+
+- Measure is an accessibility feature. Long lines are hardest on people with dyslexia and low vision. A control is more useful than one fixed value.
+- The progress bar has an `aria-label` and a real `value`, so it is announced as progress, not decoration.
+- The table of contents is a list of real anchors, so keyboard and screen reader navigation work for free.
+- Heading order runs `h1`, then `h2` per section, then `h3` in the rail. Do not pick heading levels for their size; that is what CSS is for.
+- The byline avatar dot is `aria-hidden`, since the author's name is beside it.
+- Night mode lifts the accent instead of reusing the light one, so link and accent text still clear contrast.
+
+## Common mistakes
+
+1. Binding a length to a custom property you then multiply. `calc(66ch * 1ch)` is invalid and fails silently.
+2. Body leading on display type. A 74px headline at `line-height: 1.5` looks broken.
+3. No guard in the scroll calculation. `scrollHeight - clientHeight` is `0` on a short page and the bar shows 100%.
+4. Unbounded line length. A full-width article on a 27 inch monitor is unreadable, and one `max-width` fixes it.
+5. Inverting a palette by swapping two values. Accents need lifting on dark backgrounds or they fall below contrast.
+
+## Related
+
+- [Typography](?path=/docs/foundations-typography--docs) for the M3 type scale this page deliberately ignores
+- [Neo Brutalist Console](?path=/docs/beyond-material-neo-brutalist-console--docs), [Glass Dashboard](?path=/docs/beyond-material-glass-dashboard--docs), [Neon Terminal](?path=/docs/beyond-material-neon-terminal--docs)
+- [List](?path=/docs/layout-list--docs), [Chips](?path=/docs/form-controls-chips--docs), [Slider](?path=/docs/form-controls-slider--docs)

@@ -1,0 +1,11 @@
+<label id="filter-label">Filter by status</label>
+<mat-chip-listbox
+  multiple
+  aria-labelledby="filter-label"
+  [ngModel]="selected()"
+  (ngModelChange)="selected.set($event)">
+  @for (status of statuses; track status) {
+    <mat-chip-option [value]="status">{{ status }}</mat-chip-option>
+  }
+</mat-chip-listbox>
+<p>Selected: {{ selected().join(', ') || 'none' }}</p>

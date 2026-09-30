@@ -1,0 +1,26 @@
+<div class="docs-surface docs-demo docs-demo--row" style="justify-content: space-between; padding: 16px">
+  <button matButton="outlined" cdkOverlayOrigin #left="cdkOverlayOrigin" (click)="leftOpen.set(!leftOpen())">
+    Left trigger
+  </button>
+  <button matButton="outlined" cdkOverlayOrigin #right="cdkOverlayOrigin" (click)="rightOpen.set(!rightOpen())">
+    Right trigger
+  </button>
+
+  <ng-template
+    cdkConnectedOverlay
+    [cdkConnectedOverlayOrigin]="left"
+    [cdkConnectedOverlayOpen]="leftOpen()"
+    [cdkConnectedOverlayPositions]="positions"
+    (detach)="leftOpen.set(false)">
+    <div class="docs-overlay-panel"><p>Anchored to the left trigger</p></div>
+  </ng-template>
+
+  <ng-template
+    cdkConnectedOverlay
+    [cdkConnectedOverlayOrigin]="right"
+    [cdkConnectedOverlayOpen]="rightOpen()"
+    [cdkConnectedOverlayPositions]="positions"
+    (detach)="rightOpen.set(false)">
+    <div class="docs-overlay-panel"><p>Anchored to the right trigger</p></div>
+  </ng-template>
+</div>

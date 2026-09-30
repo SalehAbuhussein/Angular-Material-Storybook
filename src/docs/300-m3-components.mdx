@@ -1,0 +1,49 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="M3 Components/Overview" />
+
+# M3 components
+
+The [Material 3 component list](https://m3.material.io/components) has a few
+components Angular Material 22 does not ship yet, most from the 2025 "M3
+Expressive" update. This section builds six of them in plain Angular so you can
+use the patterns today and see how they behave.
+
+| Component | What it is | Closest thing in Angular Material |
+| --- | --- | --- |
+| [Button Group](?path=/docs/m3-components-button-group--docs) | Toggle buttons that change shape and width when pressed | `mat-button-toggle-group` |
+| [Split Button](?path=/docs/m3-components-split-button--docs) | A main action joined to a menu of related ones | A button next to a `matMenuTriggerFor` |
+| [FAB Menu](?path=/docs/m3-components-fab-menu--docs) | A FAB that opens into a short list of actions | `matFab` plus `mat-menu` |
+| [Carousel](?path=/docs/m3-components-carousel--docs) | Several items at once, in different sizes | None |
+| [Loading Indicator](?path=/docs/m3-components-loading-indicator--docs) | A shape that morphs while it spins, and a wavy progress bar | `mat-progress-spinner`, `mat-progress-bar` |
+| [Floating Toolbar](?path=/docs/m3-components-floating-toolbar--docs) | A pill of actions that floats over the content | `mat-toolbar` |
+
+## How they are built
+
+Every component here follows three rules. Keep them if you copy one into your
+app:
+
+1. Colors, type, corners and shadows come from `--mat-sys-*` tokens. Flip the toolbar to dark or cycle the palette, and they all follow.
+2. Behavior comes from Angular Material where it exists. The split button's menu is a real `mat-menu`, the ripples are `matRipple`, the toolbar's buttons are `matIconButton` with tooltips.
+3. Native elements first. Toggles are `<button aria-pressed>`, so keyboard and screen reader support is there before any code runs.
+
+## The motion
+
+M3 Expressive moves on springs: a shape overshoots a little and settles. CSS
+cannot run a real spring, so these components use one cubic bezier that
+overshoots:
+
+```css
+--m3-spring: cubic-bezier(0.42, 1.67, 0.21, 0.9);
+```
+
+Use it for shape and position changes. Use a plain ease for color and opacity,
+because an overshooting color looks like a flicker. Every component turns its
+movement off under `prefers-reduced-motion: reduce`.
+
+## Before you copy one
+
+These are demos, not a library. They make no public API promises and have no
+unit tests beyond the Storybook smoke tests. When Angular Material ships its own
+version of one, switch to it: it will get focus management and bug fixes that a
+copied demo never will.

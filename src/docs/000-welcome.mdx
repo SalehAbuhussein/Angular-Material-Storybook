@@ -1,0 +1,106 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Start Here/Welcome" />
+
+# Welcome
+
+Angular Material is Google's component library for Angular. It ships around forty
+components (form fields, dialogs, tables, menus, date pickers) built to the
+Material 3 design spec. Underneath sits the Angular CDK, a lower-level toolkit of
+behaviours such as overlays, drag and drop, virtual scrolling, and accessibility
+helpers.
+
+Two things set it apart from a CSS framework like Bootstrap or Tailwind. It is
+Angular code, so components are typed, work with reactive forms, and handle
+keyboard and screen reader behaviour for you. And one Sass mixin themes
+everything by emitting CSS custom properties, so you restyle the whole library by
+changing a handful of values instead of overriding selectors.
+
+## What this Storybook is
+
+Every page is a chapter with running examples. You can change inputs live, read
+why a component behaves as it does, and copy code that runs in your own app
+without edits. The examples use Angular 22.1 and Angular Material 22.1 with
+Material 3 theming, standalone components, and zoneless change detection.
+
+The official API reference lists every input. These pages list the four to eight
+you will reach for, and spend the rest of the space on the decisions the API
+leaves to you.
+
+## Reading order
+
+1. Start Here. This page, then [Install and Setup](?path=/docs/start-here-install-and-setup--docs),
+   then [How to Read These Docs](?path=/docs/start-here-how-to-read-these-docs--docs).
+2. Foundations. Theming, typography, density, dark mode, icons. Every component
+   reads from this system. Skip it and component pages will keep referring to
+   variables you have not met.
+3. Form Controls. The largest chapter and the one most apps need first.
+   Form field, input, select, checkbox, radio, datepicker.
+4. The rest, in any order. Buttons and Indicators, Navigation, Layout,
+   Popups and Modals, Data Table, CDK, Recipes. Read them when you need them.
+
+If you already have Angular Material installed and working, start at Foundations.
+
+## Using the Controls panel
+
+Most component pages open with a "Try it" section: a live example plus a table of
+its inputs. That table is the Controls panel, and editing a row re-renders the
+example immediately.
+
+It answers questions faster than reading. What does `appearance` change on a
+form field? Toggle it. Does `disabled` grey out the label too? Tick it. The
+markup above the example does not update as you type, so read current values
+from the Controls table.
+
+An empty panel means that example has no configurable inputs. The narrative
+pages in Start Here and Foundations have none.
+
+## The light and dark switch
+
+The paintbrush icon in the toolbar above the canvas switches between Light and
+Dark. It sets `color-scheme` on the document body, the same way you would switch
+themes in a real app. There is no second stylesheet and no extra class.
+
+This works because the theme in this repo emits every colour as a CSS
+`light-dark()` value. One variable holds both colours and the browser picks one
+based on `color-scheme`. [Dark Mode](?path=/docs/foundations-dark-mode--docs)
+explains the mechanism and shows how to wire a toggle in your own app.
+
+Flip the switch on any component page before you ship that component. Contrast
+problems show up in one theme and not the other.
+
+## Copying code out of these pages
+
+A component page has two kinds of code.
+
+Fenced snippets sit in the prose. Hover a block and a copy button appears in the
+corner. They run as-is once you import the module named at the top of the page.
+
+Story source is the code behind a live example. Click "Show code" under any
+example to expand it. It is the real story source, so it sometimes includes
+Storybook scaffolding such as a wrapper `div` with a `docs-demo` class. Drop the
+wrapper when you paste into your app; it only lays out the canvas.
+
+Every page states its import line right under the title, like this:
+
+```ts
+import { MatButtonModule } from '@angular/material/button';
+```
+
+Add it to the `imports` array of your standalone component and the snippets on
+that page will compile.
+
+## Before you start
+
+Three habits save time in every chapter.
+
+Never hardcode a colour. Use `var(--mat-sys-primary)` and its siblings so your own
+components follow the theme and survive the dark mode switch.
+
+Never reach into Material's internal CSS classes. They are not a public API and
+they change between minor versions. Use the `mat.<component>-overrides()` mixins
+instead, covered in [Theming](?path=/docs/foundations-theming--docs).
+
+Read the accessibility section of a component page before you use the component.
+Material gives you a lot for free, but each component has a short list of things
+only you can supply, usually a label.

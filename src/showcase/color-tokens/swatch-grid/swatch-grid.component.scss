@@ -1,0 +1,47 @@
+:host {
+  display: block;
+  width: 100%;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  width: 100%;
+}
+.tile {
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--mat-sys-corner-medium);
+  overflow: hidden;
+  background: var(--mat-sys-surface-container-low);
+}
+.chip {
+  min-height: 72px;
+  display: flex;
+  align-items: flex-end;
+  padding: 8px 12px;
+  font: var(--mat-sys-body-medium);
+}
+.sample {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.caption {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  color: var(--mat-sys-on-surface);
+}
+code {
+  font-family: 'Roboto Mono', ui-monospace, monospace;
+  font-size: 0.75rem;
+  word-break: break-all;
+}
+code.on {
+  color: var(--mat-sys-on-surface-variant);
+}
+.note {
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}

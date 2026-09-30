@@ -1,0 +1,12 @@
+<div
+  class="box"
+  [class.box--contained]="contained()"
+  [style.width.px]="size()"
+  [style.height.px]="size()"
+  role="progressbar"
+  [attr.aria-label]="label()"
+>
+  <svg viewBox="0 0 100 100" [style.transform]="'rotate(' + angle() + 'deg)'" aria-hidden="true">
+    <path [attr.d]="path()" />
+  </svg>
+</div>

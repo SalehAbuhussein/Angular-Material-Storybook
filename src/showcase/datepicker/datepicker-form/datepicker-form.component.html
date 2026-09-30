@@ -1,0 +1,16 @@
+<form [formGroup]="form" (ngSubmit)="form.markAllAsTouched()" class="docs-form">
+  <mat-form-field appearance="outline" class="docs-field">
+    <mat-label>Start date</mat-label>
+    <input matInput [matDatepicker]="picker" formControlName="startDate" [min]="today" />
+    <mat-datepicker-toggle matIconSuffix [for]="picker" />
+    <mat-datepicker #picker />
+    <mat-error>
+      @if (form.controls.startDate.hasError('required')) {
+        Pick a start date
+      } @else if (form.controls.startDate.hasError('matDatepickerMin')) {
+        The start date cannot be in the past
+      }
+    </mat-error>
+  </mat-form-field>
+  <button matButton="filled" type="submit">Save</button>
+</form>

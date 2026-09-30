@@ -1,0 +1,184 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as TableStories from './data-table-page.stories';
+
+<Meta of={TableStories} />
+
+# Data table page
+
+The screen most admin apps spend most of their time on: a list of records you
+can search, filter, sort, page through, select and act on in bulk. Each feature
+is a separate Angular Material piece. The work is wiring them together without
+them fighting.
+
+## Try it
+
+Sort by any header, type in the search box, pick a status, tick some rows, and
+page through. Turn the row count down to 0 from the controls to see the
+first-run empty state.
+
+<Example of={TableStories.Playground} />
+<Controls of={TableStories.Playground} />
+
+## The layout skeleton
+
+A column flex layout with one scrolling region:
+
+```scss
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 720px;      // or 100% of the shell's content area
+  overflow: hidden;
+}
+
+.table-wrap {
+  flex: 1;
+  min-height: 0;      // the line everyone forgets
+  overflow: auto;
+}
+```
+
+A flex item defaults to `min-height: auto`, which refuses to shrink below its
+content, so the table pushes the paginator off the bottom of the screen instead
+of scrolling inside its own box. With `min-height: 0`, the header and paginator
+stay put and only the rows move.
+
+Add a sticky header row to keep long tables readable:
+
+```html
+<tr mat-header-row *matHeaderRowDef="columns; sticky: true"></tr>
+```
+
+## Filtering on more than one field
+
+`MatTableDataSource.filter` is a single string, which looks like a dead end once
+you have a search box and a status dropdown. Encode both into the string and
+decode them in the predicate:
+
+```ts
+this.dataSource.filterPredicate = (row, filter) => {
+  const { text, status } = JSON.parse(filter) as { text: string; status: string };
+  const haystack = `${row.id} ${row.customer} ${row.email}`.toLowerCase();
+  return haystack.includes(text) && (!status || row.status === status);
+};
+
+applyFilter(): void {
+  this.dataSource.filter = JSON.stringify({ text: this.query.trim().toLowerCase(), status: this.status });
+  this.dataSource.paginator?.firstPage();
+}
+```
+
+Reset to the first page. Filter while on page 4 and you land on a page that no
+longer exists, so the table looks empty when it is not.
+
+## Selection and the bulk bar
+
+<Example of={TableStories.RowSelection} />
+
+Selection uses `SelectionModel` from `@angular/cdk/collections`, and the header
+checkbox reflects **the current page**, not the whole data set:
+
+```ts
+private pageRows(): Order[] {
+  const p = this.paginator();
+  const data = this.dataSource.filteredData;
+  if (!p) return data;
+  const start = p.pageIndex * p.pageSize;
+  return data.slice(start, start + p.pageSize);
+}
+```
+
+"Select all" that quietly selects 2,000 invisible rows is how people delete
+things they did not mean to. Select what they can see.
+
+The bulk bar replaces the filter bar instead of appearing next to it. Otherwise
+you get two stacked toolbars, and the table moves down every time someone ticks
+a box.
+
+## Empty states
+
+There are two, and they need different words.
+
+<Example of={TableStories.EmptyAfterFilter} />
+
+Filtered to nothing: say which filters are active and offer to clear them.
+`*matNoDataRow` renders whenever the rendered data is empty:
+
+```html
+<tr class="empty" *matNoDataRow>
+  <td [attr.colspan]="columns.length">No orders match those filters</td>
+</tr>
+```
+
+<Example of={TableStories.NoDataAtAll} />
+
+No records at all: this is a first-run screen, not a failure. Offer the action
+that creates the first record, not a "clear filters" button that does nothing.
+
+## Loading
+
+<Example of={TableStories.Loading} />
+
+The progress bar sits above the table and the rows stay where they are. See
+[Dashboard](?path=/docs/full-layouts-dashboard--docs) for the same rule applied
+to cards: never let a loading state collapse the layout.
+
+## Wiring sort and paginator with signal queries
+
+`viewChild()` returns a signal that is empty until after the first render, so
+assign inside an `effect`:
+
+```ts
+private readonly sort = viewChild(MatSort);
+private readonly paginator = viewChild(MatPaginator);
+
+constructor() {
+  effect(() => {
+    const sort = this.sort();
+    const paginator = this.paginator();
+    if (sort) this.dataSource.sort = sort;
+    if (paginator) this.dataSource.paginator = paginator;
+  });
+}
+```
+
+The old `ngAfterViewInit` with `@ViewChild` still works, but it breaks once the
+table is inside an `@if`, because the view child arrives after the lifecycle
+hook. The effect re-runs whenever the query resolves.
+
+## API you will use
+
+| Member | Type | What it does |
+| --- | --- | --- |
+| `MatTableDataSource` | `data`, `filter`, `filterPredicate`, `filteredData`, `sort`, `paginator` | Client side sorting, filtering and paging. Drop it for server side paging. |
+| `matSort` / `mat-sort-header` | directives | Sorting. `mat-sort-header` goes on the `<th>`, `matSort` on the `<table>`. |
+| `mat-paginator` | `pageSize`, `pageSizeOptions`, `length`, `(page)` | Assign it to `dataSource.paginator`, or handle `(page)` yourself for server paging. |
+| `*matNoDataRow` | structural directive | The row rendered when there is nothing to show. |
+| `sticky: true` on `matHeaderRowDef` | boolean | Pins the header while the body scrolls. `stickyEnd` does the same for a column. |
+| `SelectionModel` | `select`, `deselect`, `toggle`, `isSelected`, `hasValue` | Selection state. From `@angular/cdk/collections`, not Material. |
+| `subscriptSizing="dynamic"` | `'fixed' \| 'dynamic'` | Stops each form field reserving a row of space for an error that is not there. |
+
+## Accessibility
+
+- Every checkbox has its own label. The header says "Select all rows on this page", each row says which order it selects. A column of unlabelled checkboxes is unusable by voice or screen reader.
+- `mat-paginator` takes an `aria-label`. Without it, a page with two paginators announces both identically.
+- `mat-sort-header` announces the sort state itself. Do not add your own `aria-sort`.
+- The row action buttons are icon only, so each carries `aria-label` naming the row it acts on.
+- Status is text inside the pill, not colour alone.
+- The empty state is real content inside the table, so it is announced in place. It is not a visual-only overlay.
+
+## Common mistakes
+
+1. **Forgetting `min-height: 0` on the scrolling flex child.** The paginator slides off the bottom of the viewport, and no `overflow` setting fixes it.
+2. **Filtering without resetting to page one.** The user is on page 4, filters down to 8 results, and sees an empty table.
+3. **"Select all" selecting the whole filtered set.** Select the visible page, or make the difference explicit with a second "select all 2,431" action.
+4. **Assigning `dataSource.sort` in `ngAfterViewInit` when the table is inside `@if`.** The view child is not there yet. Use a `viewChild()` signal and an effect.
+5. **One empty state for both cases.** "Clear filters" is nonsense on a screen that has never had any data.
+
+## Related
+
+- [Table](?path=/docs/data-table-table--docs), [Sorting](?path=/docs/data-table-sorting--docs), [Pagination](?path=/docs/data-table-pagination--docs)
+- [Filter and Selection](?path=/docs/data-table-filter-and-selection--docs) for the smaller version of this wiring
+- [Empty, Loading and Error](?path=/docs/full-layouts-empty-loading-and-error--docs) for the full set of states
+- [App Shell](?path=/docs/full-layouts-app-shell--docs) for the frame around this screen

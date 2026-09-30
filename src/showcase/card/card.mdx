@@ -1,0 +1,122 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as CardStories from './card.stories';
+
+<Meta of={CardStories} />
+
+# Card
+
+**Import:** `import { MatCardModule } from '@angular/material/card';`
+
+A card is a surface that groups content about one subject. It adds no click
+handling, focus or role. You get a background, a corner radius and slots that
+keep padding consistent across every card in the app.
+
+```html
+<mat-card appearance="outlined">
+  <mat-card-header>
+    <mat-card-title>Weekly report</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>Sessions are up 12%.</mat-card-content>
+</mat-card>
+```
+
+## Try it
+
+<Example of={CardStories.Playground} />
+<Controls of={CardStories.Playground} />
+
+## The slots
+
+Order matters. Angular Material sets padding by slot, so content placed directly
+inside `<mat-card>` without a wrapper gets no padding.
+
+| Element | What goes in it |
+| --- | --- |
+| `mat-card-header` | Title, subtitle and an optional `[mat-card-avatar]` |
+| `[mat-card-image]` | A full-bleed image, on the `<img>` itself |
+| `mat-card-content` | The body text or form |
+| `mat-card-actions` | Buttons, aligned with `align="end"` when needed |
+| `mat-card-footer` | Metadata below the actions |
+
+<Example of={CardStories.Anatomy} />
+
+## Appearance
+
+There are three values, and none is called `elevated`. The default, `raised`,
+has the shadow.
+
+<Example of={CardStories.Appearances} />
+
+```html
+<mat-card appearance="outlined">…</mat-card>
+```
+
+Use `outlined` in a grid of cards, where a dozen shadows become noise. Use
+`raised` for a single card over a plain background. Use `filled` to separate a
+card from the page without a border or shadow.
+
+To change the app-wide default, provide `MAT_CARD_CONFIG`:
+
+```ts
+import { MAT_CARD_CONFIG } from '@angular/material/card';
+
+providers: [{ provide: MAT_CARD_CONFIG, useValue: { appearance: 'outlined' } }];
+```
+
+## Title group
+
+`mat-card-title-group` lays the title block and a small image side by side. The
+image directives come in sizes: `mat-card-sm-image`, `mat-card-md-image`,
+`mat-card-lg-image` and `mat-card-xl-image`.
+
+<Example of={CardStories.TitleGroup} />
+
+## A real product card
+
+<Example of={CardStories.ProductCard} />
+
+The price is a `<p>` styled with a typography token, not a `mat-card-subtitle`,
+because the subtitle slot is for one line under the title. A `<mat-divider>`
+separates the content from the actions, which reads better than extra margin
+in a dense card.
+
+## API you will use
+
+| Name | Type | Notes |
+| --- | --- | --- |
+| `appearance` on `mat-card` | `'raised' \| 'outlined' \| 'filled'` | Defaults to `raised` |
+| `align` on `mat-card-actions` | `'start' \| 'end'` | `start` is the default |
+| `mat-card-header` | element | Projects avatar, then title and subtitle, then anything else |
+| `[mat-card-avatar]` | attribute | A 40px circle slot inside the header |
+| `[mat-card-image]` | attribute on `<img>` | Stretches the image to the card edges |
+| `mat-card-title-group` | element | Title block plus a sized thumbnail on one row |
+| `MAT_CARD_CONFIG` | injection token | Sets the default appearance app-wide |
+
+## Accessibility
+
+A card is a `<div>` with no role, and keyboard focus skips it. That is correct:
+the interactive parts inside it should be focusable, not the card.
+
+- `mat-card-title` renders plain text, not a heading. If the card is a page
+  section, put a real `<h2>` or `<h3>` inside it so screen reader users can jump
+  to it.
+- A card that acts as a link needs a real `<a>` wrapping the content, not a
+  click handler on `<mat-card>`. Otherwise keyboard users and the links list
+  cannot find it.
+- Give `[mat-card-image]` a meaningful `alt`, or `alt=""` when the image is
+  decoration.
+
+## Common mistakes
+
+1. **`appearance="elevated"`.** That value does not exist and silently falls back to the default styling. The elevated look is `appearance="raised"`.
+2. **Content without a slot.** Text placed straight into `<mat-card>` sits flush against the edge. Wrap it in `<mat-card-content>`.
+3. **`(click)` on `<mat-card>`.** No focus, no Enter key, no role. Wrap the card content in an `<a>` or put a real button in `mat-card-actions`.
+4. **Using `mat-card-subtitle` for body text.** It is styled as one supporting line under the title. Long text belongs in `mat-card-content`.
+5. **A grid of raised cards.** A dozen shadows compete. Use `outlined` in lists and grids.
+
+## Related
+
+- [Divider](?path=/docs/layout-divider--docs) for the line between content and actions
+- [Grid List](?path=/docs/layout-grid-list--docs) for arranging cards in a grid
+- [Button](?path=/docs/buttons-and-indicators-button--docs) for what goes in `mat-card-actions`

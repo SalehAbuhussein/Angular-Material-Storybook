@@ -1,0 +1,10 @@
+<mat-form-field appearance="outline" class="docs-field">
+  <mat-label>State (must be picked)</mat-label>
+  <input matInput [formControl]="control" [matAutocomplete]="auto" />
+  <mat-autocomplete #auto="matAutocomplete" requireSelection>
+    @for (state of filtered(); track state) {
+      <mat-option [value]="state">{{ state }}</mat-option>
+    }
+  </mat-autocomplete>
+  <mat-hint>Type "Ala", blur, and watch the field clear</mat-hint>
+</mat-form-field>

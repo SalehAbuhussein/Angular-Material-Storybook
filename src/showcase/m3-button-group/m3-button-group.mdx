@@ -1,0 +1,76 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as Stories from './m3-button-group.stories';
+
+<Meta of={Stories} />
+
+# Button group
+
+A row of related toggle buttons. M3 gives them two shapes: standard, with
+gaps between the buttons, and connected, where they touch.
+
+## Try it
+
+Press and hold a button. In a standard group it widens and its corners square
+off while its neighbours give way, so the press reads across the whole group.
+
+<Example of={Stories.Playground} />
+<Controls of={Stories.Playground} />
+
+## Connected
+
+Buttons sit 2px apart with small inner corners, so the group reads as one
+control. The selected button becomes a full pill. Use it where you would use a
+segmented button.
+
+<Example of={Stories.Connected} />
+
+## Several on at once
+
+Set `multiple` for toggles that combine, such as text formatting. Each button
+is its own `aria-pressed` toggle, so screen readers get each state.
+
+<Example of={Stories.FormattingToggles} />
+
+## Sizes
+
+<Example of={Stories.Large} />
+
+| Size | Height | Label type |
+| --- | --- | --- |
+| `sm` | 40px | `label-large` |
+| `md` | 56px | `label-large` |
+| `lg` | 96px | `headline-small` |
+
+## How the press works
+
+CSS only, no pointer handlers:
+
+```css
+.group--standard .btn:active {
+  padding: 0 calc(var(--pad) * 1.5);
+  border-radius: var(--inner);
+}
+.group--standard:has(.btn:active) .btn:not(:active) {
+  padding: 0 calc(var(--pad) * 0.75);
+}
+```
+
+`:has()` lets the group react to one child being pressed, so the neighbours
+shrink without any JavaScript.
+
+## Tokens used
+
+| Element | Token |
+| --- | --- |
+| Unselected, standard | `surface-container-high`, `on-surface-variant` |
+| Unselected, connected | `secondary-container`, `on-secondary-container` |
+| Selected, standard | `primary`, `on-primary` |
+| Selected, connected | `secondary`, `on-secondary` |
+
+## Accessibility
+
+- The group is `role="group"` with an `aria-label`, so it is announced as one set.
+- Each button is a native `<button aria-pressed>`. Space and Enter toggle it.
+- Icon-only buttons get the label as `aria-label`.
+- Selection is shown by color and shape together, never color alone.

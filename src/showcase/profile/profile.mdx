@@ -1,0 +1,154 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as ProfileStories from './profile.stories';
+
+<Meta of={ProfileStories} />
+
+# Profile page
+
+An identity header, a stat row, and tabbed sections, built around inline
+editing: the same card shows the data and edits it, instead of sending people to
+a separate form screen and back.
+
+## Try it
+
+Press Edit profile and change the name. The heading and the avatar initials
+follow as you type. Cancel puts everything back.
+
+<Example of={ProfileStories.Playground} />
+<Controls of={ProfileStories.Playground} />
+
+## The layout skeleton
+
+Three stacked bands and a tab group, in a column flex page:
+
+```scss
+.page { display: flex; flex-direction: column; overflow: auto; }
+
+.hero {
+  display: flex;
+  flex-wrap: wrap;      // the whole responsive story
+  gap: 20px;
+  align-items: center;
+}
+.hero__text { flex: 1; min-width: 220px; }
+```
+
+`flex-wrap` plus a `min-width` on the text block is the entire responsive
+behaviour. When the container is too narrow for avatar, text and buttons on one
+row, the actions drop to a second line. No media query, no breakpoint observer.
+
+<Example of={ProfileStories.Narrow} />
+
+The projects grid uses `auto-fill`, not `auto-fit`:
+
+```scss
+grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+```
+
+`auto-fit` collapses empty tracks, so three cards in a wide container stretch to
+fill it. `auto-fill` keeps the empty tracks, so the cards stay a sensible width
+and the row ends. For a card grid that can hold any number of items, `auto-fill`
+is usually what you want.
+
+## Inline editing
+
+<Example of={ProfileStories.ReadMode} />
+<Example of={ProfileStories.EditMode} />
+
+Read mode is a `<dl>`, not a form full of disabled inputs:
+
+```html
+@if (editing()) {
+  <form [formGroup]="form" class="fields">…</form>
+} @else {
+  <dl class="read">
+    <div><dt>Name</dt><dd>{{ form.getRawValue().name }}</dd></div>
+  </dl>
+}
+```
+
+Disabled inputs are a tempting shortcut and the wrong answer. Keyboard
+navigation skips them, the muted colour makes them harder to read, and they look
+broken instead of read only.
+
+## Cancel needs a snapshot
+
+`form.reset()` restores the values the form was *constructed* with, not the ones
+it had when editing began, so after one successful save, cancel would throw
+that save away too. Take a snapshot instead:
+
+```ts
+private snapshot = this.form.getRawValue();
+
+startEdit(): void {
+  this.snapshot = this.form.getRawValue();
+  this.editing.set(true);
+}
+
+cancelEdit(): void {
+  this.form.setValue(this.snapshot);
+  this.editing.set(false);
+}
+
+saveEdit(): void {
+  this.snapshot = this.form.getRawValue();   // the new baseline
+  this.editing.set(false);
+}
+```
+
+## Live header from form values
+
+The heading and the avatar initials derive from the form while it is being
+edited. A `FormGroup` is not a signal, so the computed needs `form.events` to
+depend on:
+
+```ts
+private readonly events = toSignal(this.form.events, { initialValue: null });
+
+readonly name = computed(() => {
+  this.events();
+  return this.form.getRawValue().name;
+});
+
+readonly initials = computed(() =>
+  this.name().split(' ').map((p) => p.charAt(0)).slice(0, 2).join(''),
+);
+```
+
+`initials` depends on `name`, which depends on the form. One edit updates all
+three places the name appears.
+
+## API you will use
+
+| Member | Type | What it does |
+| --- | --- | --- |
+| `mat-card-actions` | `align="start" \| "end"` | The button row. `end` is where Save and Cancel belong. |
+| `mat-card-header` / `mat-card-subtitle` | content slots | Title and the "Editing" hint under it. |
+| `mat-tab-group` | `[selectedIndex]`, `(selectedTabChange)` | Sections of one profile. Not a substitute for routing. |
+| `mat-chip` with `[disableRipple]` | boolean | Skill tags are labels, not controls, so they should not ripple. |
+| `form.getRawValue()` | method | The full value including disabled controls, and fully typed. |
+| `form.setValue()` | method | Restores a complete snapshot. Needs every control, unlike `patchValue`. |
+| `auto-fill` vs `auto-fit` | CSS | `auto-fill` keeps empty tracks so cards stay their natural width. |
+
+## Accessibility
+
+- The avatar is `aria-hidden`, because the name is right beside it as text. Announcing "S A" adds nothing.
+- The stat row is `role="list"` with `role="listitem"` children, so "128 Commits" is read as one item instead of four loose numbers.
+- The Follow button's label changes with state ("Follow" to "Following"), so its accessible name is always accurate. An icon-only toggle would need `aria-pressed`.
+- Read mode uses `<dl>`, which ties each value to its label programmatically. A grid of `<div>`s does not.
+- One `<h1>`: the person's name. Tab labels are not headings.
+
+## Common mistakes
+
+1. **Disabled inputs as read mode.** They skip keyboard focus and look broken. Use a definition list.
+2. **`form.reset()` for cancel.** It reverts to the construction values, discarding any earlier save. Snapshot with `getRawValue()` and restore with `setValue()`.
+3. **Reading `form.value` in a `computed` with no dependency.** The header never updates while typing. Feed it from `form.events`.
+4. **`auto-fit` for a card grid.** Two cards stretch across a 1400px screen and look absurd. `auto-fill` keeps them sane.
+5. **A separate edit screen.** For four fields, the round trip costs more than it saves. Edit in place.
+
+## Related
+
+- [Settings Page](?path=/docs/full-layouts-settings-page--docs) for a longer form and the save bar pattern
+- [Card](?path=/docs/layout-card--docs), [Tabs](?path=/docs/navigation-tabs--docs), [Chips](?path=/docs/form-controls-chips--docs)
+- [Detail Page](?path=/docs/full-layouts-detail-page--docs) for the record-oriented version of this layout

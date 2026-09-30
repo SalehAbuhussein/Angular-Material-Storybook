@@ -1,0 +1,139 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as BottomSheetStories from './bottom-sheet.stories';
+
+<Meta of={BottomSheetStories} />
+
+# Bottom sheet
+
+**Import:** `import { MatBottomSheetModule } from '@angular/material/bottom-sheet';`
+
+A bottom sheet slides a panel up from the bottom edge of the screen. It uses the
+same machinery as a dialog in a different shape: full width, anchored to the
+bottom, and usually holding a list of choices instead of a paragraph and two
+buttons.
+
+```ts
+const ref = bottomSheet.open(ShareSheet, { data: { fileName: 'notes.txt' } });
+ref.afterDismissed().subscribe((choice) => console.log(choice));
+```
+
+## Try it
+
+<Example of={BottomSheetStories.Playground} />
+<Controls of={BottomSheetStories.Playground} />
+
+## Opening a sheet
+
+There are no structural directives. The sheet is an ordinary component, and its
+usual content is a `mat-nav-list`, because a sheet almost always offers a list
+of actions.
+
+<Example of={BottomSheetStories.Basic} />
+
+```ts
+@Component({
+  selector: 'app-share-sheet',
+  imports: [MatListModule, MatIconModule],
+  template: `
+    <mat-nav-list>
+      <a mat-list-item href="#" (click)="pick($event, 'link')">
+        <mat-icon matListItemIcon>link</mat-icon>
+        <span matListItemTitle>Copy link</span>
+      </a>
+    </mat-nav-list>
+  `,
+})
+export class ShareSheet { }
+```
+
+## Data in, result out
+
+The contract matches the dialog under different names. Data arrives through
+`MAT_BOTTOM_SHEET_DATA`. The sheet closes with `ref.dismiss(value)` and the
+caller reads the value from `afterDismissed()`.
+
+<Example of={BottomSheetStories.DataAndResult} />
+
+```ts
+export class ShareSheet {
+  private readonly ref = inject<MatBottomSheetRef<ShareSheet, string>>(MatBottomSheetRef);
+  readonly data = inject<ShareData>(MAT_BOTTOM_SHEET_DATA);
+
+  pick(id: string) {
+    this.ref.dismiss(id);
+  }
+}
+```
+
+`afterDismissed()` emits `undefined` when the user taps the backdrop or presses
+Escape, so branch on it as you would with `afterClosed()`.
+
+## Blocking dismissal
+
+<Example of={BottomSheetStories.DisableClose} />
+
+```ts
+bottomSheet.open(ShareSheet, { disableClose: true });
+```
+
+A sheet with `disableClose` and no visible way out is a dead end on a phone,
+where there is no Escape key. Always render a Cancel row when you lock it.
+
+## When to use it instead of a dialog
+
+Use a bottom sheet when:
+
+- The choice is a list of actions on an item the user just long-pressed or
+  tapped a menu button on.
+- You are on a phone. The thumb sits at the bottom edge, not the middle of the
+  screen.
+- The content is secondary, so covering the bottom third is enough and there is
+  no reason to dim and block the whole page.
+
+Use a dialog when the user has to read something, fill in a form or confirm
+something destructive. Also use one on desktop layouts, where a full-width panel
+across the bottom of a wide screen looks broken.
+
+A common setup is one call site that branches on viewport width, opening a
+bottom sheet on small screens and a dialog everywhere else.
+
+## API you will use
+
+| Member | Type | What it does |
+| --- | --- | --- |
+| `bottomSheet.open(Component, config)` | `MatBottomSheetRef<T, R>` | Opens the sheet |
+| `config.data` | `D` | Injected as `MAT_BOTTOM_SHEET_DATA` |
+| `config.disableClose` | `boolean` | Blocks Escape and backdrop taps |
+| `config.hasBackdrop` | `boolean` | Whether the page behind is dimmed and blocked |
+| `config.ariaLabel` | `string` | Accessible name for the sheet |
+| `config.panelClass` | `string \| string[]` | Class on the overlay panel |
+| `ref.dismiss(result)` | `void` | Closes with a result |
+| `ref.afterDismissed()` | `Observable<R \| undefined>` | Emits the result once |
+
+## Accessibility
+
+The sheet traps focus, marks the rest of the page as hidden, and returns focus
+to the trigger when it closes. You add:
+
+- `ariaLabel` in the config. Unlike the dialog, there is no `mat-bottom-sheet-title`
+  directive to label it, so without `ariaLabel` the sheet is announced with no
+  name.
+- Real interactive elements for the rows. `<a mat-list-item>` and
+  `<button mat-list-item>` are focusable. A `<div>` with a click handler is not.
+- A visible Cancel row whenever you set `disableClose`, because a phone has no
+  Escape key.
+
+## Common mistakes
+
+1. **No `ariaLabel`.** The dialog gets its name from `mat-dialog-title`, and the bottom sheet has no equivalent. Pass `ariaLabel`.
+2. **Clickable `<div>` rows.** Keyboard and screen reader users cannot reach them. Use `<a mat-list-item>` or `<button mat-list-item>`.
+3. **Using it on desktop.** A panel stretched across the bottom of a 1600px screen reads as a bug. Branch on viewport width.
+4. **Putting a long form in it.** The sheet is capped by `maxHeight` and the on-screen keyboard eats the rest. Use a dialog or a full page.
+5. **Expecting `afterDismissed()` to always carry a value.** A backdrop tap emits `undefined`.
+
+## Related
+
+- [Dialog](?path=/docs/popups-and-modals-dialog--docs) for the desktop shape of the same job
+- [Snack Bar](?path=/docs/popups-and-modals-snack-bar--docs) when nothing has to be chosen
+- [CDK Overlay](?path=/docs/popups-and-modals-cdk-overlay--docs) for the layer underneath

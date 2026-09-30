@@ -1,0 +1,11 @@
+<mat-form-field appearance="outline" class="docs-field">
+  <mat-label>Release notes</mat-label>
+  <textarea
+    matInput
+    rows="4"
+    maxlength="140"
+    [ngModel]="notes()"
+    (ngModelChange)="notes.set($event)"></textarea>
+  <mat-hint>Markdown is not supported</mat-hint>
+  <mat-hint align="end">{{ notes().length }} / 140</mat-hint>
+</mat-form-field>

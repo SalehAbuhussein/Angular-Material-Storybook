@@ -1,0 +1,98 @@
+<a class="skip" href="#shell-main">Skip to content</a>
+
+<mat-sidenav-container class="shell" [style.height.px]="height()">
+  <mat-sidenav
+    #drawer
+    class="drawer"
+    [class.drawer--rail]="rail()"
+    [mode]="mode()"
+    [opened]="opened()"
+    (openedChange)="drawerOpen.set($event)"
+  >
+    <div class="brand">
+      <mat-icon>hexagon</mat-icon>
+      @if (!rail()) {
+        <span class="brand__name">Northwind</span>
+      }
+    </div>
+
+    <mat-nav-list>
+      @for (item of nav; track item.id) {
+        <a
+          mat-list-item
+          [activated]="item.id === active()"
+          [attr.aria-current]="item.id === active() ? 'page' : null"
+          [matTooltip]="rail() ? item.label : ''"
+          matTooltipPosition="right"
+          (click)="select(item)"
+        >
+          <mat-icon matListItemIcon [matBadge]="item.badge" matBadgeSize="small">
+            {{ item.icon }}
+          </mat-icon>
+          @if (!rail()) {
+            <span matListItemTitle>{{ item.label }}</span>
+          }
+        </a>
+      }
+    </mat-nav-list>
+
+    <mat-divider />
+
+    <mat-nav-list>
+      <a mat-list-item routerLink="/settings">
+        <mat-icon matListItemIcon>settings</mat-icon>
+        @if (!rail()) {
+          <span matListItemTitle>Settings</span>
+        }
+      </a>
+    </mat-nav-list>
+  </mat-sidenav>
+
+  <mat-sidenav-content class="content">
+    <mat-toolbar class="bar">
+      <button matIconButton aria-label="Toggle navigation" (click)="toggle()">
+        <mat-icon>menu</mat-icon>
+      </button>
+      <span class="bar__title">{{ activeLabel() }}</span>
+      <span class="bar__spacer"></span>
+      <button matIconButton aria-label="Notifications" [matMenuTriggerFor]="alerts">
+        <mat-icon matBadge="3" matBadgeSize="small">notifications</mat-icon>
+      </button>
+      <button matIconButton aria-label="Account" [matMenuTriggerFor]="account">
+        <mat-icon>account_circle</mat-icon>
+      </button>
+    </mat-toolbar>
+
+    <mat-menu #alerts="matMenu">
+      <button mat-menu-item>Order 1042 shipped</button>
+      <button mat-menu-item>Stock low: Blue widget</button>
+      <button mat-menu-item>2 invoices overdue</button>
+    </mat-menu>
+
+    <mat-menu #account="matMenu">
+      <button mat-menu-item><mat-icon>person</mat-icon>Profile</button>
+      <button mat-menu-item><mat-icon>logout</mat-icon>Sign out</button>
+    </mat-menu>
+
+    <main id="shell-main" class="main" tabindex="-1">
+      <!-- In a real app this is <router-outlet /> -->
+      <div class="outlet">
+        <h1 class="outlet__title">{{ activeLabel() }}</h1>
+        <p class="outlet__hint">
+          Routed view placeholder. Drawer is
+          <strong>{{ drawerOpen() ? 'open' : 'closed' }}</strong> in
+          <strong>{{ mode() }}</strong> mode, viewport reads as
+          <strong>{{ isHandset() ? 'handset' : 'wide' }}</strong>.
+        </p>
+        <div class="outlet__grid">
+          @for (item of nav; track item.id) {
+            <div class="tile" [class.tile--active]="item.id === active()">
+              <mat-icon>{{ item.icon }}</mat-icon>
+              <span>{{ item.label }}</span>
+            </div>
+          }
+        </div>
+      </div>
+    </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>

@@ -1,0 +1,160 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as ChipsStories from './chips.stories';
+
+<Meta of={ChipsStories} />
+
+# Chips
+
+**Import:** `import { MatChipsModule } from '@angular/material/chips';`
+
+A chip is a small block of content. Its meaning depends on its container, and
+picking the wrong container is the main way chips go wrong.
+
+| Container | Chip element | Semantics | Use it for |
+| --- | --- | --- | --- |
+| `<mat-chip-set>` | `<mat-chip>` | None. Presentational. | Showing tags that came from elsewhere |
+| `<mat-chip-listbox>` | `<mat-chip-option>` | `listbox` with a value | Filters, compact single or multi select |
+| `<mat-chip-grid>` | `<mat-chip-row>` | `grid`, a form field control | Entering a list of tags |
+
+Only `<mat-chip-grid>` goes inside a `<mat-form-field>`.
+
+## Try it
+
+<Example of={ChipsStories.Playground} />
+<Controls of={ChipsStories.Playground} />
+
+## A plain chip set
+
+`<mat-chip-set>` has no value and no selection. It is a styled list.
+
+<Example of={ChipsStories.ChipSet} />
+
+```html
+<mat-chip-set aria-label="Skills">
+  <mat-chip>TypeScript</mat-chip>
+</mat-chip-set>
+```
+
+If people can click a chip to change something, this is the wrong container.
+
+## Tag entry
+
+This is the pattern most people want: a `<mat-chip-grid>` inside a form field,
+one `<mat-chip-row>` per value, and a plain `<input>` wired to the grid with
+`matChipInputFor`.
+
+<Example of={ChipsStories.TagInput} />
+
+```ts
+readonly separators = [ENTER, COMMA] as const;
+readonly tags = signal(['angular', 'material']);
+
+add(event: MatChipInputEvent) {
+  const value = event.value.trim();
+  if (value && !this.tags().includes(value)) {
+    this.tags.update((current) => [...current, value]);
+  }
+  event.chipInput.clear();
+}
+```
+
+```html
+<mat-chip-grid #grid aria-label="Tag entry">
+  @for (tag of tags(); track tag) {
+    <mat-chip-row (removed)="remove(tag)">
+      {{ tag }}
+      <button matChipRemove [attr.aria-label]="'Remove ' + tag">
+        <mat-icon>cancel</mat-icon>
+      </button>
+    </mat-chip-row>
+  }
+  <input [matChipInputFor]="grid"
+         [matChipInputSeparatorKeyCodes]="separators"
+         matChipInputAddOnBlur
+         (matChipInputTokenEnd)="add($event)" />
+</mat-chip-grid>
+```
+
+`ENTER` and `COMMA` come from `@angular/cdk/keycodes`. `matChipInputAddOnBlur`
+also commits half-typed text when the input loses focus, so people do not lose
+a tag by clicking away.
+
+`(removed)` fires when the `matChipRemove` button is pressed or Delete is hit on
+a focused chip. It does not remove anything on its own; you update the list.
+
+## Editable chips
+
+`editable` on a `<mat-chip-row>` lets people rename in place. Double-click, or
+focus the chip and press Enter.
+
+<Example of={ChipsStories.EditableChips} />
+
+```html
+<mat-chip-row editable (edited)="rename(label, $event.value)">{{ label }}</mat-chip-row>
+```
+
+## Selection
+
+`<mat-chip-listbox>` is a form control. It implements `ControlValueAccessor`, so
+`ngModel` and `formControlName` work, and the value is a single item or an array
+depending on `multiple`.
+
+<Example of={ChipsStories.SelectionListbox} />
+
+```html
+<mat-chip-listbox multiple formControlName="statuses" aria-labelledby="filter-label">
+  <mat-chip-option value="Open">Open</mat-chip-option>
+</mat-chip-listbox>
+```
+
+Without `multiple` it behaves like a compact radio group.
+
+<Example of={ChipsStories.SingleSelect} />
+
+## API you will use
+
+| Name | Where | What it does |
+| --- | --- | --- |
+| `removable` | `<mat-chip>` | Allows removal. Add a `matChipRemove` button too. |
+| `removed` | chip | Emits when the remove button or Delete is used. |
+| `matChipRemove` | button inside a chip | Makes the button remove its chip. |
+| `editable` / `edited` | `<mat-chip-row>` | Inline rename, and the resulting value. |
+| `[matChipInputFor]` | the `<input>` | Links the input to a `<mat-chip-grid>`. |
+| `[matChipInputSeparatorKeyCodes]` | the `<input>` | Which keys commit a chip. |
+| `(matChipInputTokenEnd)` | the `<input>` | Emits `MatChipInputEvent` when a chip should be added. |
+| `multiple` / `value` | `<mat-chip-listbox>` | Selection mode and the selected value. |
+
+## Accessibility
+
+Each container sets the right role: `listbox` with `option` children, or `grid`
+with `row` children. Arrow keys move between chips, Delete and Backspace remove
+a focused removable chip, and the grid keeps the input in the tab order.
+
+What you still supply:
+
+- `aria-label` on the container. "Tag entry", "Filter by status".
+- `aria-label` on every remove button, including the tag name: "Remove angular".
+  A bare "Remove" tells a screen reader user nothing about which chip.
+- A visible label for the listbox, linked with `aria-labelledby`.
+- The removal itself. `(removed)` is a notification, not an action.
+
+## Common mistakes
+
+1. `<mat-chip-set>` for something clickable. It has no selection semantics.
+   Use `<mat-chip-listbox>`.
+2. A chip listbox inside `<mat-form-field>`. Only `<mat-chip-grid>` is a form
+   field control. The field throws for the other two.
+3. Expecting `(removed)` to remove the chip. It tells you the user asked.
+   Update your own list.
+4. Forgetting `event.chipInput.clear()`. The typed text stays in the input
+   and gets added again on the next Enter.
+5. Unlabelled remove buttons. Ten buttons all announced as "Remove" make the
+   list unusable by screen reader.
+
+## Related
+
+- [Autocomplete](?path=/docs/form-controls-autocomplete--docs) to suggest tags while typing
+- [Select](?path=/docs/form-controls-select--docs) for multi-select from a fixed list
+- [Form Field](?path=/docs/form-controls-form-field--docs) for the wrapper around a chip grid
+- [Button Toggle](?path=/docs/form-controls-button-toggle--docs) for a fixed set of filters

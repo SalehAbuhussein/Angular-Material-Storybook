@@ -1,0 +1,159 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as SortingStories from './sorting.stories';
+
+<Meta of={SortingStories} />
+
+# Sorting
+
+**Import:** `import { MatSortModule } from '@angular/material/sort';`
+
+Sorting is two directives. `matSort` goes on the table and holds the current
+column and direction. `mat-sort-header` goes on each header cell you want to be
+clickable. Neither sorts anything. Something has to react to the sort state,
+and with `MatTableDataSource` that is the data source.
+
+```html
+<table mat-table [dataSource]="dataSource" matSort>
+  <ng-container matColumnDef="name">
+    <th mat-header-cell *matHeaderCellDef mat-sort-header>Package</th>
+    <td mat-cell *matCellDef="let row">{{ row.name }}</td>
+  </ng-container>
+</table>
+```
+
+## Try it
+
+<Example of={SortingStories.Playground} />
+<Controls of={SortingStories.Playground} />
+
+## Wiring the data source
+
+`MatTableDataSource` sorts once you give it the `MatSort` instance. Query it with
+a signal `viewChild` and assign it in an `effect`, so the assignment runs as soon
+as the view query resolves.
+
+<Example of={SortingStories.BasicSorting} />
+
+```ts
+import { Component, effect, viewChild } from '@angular/core';
+import { MatSort } from '@angular/material/sort';
+import { MatTableDataSource } from '@angular/material/table';
+
+export class PackagesTable {
+  readonly dataSource = new MatTableDataSource(PACKAGES);
+  private readonly sort = viewChild(MatSort);
+
+  constructor() {
+    effect(() => {
+      this.dataSource.sort = this.sort() ?? null;
+    });
+  }
+}
+```
+
+The column id used for sorting is the `matColumnDef` name, and the data source
+reads `row[id]`. A header without `mat-sort-header` is not sortable.
+
+## Starting sorted
+
+`matSortActive` names the column and `matSortDirection` the direction to apply on
+first render. Both are inputs on `matSort`.
+
+```html
+<table mat-table [dataSource]="dataSource"
+       matSort matSortActive="downloads" matSortDirection="desc">
+```
+
+By default a header cycles ascending, descending, unsorted. Set
+`matSortDisableClear` to drop the unsorted step when the table must always have
+an order.
+
+## Sorting on something other than the cell text
+
+The default accessor compares `row[columnId]`. A column that shows `4.8 MB`
+sorts as a string, which puts `980 kB` before `1.2 MB`.
+Replace `sortingDataAccessor` to decide what each column compares on.
+
+<Example of={SortingStories.CustomSortingDataAccessor} />
+
+```ts
+this.dataSource.sortingDataAccessor = (row, columnId) => {
+  if (columnId === 'size') {
+    const [value, unit] = row.size.split(' ');
+    return Number(value) * (unit === 'MB' ? 1000 : 1);
+  }
+  return row[columnId];
+};
+```
+
+It must return a `string` or a `number`. Use it to reach nested properties too: `columnId === 'owner' ? row.owner.name : row[columnId]`.
+
+## Sorting yourself
+
+With server-side data the table holds one page, so the server has to sort. Skip `MatTableDataSource`, listen to `matSortChange` and refetch.
+
+<Example of={SortingStories.HandlingSortChange} />
+
+```ts
+onSort(sort: Sort) {
+  if (!sort.direction) {
+    this.reset();
+    return;
+  }
+  this.load({ sortBy: sort.active, order: sort.direction });
+}
+```
+
+`Sort` is `{ active: string; direction: 'asc' | 'desc' | '' }`. The empty string
+is the cleared state, so check it before building a query.
+
+## API you will use
+
+| Name | Where | What it does |
+| --- | --- | --- |
+| `matSort` | directive on the table | Holds the sort state |
+| `matSortActive` | `matSort` input | Column sorted on first render |
+| `matSortDirection` | `matSort` input | `'asc'`, `'desc'` or `''` |
+| `matSortDisableClear` | `matSort` input | Removes the unsorted step from the cycle |
+| `matSortChange` | `matSort` output | Emits `Sort` on every change |
+| `mat-sort-header` | directive on `th` | Makes the header sortable; its value overrides the column id |
+| `sortActionDescription` | `mat-sort-header` input | Text for the header's `aria-describedby` |
+| `sortingDataAccessor` | `MatTableDataSource` property | Maps a row plus column id to a comparable value |
+
+## Accessibility
+
+`mat-sort-header` renders a real button inside the header cell, sets
+`aria-sort` on the cell and announces the new order through the live announcer
+when it changes. Keyboard users reach it with Tab and activate it with Enter or
+Space.
+
+What you still have to supply:
+
+- `sortActionDescription` when the header text alone does not describe the
+  action, for example a header labelled only with an icon.
+- A sensible `matSortActive` so the table does not start in an order that looks
+  random.
+- A `MatSortHeaderIntl` override if your app is not in English.
+
+## Common mistakes
+
+1. **Assigning `dataSource.sort` too early.** In a constructor without an effect
+   the view query has not resolved and you assign `undefined`. Use an `effect`
+   over a signal `viewChild`.
+2. **`matSort` on a wrapper instead of the table.** The header cells look up
+   `MatSort` through dependency injection, so it has to be on an ancestor of the
+   headers. Put it on the table.
+3. **Expecting sorting without a data source.** A plain array as `[dataSource]`
+   ignores `matSort` entirely. Use `MatTableDataSource` or handle
+   `matSortChange`.
+4. **Sorting formatted text.** Currency, sizes and dates rendered as strings sort
+   character by character. Fix it in `sortingDataAccessor`, not in the template.
+5. **Sorting the current page of a server-side table.** If the server pages the
+   data, a client-side sort only reorders the visible rows, which misleads people.
+
+## Related
+
+- [Table](?path=/docs/data-table-table--docs) for the column and row structure
+- [Pagination](?path=/docs/data-table-pagination--docs) for combining sort with paging
+- [Filter and Selection](?path=/docs/data-table-filter-and-selection--docs) for filtering the same data source

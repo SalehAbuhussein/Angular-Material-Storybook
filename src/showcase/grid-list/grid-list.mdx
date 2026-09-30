@@ -1,0 +1,136 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as GridListStories from './grid-list.stories';
+
+<Meta of={GridListStories} />
+
+# Grid list
+
+**Import:** `import { MatGridListModule } from '@angular/material/grid-list';`
+
+A grid list arranges tiles into a fixed number of columns and measures every
+tile in JavaScript. It predates CSS grid, which is the better choice for most
+layouts today. Use `mat-grid-list` when you need tiles that span cells and rows
+sized by a width-to-height ratio.
+
+```html
+<mat-grid-list cols="4" rowHeight="80px" gutterSize="8px">
+  <mat-grid-tile>1</mat-grid-tile>
+</mat-grid-list>
+```
+
+## Try it
+
+<Example of={GridListStories.Playground} />
+<Controls of={GridListStories.Playground} />
+
+## Spanning cells
+
+`colspan` and `rowspan` are why this component exists. A tile claims several
+cells and the rest flow around it.
+
+<Example of={GridListStories.Spans} />
+
+```html
+<mat-grid-tile [colspan]="2" [rowspan]="2">Feature</mat-grid-tile>
+```
+
+A tile's `colspan` can never exceed `cols`. If it does, you get
+`mat-grid-list: tile with colspan 5 is wider than grid with cols="4"` at runtime.
+Tiles that do not fit in the rest of a row wrap to the next one, which can leave
+holes in the grid.
+
+## Row height
+
+`rowHeight` takes three forms. The default is `1:1`.
+
+| Value | Meaning |
+| --- | --- |
+| `"80px"`, `"4rem"` | A fixed CSS length for every row |
+| `"4:3"` | A width-to-height ratio, so rows scale with the container |
+| `"fit"` | Divide the grid list's own height between its rows |
+
+<Example of={GridListStories.RowHeights} />
+
+`"fit"` only works when the `<mat-grid-list>` itself has a height. Without one,
+the rows collapse to nothing.
+
+## Tile headers and footers
+
+<Example of={GridListStories.HeadersAndFooters} />
+
+```html
+<mat-grid-tile>
+  <mat-grid-tile-header>
+    <mat-icon matGridAvatar>photo</mat-icon>
+    <h3 matLine>Harbour</h3>
+    <span matLine>Oslo, 2023</span>
+  </mat-grid-tile-header>
+</mat-grid-tile>
+```
+
+They overlay the top and bottom edges of the tile without taking space from it,
+so check that the text stays readable against the tile's content.
+
+## When CSS grid is the better choice
+
+<Example of={GridListStories.CssGridInstead} />
+
+```css
+.gallery {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+}
+```
+
+Use CSS grid when any of these is true, which is most of the time:
+
+- The column count should change with the viewport. `mat-grid-list` takes one
+  fixed `cols`, so responsive behaviour means binding it to a breakpoint
+  observer.
+- Tiles should size to their content. Grid list forces a uniform cell height.
+- You want no layout work on the main thread. Grid list recomputes tile styles on
+  every content check.
+
+Keep `mat-grid-list` for a masonry-like layout of spanning tiles at a fixed
+column count, or when you want ratio-sized rows.
+
+## API you will use
+
+| Name | On | Type | Notes |
+| --- | --- | --- | --- |
+| `cols` | `mat-grid-list` | `number` | Required. No default |
+| `rowHeight` | `mat-grid-list` | `string \| number` | Length, ratio or `"fit"`. Defaults to `1:1` |
+| `gutterSize` | `mat-grid-list` | `string` | CSS length, defaults to `1px` |
+| `colspan` | `mat-grid-tile` | `number` | Defaults to `1` |
+| `rowspan` | `mat-grid-tile` | `number` | Defaults to `1` |
+| `mat-grid-tile-header` | element | — | Overlays the top of a tile |
+| `mat-grid-tile-footer` | element | — | Overlays the bottom of a tile |
+| `[matGridAvatar]`, `[matLine]` | inside header or footer | — | Position an image and text lines |
+
+## Accessibility
+
+The grid list renders `role="list"` and each tile `role="listitem"`, and nothing
+more.
+
+- It is a visual grid, not a data grid. If the tiles have row and column meaning,
+  use a `<table>` or the CDK table so screen readers announce the relationships.
+- Tiles are not focusable. Interactive tiles need a real `<button>` or `<a>`
+  inside them.
+- Reading order follows DOM order, which a spanning tile can pull away from the
+  visual order. Keep the DOM in the order you want it read.
+
+## Common mistakes
+
+1. **No `cols`.** The component throws `mat-grid-list: must pass in number of columns`. There is no default.
+2. **`rowHeight="fit"` on a list with no height.** The rows compute to zero. Set a height on the `<mat-grid-list>`.
+3. **A `colspan` bigger than `cols`.** You get a runtime error, not a clamp. Bind both numbers from the same source when the column count is dynamic.
+4. **Expecting tiles to grow with content.** Every cell is the same computed size, and overflow is clipped. Use CSS grid when the content decides the height.
+5. **Using it for a responsive card gallery.** `cols` is one fixed number. `repeat(auto-fill, minmax(…))` does that job with no JavaScript.
+
+## Related
+
+- [Card](?path=/docs/layout-card--docs) for what usually goes inside a tile
+- [Divider](?path=/docs/layout-divider--docs) for separating sections instead of gridding them
+- [List](?path=/docs/layout-list--docs) when one column is enough

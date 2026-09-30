@@ -1,0 +1,126 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as FabStories from './fab.stories';
+
+<Meta of={FabStories} />
+
+# FAB
+
+**Import:** `import { MatButtonModule } from '@angular/material/button';`
+
+A floating action button marks the most important action on a screen. It floats
+above the content, so it stays reachable while the page scrolls.
+
+```html
+<button matFab aria-label="New message">
+  <mat-icon>add</mat-icon>
+</button>
+```
+
+## Try it
+
+<Example of={FabStories.Playground} />
+<Controls of={FabStories.Playground} />
+
+## The three shapes
+
+`matFab` and `matMiniFab` are separate directives. `extended` is an attribute on
+`matFab`, so you write `matFab extended`, not `matFab="extended"`.
+
+| Markup | Size | Use it for |
+| --- | --- | --- |
+| `<button matFab>` | 56px | The main action of a page |
+| `<button matMiniFab>` | 40px | A secondary surface: a card, a dense list header |
+| `<button matFab extended>` | 56px tall, auto width | When the icon alone does not say what happens |
+
+<Example of={FabStories.Sizes} />
+
+## Extended FAB
+
+An extended FAB carries a label, so the icon no longer has to explain itself.
+Use it when the action is not one of the few universally understood icons (add,
+edit, search).
+
+<Example of={FabStories.Extended} />
+
+```html
+<button matFab extended>
+  <mat-icon>navigation</mat-icon>
+  Start route
+</button>
+```
+
+## Positioning a FAB
+
+Angular Material gives you the shape and the elevation. Your CSS decides where
+the button sits. Put `position: relative` on the container the FAB should anchor
+to, then absolutely position the button inside it.
+
+<Example of={FabStories.Positioning} />
+
+```html
+<div style="position: relative">
+  <!-- page content -->
+  <button matFab aria-label="New message" class="page-fab">
+    <mat-icon>add</mat-icon>
+  </button>
+</div>
+```
+
+```scss
+.page-fab {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+}
+```
+
+Use `position: fixed` when the button should stay put while the whole window
+scrolls. Leave at least 16px of margin, and add bottom padding to the scrolling
+content so the last row is not permanently covered.
+
+## Mini FAB in context
+
+<Example of={FabStories.MiniInContext} />
+
+## When to use a FAB
+
+Use one when the screen has a single obvious action that people return to:
+compose, add, start. Use a filled button when the action is part of a form or a
+flow, and an icon button when it is one of several equals in a toolbar. Two FABs
+on one screen means neither is the primary action.
+
+## API you will use
+
+| Markup | Type | What it does |
+| --- | --- | --- |
+| `matFab` | directive | Standard 56px round FAB on `<button>` or `<a>` |
+| `matMiniFab` | directive | 40px round FAB |
+| `extended` | input on `matFab` | Widens the FAB so it can hold a text label |
+| `disabled` | input | Disables the button, same as any `MatButton` |
+| `disableRipple` | input | Turns off the press ripple |
+| `disabledInteractive` | input | Keeps the button focusable while it looks disabled, so a tooltip can explain why |
+
+## Accessibility
+
+A round FAB contains only an icon, so it has no accessible name. Add
+`aria-label` with the action, phrased as a verb: "New message", not "Plus". An
+extended FAB already has visible text and does not need one. A different
+`aria-label` there would override what people can see.
+
+The FAB overlaps content, so check that it does not cover a focusable element.
+Keyboard users tab to whatever is underneath and see nothing.
+
+## Common mistakes
+
+1. `matFab="extended"`: `matFab` takes no value. The extended form is `<button matFab extended>`.
+2. No `aria-label` on a round FAB: a screen reader announces "button" and stops. Add the action as a label.
+3. `<div matFab>`: the directive does not make a div focusable or keyboard-operable. Use `<button>`, or `<a>` when it navigates.
+4. Content hidden under the FAB: add bottom padding to the scroll container equal to the FAB height plus its margin.
+5. Two FABs on a screen: keep one FAB and make the other a regular button, or "primary action" stops meaning anything.
+
+## Related
+
+- [Button](?path=/docs/buttons-and-indicators-button--docs) for the five standard appearances
+- [Icon](?path=/docs/buttons-and-indicators-icon--docs) for the `<mat-icon>` inside a FAB
+- [Tooltip](?path=/docs/buttons-and-indicators-tooltip--docs) for explaining a mini FAB on hover

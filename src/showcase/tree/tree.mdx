@@ -1,0 +1,179 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as TreeStories from './tree.stories';
+
+<Meta of={TreeStories} />
+
+# Tree
+
+**Import:** `import { MatTreeModule } from '@angular/material/tree';`
+
+A tree renders hierarchical data with expand and collapse. In Angular Material
+22 you configure it with one function: `childrenAccessor` when your data is
+nested, or `levelAccessor` when it arrives flat with a level on each row. Pass
+exactly one of them.
+
+Older examples use `TreeControl`, `FlatTreeControl`, `MatTreeFlattener` and
+`MatTreeFlatDataSource`. All are deprecated. The new form needs no data source
+class, since an array works.
+
+```html
+<mat-tree [dataSource]="files" [childrenAccessor]="childrenAccessor">
+  <mat-tree-node *matTreeNodeDef="let node" matTreeNodePadding>{{ node.name }}</mat-tree-node>
+</mat-tree>
+```
+
+```ts
+readonly childrenAccessor = (node: FileNode) => node.children ?? [];
+```
+
+## Try it
+
+Change `indent` to see `matTreeNodePaddingIndent` resize every level at once.
+
+<Example of={TreeStories.Playground} />
+<Controls of={TreeStories.Playground} />
+
+## Flat rendering
+
+`<mat-tree-node>` puts every node in one flat list of rows, and
+`matTreeNodePadding` indents each row by its level. Make this your default. It
+keeps the DOM shallow, which matters once a tree has hundreds of rows.
+
+<Example of={TreeStories.FlatRendering} />
+
+```html
+<mat-tree #tree="matTree" [dataSource]="data" [childrenAccessor]="childrenAccessor">
+  <mat-tree-node *matTreeNodeDef="let node" matTreeNodePadding>
+    {{ node.name }}
+  </mat-tree-node>
+
+  <mat-tree-node *matTreeNodeDef="let node; when: hasChild" matTreeNodePadding [isExpandable]="true">
+    <button matIconButton matTreeNodeToggle [attr.aria-label]="'Toggle ' + node.name">
+      <mat-icon>{{ tree.isExpanded(node) ? 'expand_more' : 'chevron_right' }}</mat-icon>
+    </button>
+    {{ node.name }}
+  </mat-tree-node>
+</mat-tree>
+```
+
+```ts
+readonly hasChild = (_: number, node: FileNode) => !!node.children?.length;
+```
+
+How it works:
+
+- `when` on the second `*matTreeNodeDef` picks the template per node. The first
+  definition without a `when` is the fallback.
+- `[isExpandable]="true"` tells the node it has children. Without a
+  `TreeControl` the tree cannot guess, so a node with no `isExpandable` never
+  expands and gets no `aria-expanded`.
+- `matTreeNodeToggle` on the button calls `toggle()` for that node. Add
+  `matTreeNodeToggleRecursive` to expand the whole subtree.
+
+## Nested rendering
+
+`<mat-nested-tree-node>` renders children inside the parent element, through
+`<ng-container matTreeNodeOutlet>`. The DOM matches the data, which helps when a
+group needs its own border, background or `role="group"`.
+
+<Example of={TreeStories.NestedRendering} />
+
+```html
+<mat-nested-tree-node *matTreeNodeDef="let node; when: hasChild" [isExpandable]="true">
+  <div class="row">
+    <button matIconButton matTreeNodeToggle [attr.aria-label]="'Toggle ' + node.name">
+      <mat-icon>{{ tree.isExpanded(node) ? 'expand_more' : 'chevron_right' }}</mat-icon>
+    </button>
+    {{ node.name }}
+  </div>
+  <div role="group" [class.hidden]="!tree.isExpanded(node)">
+    <ng-container matTreeNodeOutlet></ng-container>
+  </div>
+</mat-nested-tree-node>
+```
+
+Nested nodes always render their children. Collapsing hides them with CSS, so
+you supply the `display: none`. Do not mix `<mat-tree-node>` and
+`<mat-nested-tree-node>` in one tree, including for leaves. Angular Material
+logs "Tree is using conflicting node types" and expansion misbehaves.
+
+## Level accessor
+
+When rows arrive flat from an API, give the tree `levelAccessor` instead.
+
+<Example of={TreeStories.LevelAccessor} />
+
+```ts
+readonly levelAccessor = (node: FlatNode) => node.level;
+```
+
+With `levelAccessor` the tree renders every item in the array you hand it. It
+tracks expansion and sets `aria-expanded`, but it does not drop the rows under a
+collapsed parent. Filter the array yourself, as the example does, and bind
+`[isExpanded]` so the tree and your state agree.
+
+`childrenAccessor` has no such catch, so prefer it whenever you can nest the
+data.
+
+## A checkbox file tree
+
+<Example of={TreeStories.CheckboxFileTree} />
+
+Store only the selected leaves and derive folder state from them. A folder is
+checked when all its leaves are, and indeterminate when only some are. That
+keeps one source of truth, so what a user submits is the list of files.
+
+```ts
+isChecked = (node: FileNode) => this.leaves(node).every((l) => this.selected().has(l));
+isPartial = (node: FileNode) => this.leaves(node).some((l) => this.selected().has(l)) && !this.isChecked(node);
+```
+
+## API you will use
+
+| Name | On | Type | Notes |
+| --- | --- | --- | --- |
+| `dataSource` | `mat-tree` | `T[] \| Observable<T[]> \| DataSource<T>` | A plain array is fine |
+| `childrenAccessor` | `mat-tree` | `(node: T) => T[] \| Observable<T[]>` | For nested data. Pass this or `levelAccessor`, not both |
+| `levelAccessor` | `mat-tree` | `(node: T) => number` | For flat data, zero based |
+| `trackBy` | `mat-tree` | `TrackByFunction<T>` | Identity of a node across reloads |
+| `expansionKey` | `mat-tree` | `(node: T) => K` | Key expansion by id instead of object identity |
+| `*matTreeNodeDef` with `when` | `ng-template` | `(index, node) => boolean` | Picks the template per node |
+| `isExpandable`, `isExpanded` | node | `boolean` | `isExpandable` is required for expandable nodes |
+| `matTreeNodePadding` | node | — | Indents by level, `matTreeNodePaddingIndent` changes the step |
+| `matTreeNodeToggle` | any element | — | Toggles the node, `matTreeNodeToggleRecursive` toggles descendants |
+| `(expandedChange)`, `(activation)` | node | `boolean`, `T` | Expansion changed, node activated by Enter |
+
+On the `MatTree` instance (`#tree="matTree"` or `@ViewChild`): `isExpanded`,
+`expand`, `collapse`, `toggle`, `expandDescendants`, `expandAll`, `collapseAll`.
+
+## Accessibility
+
+`<mat-tree>` renders `role="tree"` and each node `role="treeitem"` with
+`aria-level`, `aria-posinset`, `aria-setsize` and `aria-expanded`. The built-in
+key manager gives you arrow key navigation, Left and Right to collapse and
+expand, Home and End, and typeahead.
+
+- A node's accessible name is its text content. Set
+  `cdkTreeNodeTypeaheadLabel` when the row holds icons or controls whose text
+  would pollute it.
+- Give the toggle button an `aria-label` that names the node. Otherwise every
+  toggle in the tree announces the same thing.
+- `aria-expanded` only appears on nodes where `isExpandable` is true, another
+  reason to bind it.
+- Reserve the toggle's width on leaf rows, so text lines up and the eye can
+  follow the levels.
+
+## Common mistakes
+
+1. **Copying an old example.** `new FlatTreeControl(...)`, `MatTreeFlattener` and `MatTreeFlatDataSource` are deprecated and will be removed. Use `childrenAccessor` or `levelAccessor`.
+2. **Passing both accessors.** The tree throws "More than one of tree control, levelAccessor, or childrenAccessor were provided". Passing neither throws too.
+3. **Forgetting `[isExpandable]`.** The node renders, the toggle does nothing and `aria-expanded` is missing. Without a `TreeControl`, this input is the only signal the tree has.
+4. **Mixing `mat-tree-node` and `mat-nested-tree-node`.** Use one type for the whole tree, leaves included.
+5. **Recreating the accessor in the template.** `[childrenAccessor]="(n) => n.children"` returns a new function on every check. Declare it once as a field.
+
+## Related
+
+- [List](?path=/docs/layout-list--docs) when the data is one level deep
+- [Expansion Panel](?path=/docs/layout-expansion-panel--docs) for a handful of sections rather than a hierarchy
+- [Checkbox](?path=/docs/form-controls-checkbox--docs) for the selection controls used here

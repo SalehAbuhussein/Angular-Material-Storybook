@@ -1,0 +1,162 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as DatepickerStories from './datepicker.stories';
+
+<Meta of={DatepickerStories} />
+
+# Datepicker
+
+**Import:** `import { MatDatepickerModule } from '@angular/material/datepicker';`
+
+A datepicker is three pieces used together: an `<input>` with
+`[matDatepicker]`, a `<mat-datepicker-toggle>` button, and the
+`<mat-datepicker>` itself. The input holds the value; the picker is only a way
+to set it.
+
+```html
+<mat-form-field>
+  <mat-label>Delivery date</mat-label>
+  <input matInput [matDatepicker]="picker" />
+  <mat-datepicker-toggle matIconSuffix [for]="picker" />
+  <mat-datepicker #picker />
+</mat-form-field>
+```
+
+## Provide a date adapter first
+
+Material does not pick a date library for you. Without an adapter, every
+datepicker throws at runtime. The built-in one uses the native `Date`:
+
+```ts
+import { provideNativeDateAdapter } from '@angular/material/core';
+
+bootstrapApplication(App, {
+  providers: [provideNativeDateAdapter()],
+});
+```
+
+If only one screen uses dates, put it in that component's `providers` instead.
+For anything beyond simple parsing, swap in a Luxon, date-fns, or Moment adapter
+from `@angular/material-luxon-adapter` and friends; the native `Date` parser is
+lenient in surprising ways.
+
+## Try it
+
+<Example of={DatepickerStories.Playground} />
+<Controls of={DatepickerStories.Playground} />
+
+## The three pieces
+
+<Example of={DatepickerStories.Basic} />
+
+The toggle's `[for]` and the input's `[matDatepicker]` both point at `#picker`. Drop the toggle and the calendar can still be opened from the
+keyboard, but there is nothing to click.
+
+## min, max and filter
+
+`min` and `max` go on the **input**, not on the picker. Out-of-range dates are
+greyed out in the calendar, and a typed date that falls outside adds a
+`matDatepickerMin` or `matDatepickerMax` error to the control.
+
+<Example of={DatepickerStories.MinAndMax} />
+
+`matDatepickerFilter` disables individual dates and adds
+`matDatepickerFilter` to the errors.
+
+<Example of={DatepickerStories.DateFilter} />
+
+```ts
+weekdaysOnly = (date: Date | null) => {
+  const day = (date ?? new Date()).getDay();
+  return day !== 0 && day !== 6;
+};
+```
+
+Handle `null`. The filter runs against the empty value too.
+
+## Range picker
+
+A range uses different components: `<mat-date-range-input>` wrapping a
+`matStartDate` and a `matEndDate` input, paired with
+`<mat-date-range-picker>`. The value is two controls.
+
+<Example of={DatepickerStories.RangePicker} />
+
+```html
+<mat-form-field>
+  <mat-label>Reporting period</mat-label>
+  <mat-date-range-input [formGroup]="range" [rangePicker]="picker">
+    <input matStartDate formControlName="start" placeholder="Start" />
+    <input matEndDate formControlName="end" placeholder="End" />
+  </mat-date-range-input>
+  <mat-datepicker-toggle matIconSuffix [for]="picker" />
+  <mat-date-range-picker #picker />
+</mat-form-field>
+```
+
+The range input takes `[rangePicker]`, not `[matDatepicker]`.
+
+## In reactive forms
+
+The control holds a `Date | null`. Combine `Validators.required` with `min` and
+handle both in one `<mat-error>`.
+
+<Example of={DatepickerStories.InReactiveForms} />
+
+```html
+<mat-error>
+  @if (form.controls.startDate.hasError('required')) {
+    Pick a start date
+  } @else if (form.controls.startDate.hasError('matDatepickerMin')) {
+    The start date cannot be in the past
+  }
+</mat-error>
+```
+
+## API you will use
+
+| Name | Where | What it does |
+| --- | --- | --- |
+| `[matDatepicker]` | input | Links the input to a picker. |
+| `min` / `max` | input | Bounds. Add `matDatepickerMin` / `matDatepickerMax` errors. |
+| `[matDatepickerFilter]` | input | `(date) => boolean`. Disables individual dates. |
+| `[for]` | `<mat-datepicker-toggle>` | The picker this button opens. |
+| `touchUi` | `<mat-datepicker>` | Centred modal calendar instead of a dropdown. |
+| `startView` | `<mat-datepicker>` | `month`, `year`, or `multi-year`. Useful for birthdays. |
+| `startAt` | `<mat-datepicker>` | Which month to open on when there is no value. |
+| `[rangePicker]` | `<mat-date-range-input>` | The range picker this field opens. |
+
+## Accessibility
+
+The calendar is a dialog with focus trapped inside. Arrow keys move by day,
+Page Up/Down by month, and Escape closes it. Focus returns to the toggle on
+close unless you set `restoreFocus="false"`.
+
+What you still supply:
+
+- A `<mat-label>` on the field.
+- A `<mat-hint>` with the expected format. People type dates far more often than
+  they click through a calendar, and the accepted format depends on the locale.
+- Distinct placeholders on the two inputs of a range field.
+- An `aria-label` on the toggle if the field label does not make its purpose
+  obvious.
+
+## Common mistakes
+
+1. Forgetting the date adapter. The picker throws. Call
+   `provideNativeDateAdapter()` in `bootstrapApplication` or in the component's
+   `providers`.
+2. `min` and `max` on `<mat-datepicker>`. They belong on the input. On the
+   picker they are ignored.
+3. `[matDatepicker]` for a range. A range needs `<mat-date-range-input>` and
+   `[rangePicker]`.
+4. Assuming the value is a string. The control holds a `Date`. Format it for
+   display and serialise it yourself for the API.
+5. No format hint. A date typed as 03/04/2026 means two different days
+   depending on locale. Say which you expect.
+
+## Related
+
+- [Input](?path=/docs/form-controls-input--docs) for the field underneath
+- [Form Field](?path=/docs/form-controls-form-field--docs) for labels, hints and errors
+- [Putting It Together](?path=/docs/form-controls-putting-it-together--docs) for a full reactive form

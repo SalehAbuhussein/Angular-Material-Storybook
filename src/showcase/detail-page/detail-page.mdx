@@ -1,0 +1,150 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as DetailStories from './detail-page.stories';
+
+<Meta of={DetailStories} />
+
+# Detail page
+
+The screen you land on after clicking a row in a table. It has to answer three
+questions at once: what am I looking at, what state is it in, and what can I do
+to it.
+
+## Try it
+
+Switch tabs, push the order forward with the primary action, or cancel it from
+the overflow menu. The chip, the progress bar and the action label all follow
+from one signal.
+
+<Example of={DetailStories.Playground} />
+<Controls of={DetailStories.Playground} />
+
+## The layout skeleton
+
+A header that does not scroll away from its own actions, then a two column body:
+
+```scss
+.body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .body { grid-template-columns: 1fr; }
+}
+```
+
+Use `minmax(0, 1fr)` on the main column, not plain `1fr`. A `1fr` track has
+`min-width: auto`, so a wide table inside it refuses to shrink and pushes the
+rail off the screen. `minmax(0, 1fr)` lets the column be narrower than its
+content, so the inner table scrolls instead.
+
+`align-items: start` stops the rail cards stretching to match the height of the
+main panel. Without it, a three-line card becomes 600px tall.
+
+## The header
+
+Three layers, in a fixed order:
+
+1. Breadcrumbs say where this record sits. The current page is `aria-current="page"` and is not a link.
+2. Title and status share one row. The title says which record, the chip says what state.
+3. Actions, right aligned: one filled primary action, one or two outlined secondary ones, and everything else in an overflow menu.
+
+Keep exactly one filled button. If two actions are equally primary, neither is.
+
+```html
+<nav class="crumbs" aria-label="Breadcrumb">
+  <ol>
+    <li><a href="#orders">Orders</a></li>
+    <li aria-hidden="true">/</li>
+    <li aria-current="page">#4821</li>
+  </ol>
+</nav>
+```
+
+The `/` separators are `aria-hidden`, because "Orders slash September slash
+4821" helps nobody.
+
+## Status drives everything
+
+<Example of={DetailStories.Shipped} />
+
+The chip text, the progress bar and the primary button label all derive from one
+signal:
+
+```ts
+readonly status = signal<Status>('Processing');
+
+readonly progress = computed(() => {
+  switch (this.status()) {
+    case 'Draft': return 10;
+    case 'Processing': return 55;
+    case 'Shipped': return 100;
+    case 'Cancelled': return 0;
+  }
+});
+
+readonly nextAction = computed(() =>
+  this.status() === 'Shipped' ? 'Mark delivered' : 'Mark shipped');
+```
+
+A detail screen has one record with one state, and everything on screen is a
+view of it. Keep a second signal that must be updated alongside the first, and
+the chip and the progress bar can disagree.
+
+## Disable, do not hide
+
+<Example of={DetailStories.Cancelled} />
+
+On a cancelled order the primary action is disabled, not removed. Removing it
+makes the layout jump and leaves the user wondering whether they misremembered
+where the button was. A disabled button with a tooltip explaining why is almost
+always better.
+
+## The metadata rail
+
+Short, scannable facts in cards, in the order someone asks for them. Do not dump
+every field on the record here. Anything that needs more than a line belongs in
+a tab.
+
+<Example of={DetailStories.Stacked} />
+
+Below 900px the rail moves under the main content, because on a phone the item
+list is what someone came for.
+
+## API you will use
+
+| Member | Type | What it does |
+| --- | --- | --- |
+| `mat-tab-group` | `[selectedIndex]`, `(selectedTabChange)` | Sections within one record. Not for navigating between records. |
+| `mat-chip` with `[disableRipple]` | boolean | A status chip is a label, not a control, so it should not ripple. |
+| `mat-progress-bar` | `mode="determinate"`, `[value]` | Use `determinate` only when you know the percentage. |
+| `mat-card appearance="outlined"` | `'raised' \| 'outlined' \| 'filled'` | Borders instead of shadows, so a rail of cards stays calm. |
+| `matMenuTriggerFor` | `MatMenu` | The overflow menu for actions that do not earn a button. |
+| `matListItemTitle` / `matListItemLine` / `matListItemIcon` | content slots | Timeline rows. |
+| `minmax(0, 1fr)` | CSS | Lets a grid column shrink below its content so wide tables scroll. |
+
+## Accessibility
+
+- The breadcrumb is a `<nav aria-label="Breadcrumb">` wrapping an `<ol>`, because it is an ordered path. Separators are `aria-hidden`.
+- The metadata rail is `<aside aria-label="Order details">`, so it is skippable as a landmark.
+- `mat-progress-bar` gets an `aria-label` that includes the percentage. It has `role="progressbar"` but supplies no name of its own.
+- The status chip contains its own text. The background colour is reinforcement, never the only signal.
+- One `<h1>` naming the record. Tab labels are not headings, so do not mark them up as headings.
+
+## Common mistakes
+
+1. **Plain `1fr` for the main column.** A wide table stops the rail from fitting, because `1fr` will not shrink below its content. Use `minmax(0, 1fr)`.
+2. **Deriving nothing.** Keep `status`, `progress` and `actionLabel` as three separate signals and they will disagree eventually.
+3. **Two filled buttons in the header.** The page no longer says which action is expected.
+4. **Hiding actions that do not apply.** Disable them and explain why. Vanishing buttons make the layout jump and look like a bug.
+5. **Stretching rail cards.** Without `align-items: start`, a short card grows to match the main panel and looks broken.
+
+## Related
+
+- [Data Table Page](?path=/docs/full-layouts-data-table-page--docs) for the list this page is reached from
+- [Tabs](?path=/docs/navigation-tabs--docs), [Chips](?path=/docs/form-controls-chips--docs), [Menu](?path=/docs/navigation-menu--docs)
+- [Card](?path=/docs/layout-card--docs) for the rail cards
+- [Color and Variables](?path=/docs/foundations-color-and-variables--docs) for the container roles used by the status chip

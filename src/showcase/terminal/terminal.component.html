@@ -1,0 +1,82 @@
+<div
+  class="crt"
+  [class.crt--amber]="phosphor() === 'amber'"
+  [class.crt--ice]="phosphor() === 'ice'"
+  [class.crt--scan]="scanlines()"
+  [class.no-glow]="!glow()"
+  [style.height.px]="height()">
+  <div class="bezel">
+    <header class="chrome">
+      <span class="led" aria-hidden="true"></span>
+      <span class="chrome__name">orbital@control</span>
+      <span class="spacer"></span>
+      <span class="chrome__stat">{{ lines().length }} LINES</span>
+      <button matIconButton class="icon" (click)="reset()" aria-label="Reset session"
+              matTooltip="Reset session">
+        <mat-icon>restart_alt</mat-icon>
+      </button>
+    </header>
+
+    <mat-tab-group class="tabs" [selectedIndex]="tab()" (selectedIndexChange)="tab.set($event)">
+      <mat-tab label="SHELL">
+        <div class="screen" #screen>
+          @for (line of lines(); track $index) {
+            <p class="line" [class]="'line--' + line.kind">
+              @if (line.kind === 'in') { <span class="ps1">&gt;</span> }
+              {{ line.text }}
+            </p>
+          }
+          @if (busy()) {
+            <mat-progress-bar mode="indeterminate" class="work" aria-label="Working" />
+          }
+          <p class="line line--cursor"><span class="ps1">&gt;</span><span class="cursor"></span></p>
+        </div>
+
+        <form class="prompt" (ngSubmit)="run()">
+          <mat-form-field appearance="outline" subscriptSizing="dynamic" class="field">
+            <span matTextPrefix class="ps1">&gt;&nbsp;</span>
+            <input
+              matInput
+              [ngModel]="draft()"
+              (ngModelChange)="draft.set($event)"
+              name="cmd"
+              autocomplete="off"
+              spellcheck="false"
+              aria-label="Command"
+              [matAutocomplete]="ac" />
+            <mat-autocomplete #ac="matAutocomplete" class="ac">
+              @for (c of suggestions(); track c) {
+                <mat-option [value]="c">{{ c }}</mat-option>
+              }
+            </mat-autocomplete>
+          </mat-form-field>
+          <button matButton="filled" class="run" type="submit" [disabled]="!draft().trim()">
+            RUN
+          </button>
+        </form>
+      </mat-tab>
+
+      <mat-tab label="TELEMETRY">
+        <div class="screen">
+          @for (m of telemetry(); track m.k) {
+            <p class="line">
+              {{ m.k }}<span class="fill">{{ dots(m.k) }}</span>{{ m.v }}
+            </p>
+          }
+          <p class="line line--ok">ALL SUBSYSTEMS NOMINAL</p>
+        </div>
+      </mat-tab>
+
+      <mat-tab label="CONFIG">
+        <div class="screen screen--cfg">
+          <mat-checkbox [ngModel]="scanlines()" (ngModelChange)="scanlines.set($event)"
+                        name="scan">SCANLINES</mat-checkbox>
+          <mat-checkbox [ngModel]="glow()" (ngModelChange)="glow.set($event)"
+                        name="glow">PHOSPHOR GLOW</mat-checkbox>
+          <mat-checkbox [ngModel]="verbose()" (ngModelChange)="verbose.set($event)"
+                        name="verbose">VERBOSE OUTPUT</mat-checkbox>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </div>
+</div>

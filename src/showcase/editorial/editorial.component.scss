@@ -1,0 +1,188 @@
+:host { display: block; }
+
+.mag {
+  --paper: #f7f4ec;
+  --ink: #1b1a17;
+  --soft: #6b665c;
+  --rule: #ddd6c6;
+  --accent: #a8442a;
+  --measure: 66;
+
+  position: relative;
+  box-sizing: border-box;
+  overflow: hidden;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Fraunces', Georgia, serif;
+
+  --mat-sys-primary: var(--accent);
+  --mat-sys-on-surface: var(--ink);
+  --mat-sys-on-surface-variant: var(--soft);
+}
+.mag--sepia { --paper: #f2e7d5; --ink: #2b2115; --soft: #7a6a52; --rule: #ddcaa8; --accent: #9a5b1f; }
+.mag--night { --paper: #14130f; --ink: #ece7db; --soft: #9a9384; --rule: #33302a; --accent: #e08a5f; }
+
+.read {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  z-index: 3;
+  --mat-progress-bar-active-indicator-color: var(--accent);
+  --mat-progress-bar-track-color: transparent;
+}
+
+.frame {
+  height: 100%;
+  overflow: auto;
+  padding: 44px 36px 56px;
+  box-sizing: border-box;
+}
+
+/* Masthead ----------------------------------------------------------- */
+.masthead { max-width: 74ch; margin: 0 auto; }
+.masthead__kicker { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+
+.kicker {
+  --mat-chip-elevated-container-color: var(--accent);
+  --mat-chip-label-text-color: var(--paper);
+  --mat-chip-container-shape-radius: 2px;
+  --mat-chip-label-text-font: 'Space Grotesk', sans-serif;
+  --mat-chip-label-text-weight: 700;
+  --mat-chip-label-text-size: 10px;
+  --mat-chip-label-text-tracking: 0.18em;
+  --mat-chip-container-height: 22px;
+  --mat-chip-outline-width: 0;
+}
+
+.hed {
+  margin: 0 0 16px;
+  font-size: clamp(42px, 6vw, 74px);
+  font-weight: 900;
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  font-variation-settings: 'opsz' 120;
+}
+.hed em { font-style: italic; font-weight: 400; color: var(--accent); }
+
+.dek {
+  margin: 0 0 22px;
+  max-width: 54ch;
+  font-size: 19px;
+  line-height: 1.5;
+  color: var(--soft);
+}
+
+.byline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+}
+.byline__dot {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--accent);
+  display: inline-block;
+}
+.meta { color: var(--soft); font-family: 'Space Grotesk', sans-serif; font-size: 12px; }
+.spacer { flex: 1 1 auto; }
+.ghost { --mat-icon-button-icon-color: var(--soft); }
+
+.rule { max-width: 74ch; margin: 26px auto; border-top-color: var(--rule); }
+
+/* Body --------------------------------------------------------------- */
+.body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 210px;
+  gap: 46px;
+  max-width: 74ch;
+  margin: 0 auto;
+  align-items: start;
+}
+@media (max-width: 860px) {
+  .body { grid-template-columns: 1fr; gap: 28px; }
+}
+
+.column { max-width: calc(var(--measure) * 1ch); }
+.column h2 {
+  margin: 34px 0 10px;
+  font-size: 25px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.column p {
+  margin: 0 0 16px;
+  font-size: 17px;
+  line-height: 1.68;
+  hyphens: auto;
+}
+
+/* A drop cap costs three lines and does more for an editorial feel than
+   any amount of component styling. */
+.lead::first-letter {
+  float: left;
+  font-size: 62px;
+  line-height: 0.82;
+  padding: 6px 10px 0 0;
+  font-weight: 900;
+  color: var(--accent);
+}
+
+blockquote {
+  margin: 30px 0;
+  padding-left: 20px;
+  border-left: 3px solid var(--accent);
+  font-size: 22px;
+  font-style: italic;
+  line-height: 1.4;
+}
+.end { color: var(--accent); }
+
+/* Rail --------------------------------------------------------------- */
+.rail {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  font-family: 'Space Grotesk', sans-serif;
+}
+.rail__block h3 {
+  margin: 0 0 8px;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--soft);
+}
+.rail p { margin: 0 0 4px; }
+
+.toc {
+  padding: 0;
+  --mat-list-list-item-leading-space: 0;
+  --mat-list-list-item-trailing-space: 0;
+  --mat-list-list-item-one-line-container-height: 32px;
+  --mat-list-list-item-label-text-font: 'Space Grotesk', sans-serif;
+  --mat-list-list-item-label-text-size: 13px;
+}
+.toc a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--rule); }
+.toc a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+
+.sl {
+  width: 100%;
+  --mat-slider-handle-color: var(--accent);
+  --mat-slider-active-track-color: var(--accent);
+  --mat-slider-inactive-track-color: var(--rule);
+  --mat-slider-label-container-color: var(--ink);
+  --mat-slider-label-label-text-color: var(--paper);
+}
+
+.tags {
+  --mat-chip-elevated-container-color: transparent;
+  --mat-chip-label-text-color: var(--soft);
+  --mat-chip-outline-color: var(--rule);
+  --mat-chip-outline-width: 1px;
+  --mat-chip-container-shape-radius: 2px;
+  --mat-chip-label-text-font: 'Space Grotesk', sans-serif;
+  --mat-chip-label-text-size: 11px;
+  --mat-chip-container-height: 26px;
+}

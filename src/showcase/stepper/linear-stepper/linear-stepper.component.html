@@ -1,0 +1,35 @@
+<div class="docs-surface" style="width: 560px; padding: 16px">
+  <mat-stepper linear #stepper>
+    <mat-step [stepControl]="account" label="Account">
+      <form [formGroup]="account" style="display: flex; flex-direction: column; gap: 8px; padding-block: 8px">
+        <mat-form-field appearance="outline">
+          <mat-label>Email</mat-label>
+          <input matInput formControlName="email" type="email" />
+        </mat-form-field>
+        <div>
+          <button matButton="filled" matStepperNext>Next</button>
+        </div>
+      </form>
+    </mat-step>
+
+    <mat-step [stepControl]="profile" label="Profile">
+      <form [formGroup]="profile" style="display: flex; flex-direction: column; gap: 8px; padding-block: 8px">
+        <mat-form-field appearance="outline">
+          <mat-label>Display name</mat-label>
+          <input matInput formControlName="name" />
+        </mat-form-field>
+        <div style="display: flex; gap: 8px">
+          <button matButton matStepperPrevious>Back</button>
+          <button matButton="filled" matStepperNext>Next</button>
+        </div>
+      </form>
+    </mat-step>
+
+    <mat-step label="Done">
+      <p style="font: var(--mat-sys-body-medium)">
+        Signed up as {{ account.value.email }} ({{ profile.value.name }}).
+      </p>
+      <button matButton (click)="stepper.reset()">Start over</button>
+    </mat-step>
+  </mat-stepper>
+</div>

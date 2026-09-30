@@ -1,0 +1,129 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as ToolbarStories from './toolbar.stories';
+
+<Meta of={ToolbarStories} />
+
+# Toolbar
+
+**Import:** `import { MatToolbarModule } from '@angular/material/toolbar';`
+
+A toolbar is a container with Material height, padding and typography. You lay
+out its children yourself with flexbox. Use it for the app bar at the top of a
+screen, or for a header strip above a table or a card.
+
+```html
+<mat-toolbar>Reports</mat-toolbar>
+```
+
+## Try it
+
+<Example of={ToolbarStories.Playground} />
+<Controls of={ToolbarStories.Playground} />
+
+## Single row
+
+Content placed directly inside `<mat-toolbar>` sits on one row, vertically
+centred. Most uses need nothing more.
+
+<Example of={ToolbarStories.SingleRow} />
+
+```html
+<mat-toolbar>Settings</mat-toolbar>
+```
+
+## Multiple rows
+
+Wrap each row in `<mat-toolbar-row>` and the toolbar grows to fit them. The two
+modes cannot be mixed: if you put loose text next to a row, Angular Material
+throws `MatToolbar: attempting to combine different toolbar modes`.
+
+<Example of={ToolbarStories.MultipleRows} />
+
+```html
+<mat-toolbar>
+  <mat-toolbar-row>Invoices</mat-toolbar-row>
+  <mat-toolbar-row>
+    <span>42 open</span>
+    <span style="flex: 1 1 auto"></span>
+    <span>$12,400 outstanding</span>
+  </mat-toolbar-row>
+</mat-toolbar>
+```
+
+## A real app bar
+
+The standard shape is menu button, title, spacer, actions. There is no spacer
+component. A `<span>` with `flex: 1 1 auto` pushes everything after it to the end.
+
+<Example of={ToolbarStories.AppBar} />
+
+```html
+<mat-toolbar>
+  <button matIconButton aria-label="Open navigation">
+    <mat-icon>menu</mat-icon>
+  </button>
+  <span>Acme Console</span>
+  <span class="spacer"></span>
+  <button matIconButton aria-label="Search"><mat-icon>search</mat-icon></button>
+  <button matIconButton aria-label="Account"><mat-icon>account_circle</mat-icon></button>
+</mat-toolbar>
+```
+
+```scss
+.spacer {
+  flex: 1 1 auto;
+}
+```
+
+## Colour comes from theme tokens
+
+`MatToolbar` has a `color` input, but it does nothing in a Material 3 theme. Set
+the background and foreground from the system tokens instead, and the bar follows
+the light and dark schemes on its own.
+
+<Example of={ToolbarStories.ColorFromThemeTokens} />
+
+```scss
+.app-bar {
+  background: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+}
+```
+
+## API you will use
+
+| Name | Type | Notes |
+| --- | --- | --- |
+| `<mat-toolbar>` | component | The bar itself. Content projects into one row. |
+| `<mat-toolbar-row>` | component | One row. Use several, or none, never a mix with loose content. |
+| `color` | `string` | Material 2 only. Has no effect in a Material 3 theme. |
+| `--mat-sys-surface-container` | token | Neutral bar background. |
+| `--mat-sys-primary-container` | token | Branded bar background, paired with `--mat-sys-on-primary-container`. |
+
+## Accessibility
+
+`<mat-toolbar>` renders a plain `<div>` with no ARIA role. That is correct, since
+a bar of links and buttons is not an ARIA `toolbar` widget. You still need to:
+
+- Wrap the top-level app bar in a `<header>` landmark, and the navigation links
+  inside it in `<nav>`.
+- Give every icon-only button an `aria-label`. The icon ligature is not an
+  accessible name.
+
+For a real grouped control set, such as a formatting bar, add `role="toolbar"`
+yourself and manage arrow-key focus with the CDK's `FocusKeyManager`.
+
+## Common mistakes
+
+1. **Mixing rows and loose content.** `<mat-toolbar>Title<mat-toolbar-row>...</mat-toolbar-row></mat-toolbar>` throws at runtime. Pick one mode.
+2. **Expecting `color="primary"` to work.** It is a Material 2 API. In Material 3 set `background` and `color` from `--mat-sys-*` tokens.
+3. **Hardcoding hex colours.** The bar stays light when the user switches to dark mode. Tokens flip, hex codes do not.
+4. **Icon buttons with no `aria-label`.** A screen reader announces "button" and the user cannot tell what it does.
+5. **Treating the toolbar as a header landmark.** It is a `<div>`. Put it inside `<header>` so assistive tech can jump to it.
+
+## Related
+
+- [Sidenav](?path=/docs/navigation-sidenav--docs) for the drawer the menu button opens
+- [Menu](?path=/docs/navigation-menu--docs) for the overflow menu in the trailing actions
+- [Button](?path=/docs/buttons-and-indicators-button--docs) for the icon buttons inside the bar

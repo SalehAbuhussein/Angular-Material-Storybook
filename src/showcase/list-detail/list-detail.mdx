@@ -1,0 +1,133 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as ListDetailStories from './list-detail.stories';
+
+<Meta of={ListDetailStories} />
+
+# List and detail
+
+The inbox pattern: pick something on the left, read it on the right. Mail
+clients, chat apps, ticket queues and file browsers all use this layout. The
+hard part is what happens when the screen is too narrow to show both.
+
+## Try it
+
+Pick a message on the left. Turn on `narrow` in the controls and the same
+component becomes two screens with a back button.
+
+<Example of={ListDetailStories.Playground} />
+<Controls of={ListDetailStories.Playground} />
+
+## The layout skeleton
+
+```scss
+.pane {
+  display: grid;
+  grid-template-columns: 340px minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.pane--narrow { grid-template-columns: 1fr; }
+
+.list, .detail { display: flex; flex-direction: column; min-height: 0; }
+.items, .detail__body { flex: 1; overflow: auto; }
+```
+
+A fixed list column and a flexible detail column. `minmax(0, 1fr)` again,
+because otherwise a long unbroken subject line in the detail pane refuses to
+shrink and pushes the list off screen.
+
+Each side scrolls independently, so scrolling a long message does not move the
+list you are picking from.
+
+## Narrow mode is not only CSS
+
+People get this part wrong. On a phone you cannot show both panes, so one has to
+go, and hiding it with CSS is not enough:
+
+```html
+@if (!narrow() || !selected()) {
+  <section class="list">…</section>
+}
+
+@if (!narrow() || selected()) {
+  <section class="detail">…</section>
+}
+```
+
+With `display: none`, the hidden list is still in the DOM, still focusable by
+screen readers in some configurations, and still holding scroll position and
+state that no longer matches what the user sees. Removing it with `@if` makes
+the back button honest: there is nothing else on screen.
+
+<Example of={ListDetailStories.NarrowList} />
+<Example of={ListDetailStories.NarrowDetail} />
+
+The back button only exists in narrow mode. On a wide screen there is nothing to
+go back to, and a back button that does nothing is worse than no button.
+
+In a real app, drive `narrow` from `BreakpointObserver` instead of an input:
+
+```ts
+readonly narrow = toSignal(
+  this.breakpoints.observe(Breakpoints.Handset).pipe(map((s) => s.matches)),
+  { initialValue: false },
+);
+```
+
+## The empty pane is a state
+
+<Example of={ListDetailStories.NothingSelected} />
+
+Before anything is picked, the right pane says what to do. An empty white
+rectangle reads as a loading failure. Four lines prevent a whole class of "is it
+broken?" support tickets.
+
+## Single select with mat-selection-list
+
+`mat-selection-list` is usually the multi-select component, but
+`[multiple]="false"` turns it into a single-select list that keeps the roving
+focus and keyboard behaviour:
+
+```html
+<mat-selection-list [multiple]="false" (selectionChange)="pick($event.options[0].value)">
+  <mat-list-option [value]="m.id" [selected]="selectedId() === m.id">
+```
+
+Use `mat-nav-list` with `[activated]` instead when picking an item changes the
+URL. Use the selection list when the selection is view state, not navigation.
+
+## API you will use
+
+| Member | Type | What it does |
+| --- | --- | --- |
+| `mat-selection-list` | `[multiple]`, `(selectionChange)` | `multiple="false"` gives single select with list keyboard handling. |
+| `mat-list-option` | `[value]`, `[selected]` | One row. `value` is what `selectionChange` hands back. |
+| `matListItemTitle` / `matListItemLine` / `matListItemMeta` | content slots | Title, supporting lines, and the trailing slot for the timestamp. |
+| `MatSelectionListChange` | `{ source, options }` | `options[0].value` is the item picked in single select mode. |
+| `subscriptSizing="dynamic"` | `'fixed' \| 'dynamic'` | Stops the search field reserving a row for an error that never appears. |
+| `minmax(0, 1fr)` | CSS | Lets the detail column shrink below its content instead of crushing the list. |
+| `BreakpointObserver` | `observe(Breakpoints.Handset)` | The real source for `narrow`. Pair with `toSignal`. |
+
+## Accessibility
+
+- Both panes are `<section>` elements with `aria-label`, so they are separate landmarks instead of one undifferentiated region.
+- The back button has an `aria-label` naming its destination, not only "Back".
+- Icon-only toolbar actions each carry an `aria-label` and a tooltip. The tooltip is not a substitute for the label.
+- The avatar circle is `aria-hidden`, because the sender's name is already text right next to it. A screen reader announcing "D" helps nobody.
+- `mat-selection-list` handles arrow keys, Home and End. Do not add your own key handling.
+
+## Common mistakes
+
+1. **Hiding the list with CSS in narrow mode.** It stays in the DOM with stale state, and the back button becomes theatre. Remove it with `@if`.
+2. **A blank right pane before anything is selected.** It reads as broken. Say "Pick a message on the left".
+3. **A back button on the wide layout.** There is nothing to go back to.
+4. **Plain `1fr` for the detail column.** One long subject line and the list column gets squeezed out.
+5. **One shared scroll container.** Scrolling a long message moves the list too, and people lose their place.
+
+## Related
+
+- [List](?path=/docs/layout-list--docs) for selection lists and the list item slots
+- [App Shell](?path=/docs/full-layouts-app-shell--docs) for the responsive pattern applied to a sidenav
+- [Responsive Layout](?path=/docs/cdk-responsive-layout--docs) for `BreakpointObserver`
+- [Detail Page](?path=/docs/full-layouts-detail-page--docs) for the full-page version of the right-hand pane

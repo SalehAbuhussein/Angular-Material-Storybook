@@ -1,0 +1,29 @@
+:host {
+  display: block;
+  width: 100%;
+}
+.ladder {
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--mat-sys-corner-medium);
+  overflow: hidden;
+}
+.step {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  align-items: baseline;
+  padding: 14px 16px;
+  color: var(--mat-sys-on-surface);
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+}
+.step:last-child {
+  border-bottom: 0;
+}
+code {
+  font-family: 'Roboto Mono', ui-monospace, monospace;
+  font-size: 0.8125rem;
+}
+.note {
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}

@@ -1,0 +1,98 @@
+<div class="pane" [class.pane--narrow]="narrow()" [style.height.px]="height()">
+  <!-- On a narrow screen only one side is in the DOM at a time, which is
+       what makes the back button meaningful instead of decorative. -->
+  @if (!narrow() || !selected()) {
+    <section class="list" aria-label="Messages">
+      <mat-toolbar class="bar">
+        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="search">
+          <mat-icon matIconPrefix>search</mat-icon>
+          <!-- Two-way ngModel cannot bind a signal, so read and write it
+               explicitly. A plain field here would leave the filtered()
+               computed with no signal to depend on, and the list would
+               never update. -->
+          <input
+            matInput
+            [ngModel]="query()"
+            (ngModelChange)="query.set($event)"
+            placeholder="Search messages"
+            aria-label="Search messages" />
+        </mat-form-field>
+      </mat-toolbar>
+
+      @if (filtered().length === 0) {
+        <div class="empty">
+          <mat-icon>search_off</mat-icon>
+          <p>No messages match "{{ query() }}"</p>
+          <button matButton (click)="query.set('')">Clear search</button>
+        </div>
+      } @else {
+        <mat-selection-list
+          [multiple]="false"
+          (selectionChange)="pick($event.options[0].value)"
+          class="items">
+          @for (m of filtered(); track m.id) {
+            <mat-list-option
+              [value]="m.id"
+              [selected]="selectedId() === m.id"
+              [class.item--unread]="m.unread">
+              <span matListItemTitle>{{ m.from }}</span>
+              <span matListItemLine class="subject">{{ m.subject }}</span>
+              <span matListItemLine class="muted">{{ m.preview }}</span>
+              <span matListItemMeta class="time">{{ m.time }}</span>
+            </mat-list-option>
+          }
+        </mat-selection-list>
+      }
+    </section>
+  }
+
+  @if (!narrow() || selected()) {
+    <section class="detail" aria-label="Message">
+      @if (selected(); as message) {
+        <mat-toolbar class="bar">
+          @if (narrow()) {
+            <button matIconButton (click)="back()" aria-label="Back to messages">
+              <mat-icon>arrow_back</mat-icon>
+            </button>
+          }
+          <span class="bar__title">{{ message.subject }}</span>
+          <span class="spacer"></span>
+          <button matIconButton aria-label="Archive" matTooltip="Archive"><mat-icon>archive</mat-icon></button>
+          <button matIconButton aria-label="Delete" matTooltip="Delete"><mat-icon>delete</mat-icon></button>
+        </mat-toolbar>
+
+        <div class="detail__body">
+          <div class="from">
+            <div class="avatar" aria-hidden="true">{{ message.from.charAt(0) }}</div>
+            <div>
+              <p class="from__name">{{ message.from }}</p>
+              <p class="muted">{{ message.time }}</p>
+            </div>
+            <mat-chip [disableRipple]="true">{{ message.label }}</mat-chip>
+          </div>
+
+          <mat-divider />
+
+          <p class="body">{{ message.body }}</p>
+
+          <div class="reply">
+            <mat-form-field appearance="outline" class="reply__field">
+              <mat-label>Reply</mat-label>
+              <textarea matInput rows="3" [(ngModel)]="draft"></textarea>
+            </mat-form-field>
+            <button matButton="filled" [disabled]="!draft.trim()" (click)="send()">
+              <mat-icon>send</mat-icon> Send
+            </button>
+          </div>
+        </div>
+      } @else {
+        <!-- The placeholder is a real state, not an empty div. -->
+        <div class="empty">
+          <mat-icon>mail</mat-icon>
+          <p><strong>Nothing selected</strong></p>
+          <p class="muted">Pick a message on the left to read it.</p>
+        </div>
+      }
+    </section>
+  }
+</div>

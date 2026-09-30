@@ -1,0 +1,13 @@
+<div class="docs-demo">
+  <div class="row">
+    <span>{{ apiKey }}</span>
+    <button
+      matIconButton
+      aria-label="Copy the API key"
+      [cdkCopyToClipboard]="apiKey"
+      (cdkCopyToClipboardCopied)="onCopied($event)"
+    >
+      <mat-icon>{{ justCopied() ? 'check' : 'content_copy' }}</mat-icon>
+    </button>
+  </div>
+</div>

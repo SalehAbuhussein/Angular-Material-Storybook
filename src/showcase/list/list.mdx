@@ -1,0 +1,140 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as ListStories from './list.stories';
+
+<Meta of={ListStories} />
+
+# List
+
+**Import:** `import { MatListModule } from '@angular/material/list';`
+
+There is one list item component and four wrappers around it. The wrapper sets
+the semantics: a plain list is static text, a nav list is links, a selection
+list is a listbox, an action list is buttons. Picking the wrong one is the most
+common list bug, because it looks right and reads wrong.
+
+```html
+<mat-list>
+  <mat-list-item>Deploy 4.2.1</mat-list-item>
+</mat-list>
+```
+
+## Try it
+
+<Example of={ListStories.Playground} />
+<Controls of={ListStories.Playground} />
+
+## Pick the right wrapper
+
+| Wrapper | Item element | Use it when |
+| --- | --- | --- |
+| `mat-list` | `<mat-list-item>` | The items are read-only content |
+| `mat-nav-list` | `<a mat-list-item>` | Clicking changes the URL |
+| `mat-selection-list` | `<mat-list-option>` | The user picks one or many |
+| `mat-action-list` | `<button mat-list-item>` | Clicking runs a command |
+
+<Example of={ListStories.BasicList} />
+
+`[matSubheader]` labels a group inside a list, and `<mat-divider>` draws the line
+between groups.
+
+## Navigation list
+
+<Example of={ListStories.NavList} />
+
+```html
+<mat-nav-list>
+  <a mat-list-item routerLink="/inbox" routerLinkActive activated>
+    <mat-icon matListItemIcon>inbox</mat-icon>
+    <span matListItemTitle>Inbox</span>
+    <span matListItemMeta>12</span>
+  </a>
+</mat-nav-list>
+```
+
+`activated` marks the current item. On an `<a>` it also sets
+`aria-current="page"`, so screen readers announce which entry you are on.
+
+## Selection list
+
+`mat-selection-list` is a listbox. Options are multi-select by default. Set
+`[multiple]="false"` for a single-choice list, which swaps the checkboxes for
+radio indicators.
+
+<Example of={ListStories.SelectionList} />
+
+```ts
+onChange(event: MatSelectionListChange) {
+  this.selected.set(event.source.selectedOptions.selected.map((o) => o.value));
+}
+```
+
+The list is also a `ControlValueAccessor`, so `[(ngModel)]` or `formControlName`
+gives you the array of `value` inputs directly.
+
+## Action list
+
+<Example of={ListStories.ActionList} />
+
+Items are real `<button>` elements. Inside a `<form>` they default to
+`type="submit"`, so add `type="button"` there.
+
+## Lines, avatars and meta
+
+An item has four content slots. `matListItemTitle` is the first line,
+`matListItemLine` adds supporting lines, `matListItemAvatar` or
+`matListItemIcon` sits at the start, and `matListItemMeta` sits at the end.
+Angular Material sizes the row from the number of lines, up to three.
+
+<Example of={ListStories.LinesAndAvatars} />
+
+```html
+<mat-list-item>
+  <img matListItemAvatar src="avatar.png" alt="" />
+  <span matListItemTitle>Priya Raman</span>
+  <span matListItemLine>Re: quarterly numbers</span>
+  <span matListItemMeta>09:41</span>
+</mat-list-item>
+```
+
+## API you will use
+
+| Name | On | Type | Notes |
+| --- | --- | --- | --- |
+| `activated` | `mat-list-item` | `boolean` | Highlights the current item, sets `aria-current` on anchors |
+| `lines` | `mat-list-item` | `number \| string` | Forces the row height instead of counting lines |
+| `disableRipple` | list or item | `boolean` | Turns off the click ripple |
+| `multiple` | `mat-selection-list` | `boolean` | Defaults to `true` |
+| `hideSingleSelectionIndicator` | `mat-selection-list` | `boolean` | Hides radios in single-select mode |
+| `selectionChange` | `mat-selection-list` | `MatSelectionListChange` | `{ source, options }` |
+| `selectedOptions` | `mat-selection-list` | `SelectionModel<MatListOption>` | Read or set the selection in code |
+| `togglePosition` | `mat-list-option` | `'before' \| 'after'` | Checkbox side, defaults to `after` |
+
+`selectAll()` and `deselectAll()` on `MatSelectionList` cover the "select all"
+checkbox you will eventually be asked for.
+
+## Accessibility
+
+`mat-list` renders `role="list"`. `mat-selection-list` renders `role="listbox"`
+with roving tabindex and typeahead. Nav and action lists rely on the native
+`<a>` and `<button>` you supply.
+
+- Avatars are decoration. Give them `alt=""` so they are not announced twice.
+- `matListItemMeta` content is read after the title. If it is a control, it needs
+  its own accessible name, for example `aria-label="More options for Design assets"`.
+- Do not nest an interactive control inside `<a mat-list-item>`. Two focusable
+  elements in one row confuse both keyboard and screen reader users.
+
+## Common mistakes
+
+1. **`<mat-list-item routerLink>` inside `mat-nav-list`.** The element must be an anchor: `<a mat-list-item routerLink="…">`. On a `<mat-list-item>` the browser has nothing to navigate.
+2. **`(click)` on a plain `mat-list-item`.** It is not focusable and has no key handling. Use `mat-action-list` with `<button mat-list-item>`.
+3. **More than three `matListItemLine` elements.** The item clips the overflow. Three is the documented maximum.
+4. **Reading the selection from `(click)`.** Use `(selectionChange)` or `selectedOptions`. The click fires before Angular Material updates the option.
+5. **A checkbox inside `mat-list-item` to fake selection.** `mat-selection-list` already gives you the listbox role, keyboard support and form integration.
+
+## Related
+
+- [Divider](?path=/docs/layout-divider--docs) for the separators between groups
+- [Expansion Panel](?path=/docs/layout-expansion-panel--docs) for a list whose rows open
+- [Tree](?path=/docs/layout-tree--docs) when the items nest

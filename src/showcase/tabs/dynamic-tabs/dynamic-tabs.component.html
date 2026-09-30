@@ -1,0 +1,19 @@
+<div class="docs-demo">
+  <div class="docs-demo docs-demo--row">
+    <button matButton="filled" (click)="add()">Add tab</button>
+    <span style="font: var(--mat-sys-body-medium)">Selected index: {{ selected() }}</span>
+  </div>
+
+  <div class="docs-surface" style="width: 520px; padding: 8px">
+    <mat-tab-group [selectedIndex]="selected()" (selectedIndexChange)="selected.set($event)">
+      @for (tab of tabs(); track tab.id) {
+        <mat-tab [label]="tab.label">
+          <div style="padding: 16px; font: var(--mat-sys-body-medium)">
+            <p>Content for {{ tab.label }}.</p>
+            <button matButton (click)="remove(tab.id)">Close</button>
+          </div>
+        </mat-tab>
+      }
+    </mat-tab-group>
+  </div>
+</div>

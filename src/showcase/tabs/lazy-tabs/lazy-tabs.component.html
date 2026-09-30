@@ -1,0 +1,16 @@
+<div class="docs-surface" style="width: 480px; padding: 8px">
+  <mat-tab-group>
+    <mat-tab label="Eager">
+      <div style="padding: 16px; font: var(--mat-sys-body-medium)">
+        Built with the group: <demo-stamp />
+      </div>
+    </mat-tab>
+    <mat-tab label="Lazy">
+      <ng-template matTabContent>
+        <div style="padding: 16px; font: var(--mat-sys-body-medium)">
+          Built on first open: <demo-stamp />
+        </div>
+      </ng-template>
+    </mat-tab>
+  </mat-tab-group>
+</div>

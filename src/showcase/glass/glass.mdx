@@ -1,0 +1,151 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as GlassStories from './glass.stories';
+
+<Meta of={GlassStories} />
+
+# Glass dashboard
+
+A saturated aurora, frosted panels, hairline highlights and long soft shadows.
+It is the opposite aesthetic to the
+[Neo Brutalist Console](?path=/docs/beyond-material-neo-brutalist-console--docs),
+built from the same components and the same token mechanism.
+
+## Try it
+
+Drag the detail slider to redraw the sparkline, flip the switches to move the
+cache ring, or change the mood to repaint the aurora.
+
+<Example of={GlassStories.Playground} />
+<Controls of={GlassStories.Playground} />
+
+## The aurora is three divs
+
+No images, canvas or library. Three absolutely positioned circles and one big
+blur:
+
+```scss
+.aura { position: absolute; inset: -20%; filter: blur(70px); opacity: 0.85; }
+.blob { position: absolute; border-radius: 50%; }
+.blob--1 { width: 46%; height: 60%; left: -6%; top: -12%; background: var(--c1); }
+```
+
+`inset: -20%` pushes the blobs past the edges so the blur never reveals a hard
+boundary. Percentage sizing lets it rescale with the container instead of
+breaking at a fixed width.
+
+The mood switcher changes three custom properties. The blobs, sparkline,
+slider, toggles and progress bars all follow, because they resolve `var(--c2)`
+at paint time.
+
+<Example of={GlassStories.Reef} />
+<Example of={GlassStories.Ember} />
+
+## What makes glass look like glass
+
+Four properties, and the order of importance is not obvious:
+
+```scss
+.pane {
+  background: rgba(255, 255, 255, 0.08);            // 1. barely there
+  backdrop-filter: blur(22px) saturate(140%);       // 2. the blur
+  border: 1px solid rgba(255, 255, 255, 0.18);      // 3. the edge
+  box-shadow: 0 18px 50px rgba(5, 6, 15, 0.45);     // 4. the lift
+}
+
+.pane::before {                                     // 5. the tell
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent);
+}
+```
+
+`saturate(140%)` stops frosted panels looking grey, and the one-pixel gradient
+along the top edge reads as a lit rim. Skip either and you get a
+semi-transparent box.
+
+`backdrop-filter` needs something behind it. On a flat background a glass
+panel is a lighter rectangle, so the aurora is structural here.
+
+## Masks clip their children
+
+The cache ring is a conic gradient with a hole punched through it:
+
+```scss
+.ring {
+  background: conic-gradient(var(--c2) calc(var(--pct) * 1%), rgba(255,255,255,0.14) 0);
+  mask: radial-gradient(circle, transparent 54%, #000 55%);
+}
+```
+
+The percentage label cannot live inside that element. A mask applies to the
+whole subtree, so the text is punched out with the middle of the ring.
+`mask: none` on the child does not rescue it. Make the number a sibling and
+position it on top:
+
+```html
+<div class="ring-wrap">
+  <div class="ring" [style.--pct]="hitRate()"></div>
+  <span class="ring__num">{{ hitRate() }}%</span>
+</div>
+```
+
+Binding `[style.--pct]` lets a signal drive a gradient. Custom properties bind
+like any other style, and the browser repaints the gradient.
+
+## Material tokens on a dark translucent surface
+
+The default tokens assume an opaque surface, so a few need redirecting:
+
+```scss
+.glass {
+  --mat-sys-on-surface: #f2f4ff;
+  --mat-sys-on-surface-variant: rgba(242, 244, 255, 0.62);
+  --mat-sys-primary: var(--c2);
+}
+
+.pane { --mat-sys-level1: none; }   // cards bring their own shadow otherwise
+```
+
+`--mat-sys-level1: none` matters. `mat-card` applies an elevation shadow that
+stacks with the glass look's long soft shadow into a muddy double shadow.
+
+## API you will use
+
+| Member | Type | What it does |
+| --- | --- | --- |
+| `backdrop-filter` | CSS | Blurs what is behind the element. Useless without something behind it. |
+| `[style.--pct]` | style binding | Drives a custom property from a signal, repainting gradients. |
+| `--mat-sys-level1` | shadow token | Set to `none` to stop `mat-card` adding its own elevation. |
+| `--mat-slider-active-track-color` | color | The filled part of the slider track. |
+| `--mat-slide-toggle-selected-track-color` | color | The on state. There are separate hover, focus and pressed variants. |
+| `--mat-button-toggle-shape` | length | `999px` for a pill segmented control. |
+| `--mat-progress-bar-track-color` | color | The unfilled part, which needs raising on a dark surface. |
+
+## Accessibility
+
+Glass is the aesthetic most likely to fail contrast, because the background
+moves underneath it:
+
+- Test against the worst patch of the aurora, not the average. Text that passes over the dark corner can fail over the bright one.
+- Raise the panel tint until it passes. `rgba(255,255,255,0.08)` looks good and is often not enough. Contrast beats the effect.
+- Do not rely on the glow dots alone. The node states carry a tooltip and a percentage, so colour is reinforcement.
+- `backdrop-filter` is unsupported in some contexts. The panels still have a background colour and a border, so they degrade to flat cards instead of vanishing.
+- The sparkline is `role="img"` with a label naming the range. A screen reader gets a sentence instead of two paths.
+
+## Common mistakes
+
+1. Putting text inside a masked element. The mask eats it. Make it a sibling.
+2. Glass on a flat background. With nothing to blur, `backdrop-filter` does nothing and you pay for it anyway.
+3. Leaving `mat-card` elevation on. Its shadow and yours stack into mud. Set `--mat-sys-level1: none`.
+4. Forgetting `saturate()`. Blur alone desaturates what is behind it and the panel looks grey.
+5. Checking contrast once. The background is a gradient. Check the light end and the dark end.
+
+## Related
+
+- [Neo Brutalist Console](?path=/docs/beyond-material-neo-brutalist-console--docs) for the same technique, opposite result
+- [Color and Variables](?path=/docs/foundations-color-and-variables--docs) for the token reference
+- [Slider](?path=/docs/form-controls-slider--docs), [Slide Toggle](?path=/docs/form-controls-slide-toggle--docs)
+- [Dashboard](?path=/docs/full-layouts-dashboard--docs) for the neutral version of this screen

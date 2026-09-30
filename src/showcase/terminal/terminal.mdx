@@ -1,0 +1,143 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as TerminalStories from './terminal.stories';
+
+<Meta of={TerminalStories} />
+
+# Neon terminal
+
+Phosphor on near-black, scanlines, text glow and a blinking block cursor. The
+prompt is a `mat-form-field` with a `mat-autocomplete`, the panels are
+`mat-tab-group`, and the toggles are `mat-checkbox`.
+
+## Try it
+
+Type a command and press RUN. Try `help`, `status`, `logs`, `deploy`, or
+something invalid. The CONFIG tab turns the scanlines and the glow off.
+
+<Example of={TerminalStories.Playground} />
+<Controls of={TerminalStories.Playground} />
+
+## Scanlines must not eat clicks
+
+The overlay covers the whole panel, including every control under it:
+
+```scss
+.crt--scan .bezel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;      // the line that makes it usable
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0 2px,
+    rgba(0, 0, 0, 0.28) 2px 4px
+  );
+  z-index: 5;
+}
+```
+
+Without `pointer-events: none` the overlay silently swallows every click, and
+the bug looks like "the buttons stopped working", not a CSS problem.
+
+## color-mix beats a pile of variables
+
+Every tint here derives from one colour:
+
+```scss
+border: 1px solid color-mix(in srgb, var(--fg) 35%, transparent);
+box-shadow: 0 0 40px color-mix(in srgb, var(--fg) 18%, transparent);
+```
+
+Change `--fg` and the borders, glows, track colours and dim text follow. The
+alternative is declaring `--fg-35`, `--fg-18` and `--fg-6` by hand for every
+tube colour: three times the code, and it drifts the first time someone edits
+one.
+
+<Example of={TerminalStories.Amber} />
+<Example of={TerminalStories.Ice} />
+
+## The one place ::ng-deep is right
+
+The rest of this chapter insists on tokens over `::ng-deep`. This is the
+exception.
+
+`mat-tab-group` has no token for the height of its body, so a tab whose content
+should fill the remaining space collapses to its natural height. No supported
+property exists. The escape hatch, tightly scoped:
+
+```scss
+.tabs { display: flex; flex-direction: column; }
+
+.tabs ::ng-deep .mat-mdc-tab-body-wrapper { flex: 1; min-height: 0; }
+.tabs ::ng-deep .mat-mdc-tab-body-content { display: flex; flex-direction: column; overflow: hidden; }
+```
+
+The `.tabs` prefix carries this component's emulated-encapsulation attribute, so
+the deep part cannot reach another component's tabs. The rule: use a token if
+one exists. When none does, scope the deep selector under a class of your own so
+the blast radius stays inside one component.
+
+## Autocompleting a command palette
+
+The suggestion list is a plain `computed` over a string array:
+
+```ts
+readonly suggestions = computed(() => {
+  const q = this.draft().trim().toLowerCase();
+  return COMMANDS.filter((c) => c.startsWith(q));
+});
+```
+
+No debounce, HTTP or `valueChanges` pipeline. When the source is in memory, a
+computed over a signal is the whole feature.
+
+## Keeping the newest line in view
+
+```ts
+effect(() => {
+  this.lines();                                   // the dependency
+  const el = this.screen()?.nativeElement;
+  if (el) queueMicrotask(() => (el.scrollTop = el.scrollHeight));
+});
+```
+
+Reading `this.lines()` subscribes the effect. `queueMicrotask` defers the
+scroll until the new line is in the DOM. Otherwise `scrollHeight` is still the
+old value and the view lands one line short.
+
+## API you will use
+
+| Member | Type | What it does |
+| --- | --- | --- |
+| `--mat-tab-active-indicator-color` | color | The underline. `--mat-tab-active-indicator-height: 1px` makes it a hairline. |
+| `--mat-tab-header-label-text-font` | font | Swaps tab labels to monospace. |
+| `--mat-form-field-outlined-caret-color` | color | The text cursor, which is separate from the text colour. |
+| `matTextPrefix` | directive | Inline text before the input, inside the outline. `matIconPrefix` is the icon variant. |
+| `--mat-checkbox-selected-checkmark-color` | color | The tick itself. Set it to the background for a knocked-out look. |
+| `color-mix(in srgb, …)` | CSS | Derives every tint from one variable. |
+| `pointer-events: none` | CSS | Required on any full-bleed decorative overlay. |
+
+## Accessibility
+
+A terminal aesthetic is easy to make unreadable:
+
+- Make the glow optional. `text-shadow` on body text reduces legibility for a lot of people. It is the first thing to give an off switch, and this demo puts it in CONFIG.
+- Scanlines cut effective contrast. Measure the palette with the overlay on. The dark bands lower the real ratio.
+- Respect `prefers-reduced-motion`. The blinking cursor and the status LED both stop.
+- The blinking cursor is decoration. It is an empty `<span>`, so nothing is announced. The real focus indicator is the form field's.
+- Output lines are plain text in the DOM, so a screen reader reads the session instead of a canvas.
+
+## Common mistakes
+
+1. A decorative overlay without `pointer-events: none`. Every control beneath it stops responding.
+2. Glow on by default with no way off. It looks great in a screenshot and hurts to read for an hour.
+3. Hand-rolling every tint. `color-mix` derives them, so one variable repaints the theme.
+4. Scrolling before the DOM updates. `scrollHeight` is stale. Defer with `queueMicrotask`.
+5. Unscoped `::ng-deep`. Without a class prefix it leaks to every matching component on the page.
+
+## Related
+
+- [Neo Brutalist Console](?path=/docs/beyond-material-neo-brutalist-console--docs) and [Glass Dashboard](?path=/docs/beyond-material-glass-dashboard--docs)
+- [Autocomplete](?path=/docs/form-controls-autocomplete--docs), [Tabs](?path=/docs/navigation-tabs--docs)
+- [Color and Variables](?path=/docs/foundations-color-and-variables--docs) for the token reference

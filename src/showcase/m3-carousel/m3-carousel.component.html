@@ -1,0 +1,55 @@
+<section
+  class="carousel"
+  aria-roledescription="carousel"
+  [attr.aria-label]="label()"
+  tabindex="0"
+  (keydown.arrowright)="go(1)"
+  (keydown.arrowleft)="go(-1)"
+  (pointerdown)="dragStart($event)"
+  (pointerup)="dragEnd($event)"
+  (wheel)="wheel($event)"
+>
+  <div class="track" [style.height.px]="height()">
+    @for (s of slides; track s.title; let i = $index) {
+      <div
+        class="slide"
+        role="group"
+        aria-roledescription="slide"
+        [attr.aria-label]="i + 1 + ' of ' + slides.length + ', ' + s.title"
+        [attr.aria-hidden]="grow(i) === 0"
+        [attr.inert]="grow(i) === 0 ? '' : null"
+        [style.flex-grow]="grow(i)"
+        [class.slide--hidden]="grow(i) === 0"
+        [class.slide--small]="grow(i) > 0 && grow(i) < 2"
+        [style.background]="
+          'linear-gradient(135deg, var(--mat-sys-' + s.from + '), var(--mat-sys-' + s.to + '))'
+        "
+      >
+        <span class="slide__title">{{ s.title }}</span>
+      </div>
+    }
+  </div>
+  <div class="controls">
+    <span class="count" aria-live="polite">{{ start() + 1 }} / {{ slides.length }}</span>
+    <button
+      type="button"
+      class="nav"
+      matRipple
+      aria-label="Previous"
+      [disabled]="start() === 0"
+      (click)="go(-1)"
+    >
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+    <button
+      type="button"
+      class="nav"
+      matRipple
+      aria-label="Next"
+      [disabled]="start() === maxStart()"
+      (click)="go(1)"
+    >
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+  </div>
+</section>

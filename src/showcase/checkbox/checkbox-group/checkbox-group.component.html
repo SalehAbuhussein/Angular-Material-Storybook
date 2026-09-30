@@ -1,0 +1,16 @@
+<mat-checkbox
+  [checked]="allChecked()"
+  [indeterminate]="someChecked()"
+  (change)="setAll($event.checked)">
+  Notify me about everything
+</mat-checkbox>
+
+<ul class="docs-children">
+  @for (topic of topics(); track topic.id) {
+    <li>
+      <mat-checkbox [checked]="topic.on" (change)="toggle(topic.id, $event.checked)">
+        {{ topic.label }}
+      </mat-checkbox>
+    </li>
+  }
+</ul>

@@ -1,0 +1,39 @@
+<div class="wrap">
+  <h3>1. Point at a recommendation</h3>
+  <div class="plans">
+    <div class="plan">
+      <span class="plan__name">Basic</span>
+      <span class="plan__price">$0</span>
+      <button matButton="outlined">Choose</button>
+    </div>
+    <div class="plan plan--pick">
+      <span class="pick-badge">Recommended</span>
+      <span class="plan__name">Team</span>
+      <span class="plan__price">$12</span>
+      <button matButton="filled" class="btn-tertiary">Choose</button>
+    </div>
+    <div class="plan">
+      <span class="plan__name">Enterprise</span>
+      <span class="plan__price">$40</span>
+      <button matButton="outlined">Choose</button>
+    </div>
+  </div>
+
+  <h3>2. Mark a category, such as new items</h3>
+  <ul class="list">
+    <li><span>Q3 report.pdf</span></li>
+    <li><span>Pricing sheet.xlsx</span><span class="tag">New</span></li>
+    <li><span>Roadmap.pptx</span><span class="tag">New</span></li>
+    <li><span>Team photo.jpg</span></li>
+  </ul>
+
+  <h3>3. Highlight one value in a chart</h3>
+  <div class="chart" role="img" aria-label="Weekly sales, Thursday is the highest">
+    @for (b of bars; track b.day) {
+      <div class="bar-col">
+        <div class="bar" [class.bar--top]="b.top" [style.height.%]="b.value"></div>
+        <span>{{ b.day }}</span>
+      </div>
+    }
+  </div>
+</div>

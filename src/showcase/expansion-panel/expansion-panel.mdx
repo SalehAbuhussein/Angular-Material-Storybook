@@ -1,0 +1,139 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as ExpansionStories from './expansion-panel.stories';
+
+<Meta of={ExpansionStories} />
+
+# Expansion panel
+
+**Import:** `import { MatExpansionModule } from '@angular/material/expansion';`
+
+A panel is a header you click and a body that grows. Wrap several in
+`<mat-accordion>` and they coordinate: opening one closes the others, and arrow
+keys move between the headers. Use it to hide detail most people do not need,
+never something they must read.
+
+```html
+<mat-expansion-panel>
+  <mat-expansion-panel-header>
+    <mat-panel-title>Shipping address</mat-panel-title>
+  </mat-expansion-panel-header>
+  <p>221B Baker Street</p>
+</mat-expansion-panel>
+```
+
+## Try it
+
+<Example of={ExpansionStories.Playground} />
+<Controls of={ExpansionStories.Playground} />
+
+## The header
+
+`mat-panel-title` is the label. `mat-panel-description` is the second column,
+which people read while the panel is closed, so put the current value there
+instead of more instructions.
+
+<Example of={ExpansionStories.Header} />
+
+```html
+<mat-expansion-panel-header>
+  <mat-panel-title>Personal details</mat-panel-title>
+  <mat-panel-description>Dana Wu, dana@example.com</mat-panel-description>
+</mat-expansion-panel-header>
+```
+
+`hideToggle` removes the chevron and `togglePosition="before"` moves it to the
+leading edge. Both work on a single panel, or on the accordion to apply to every
+panel inside.
+
+## Accordion and multi
+
+<Example of={ExpansionStories.AccordionMulti} />
+
+```html
+<mat-accordion multi>
+  <mat-expansion-panel>…</mat-expansion-panel>
+  <mat-expansion-panel>…</mat-expansion-panel>
+</mat-accordion>
+```
+
+Without `multi`, only one panel can be open at a time. With it, panels are
+independent and the accordion only supplies shared styling and keyboard
+navigation.
+
+`displayMode="flat"` drops the spacing and elevation between panels, which suits
+a settings list.
+
+## A FAQ
+
+<Example of={ExpansionStories.FaqAccordion} />
+
+The answers are wrapped in `<ng-template matExpansionPanelContent>`, so their
+content is created only when the panel first opens. That matters once the body
+holds a form, a chart or an HTTP call.
+
+## Controlling the open panel
+
+<Example of={ExpansionStories.ActionRowWizard} />
+
+```ts
+readonly open = signal(0);
+```
+
+```html
+<mat-expansion-panel [expanded]="open() === i" (opened)="open.set(i)" (closed)="collapse(i)">
+  …
+  <mat-action-row>
+    <button matButton="filled" (click)="open.set(i + 1)">Next</button>
+  </mat-action-row>
+</mat-expansion-panel>
+```
+
+`mat-action-row` pins buttons to the bottom of the body with the right padding
+and a separator above them. The panel toggles itself when the header is clicked,
+so the `(closed)` handler tells your signal when the user collapses it.
+Without it, the two get out of step.
+
+## API you will use
+
+| Name | On | Type | Notes |
+| --- | --- | --- | --- |
+| `expanded` | panel | `boolean` | Two-way through `expandedChange` |
+| `disabled` | panel | `boolean` | Header stays visible but cannot be opened |
+| `hideToggle` | panel or accordion | `boolean` | Hides the chevron |
+| `togglePosition` | panel or accordion | `'before' \| 'after'` | Defaults to `after` |
+| `multi` | `mat-accordion` | `boolean` | Allow several panels open |
+| `displayMode` | `mat-accordion` | `'default' \| 'flat'` | `flat` removes spacing and elevation |
+| `(opened)`, `(closed)` | panel | `void` | Fire when the state changes |
+| `(afterExpand)`, `(afterCollapse)` | panel | `void` | Fire after the animation, use for focus or measuring |
+| `ng-template[matExpansionPanelContent]` | inside panel | — | Defers creating the body until first open |
+
+`expand()`, `close()` and `toggle()` are available on the panel instance through
+a template reference or `@ViewChild`.
+
+## Accessibility
+
+The header is a focusable `role="button"` with `aria-expanded` and
+`aria-controls` wired to the body. Inside an accordion, Up and Down move between
+headers, Home and End jump to the first and last, and Enter or Space toggles.
+
+- `mat-panel-title` is styled text, not a heading. If the accordion is a page
+  outline, put a real heading inside the title so it appears in the heading list.
+- Use `(afterExpand)` when you need to move focus into the body. Focusing during
+  the animation lands on an element that is still zero height.
+- A disabled panel keeps its header in the tab order with `aria-disabled`, so
+  people can still read the label.
+
+## Common mistakes
+
+1. **Hiding required form fields in a collapsed panel.** Validation fails on a field nobody can see. Open the panel that holds the error, or keep required fields out of panels.
+2. **Building the body eagerly.** Every panel's content is created on render unless you wrap it in `<ng-template matExpansionPanelContent>`. Ten panels means ten forms built for nothing.
+3. **`[expanded]` bound without `(closed)` or `(expandedChange)`.** The panel toggles internally and your state silently drifts out of sync.
+4. **`multi` on the panel.** It is an input on `<mat-accordion>` only. On a panel it does nothing.
+5. **Buttons floating at the end of the body.** Use `<mat-action-row>` so they get the separator and padding every other panel has.
+
+## Related
+
+- [List](?path=/docs/layout-list--docs) when the rows do not need to open
+- [Card](?path=/docs/layout-card--docs) for content that is always visible
+- [Tree](?path=/docs/layout-tree--docs) for nesting that goes more than one level deep

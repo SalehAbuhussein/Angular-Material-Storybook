@@ -1,0 +1,15 @@
+<div class="docs-demo">
+  <div class="list" cdkDropList (cdkDropListDropped)="drop($event)">
+    @for (row of rows(); track row) {
+      <div class="item" cdkDrag>
+        <mat-icon cdkDragHandle aria-hidden="true">drag_indicator</mat-icon>
+        <span>{{ row }}</span>
+        <input class="field" [value]="row" aria-label="Row label" />
+
+        <div class="preview" *cdkDragPreview>{{ row }}</div>
+        <div class="placeholder" *cdkDragPlaceholder>Drop here</div>
+      </div>
+    }
+  </div>
+  <p class="log">The text field stays usable because only the handle drags.</p>
+</div>

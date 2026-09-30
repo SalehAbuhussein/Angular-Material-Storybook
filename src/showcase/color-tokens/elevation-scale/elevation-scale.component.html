@@ -1,0 +1,7 @@
+<div class="row">
+  @for (level of levels; track level) {
+    <div class="box" [style.box-shadow]="'var(--mat-sys-level' + level + ')'">
+      <code>level{{ level }}</code>
+    </div>
+  }
+</div>

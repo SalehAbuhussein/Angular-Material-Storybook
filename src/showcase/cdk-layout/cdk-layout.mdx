@@ -1,0 +1,159 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as LayoutStories from './cdk-layout.stories';
+
+<Meta of={LayoutStories} />
+
+# Responsive layout
+
+**Import:** `import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';`
+
+`BreakpointObserver` is `window.matchMedia` wrapped in an observable. Use it when
+the responsive decision cannot be made in CSS: a sidenav that has to change
+`mode`, a table that becomes a card list, a dialog that becomes a bottom sheet.
+Anything purely visual belongs in a CSS media query.
+
+```ts
+private readonly observer = inject(BreakpointObserver);
+
+readonly isHandset = toSignal(
+  this.observer.observe(Breakpoints.Handset).pipe(map((state) => state.matches)),
+  { initialValue: false },
+);
+```
+
+## Try it
+
+<Example of={LayoutStories.Playground} />
+<Controls of={LayoutStories.Playground} />
+
+## observe and isMatched
+
+`observe(query)` returns an `Observable<BreakpointState>` that emits now and
+again on every change. `BreakpointState` is `{ matches, breakpoints }`, where
+`matches` is true if any of the queries match and `breakpoints` maps each query
+string to its own result.
+
+`isMatched(query)` is a one-off synchronous check, for a click handler where you
+do not want a subscription. Both take a single query or an array.
+
+```ts
+this.observer.observe([Breakpoints.Handset, Breakpoints.Tablet]);
+this.observer.isMatched('(min-width: 900px)');
+```
+
+Any media query string works. The `Breakpoints` constants keep the same widths
+everywhere so you do not retype them.
+
+## The Breakpoints constants
+
+<Example of={LayoutStories.BreakpointConstants} />
+
+There are two families and they overlap:
+
+- By size: `XSmall`, `Small`, `Medium`, `Large`, `XLarge`. These are pure width
+  ranges.
+- By device: `Handset`, `Tablet`, `Web`, each also available as
+  `HandsetPortrait`, `HandsetLandscape` and so on. These combine width with
+  orientation.
+
+Pick one family per app. Mixing `Small` and `Handset` in the same component
+produces layouts that disagree at the edges.
+
+## Turning it into a signal
+
+`toSignal` from `@angular/core/rxjs-interop` gives you a value to read in a
+template or compose in a `computed`, with no subscriptions.
+
+<Example of={LayoutStories.AsASignal} />
+
+```ts
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs';
+
+readonly isHandset = toSignal(
+  this.observer.observe(Breakpoints.Handset).pipe(map((state) => state.matches)),
+  { initialValue: false },
+);
+
+readonly columns = computed(() => (this.isHandset() ? 1 : 3));
+```
+
+Without `initialValue` the signal type includes `undefined` and the first render
+has no answer. `false` is the safe default because it renders the wide layout,
+which degrades better than the narrow one.
+
+When the query itself is dynamic, pipe the input through `toObservable` and
+`switchMap` so the subscription follows it.
+
+## A responsive shell
+
+This is what the Angular Material schematics generate, minus the boilerplate.
+One signal drives both the drawer mode and whether it starts open.
+
+<Example of={LayoutStories.ResponsiveShell} />
+
+```html
+<mat-sidenav-container>
+  <mat-sidenav #drawer [mode]="isHandset() ? 'over' : 'side'" [opened]="!isHandset()">
+    <mat-nav-list>…</mat-nav-list>
+  </mat-sidenav>
+
+  <mat-sidenav-content>
+    <mat-toolbar>
+      @if (isHandset()) {
+        <button matIconButton aria-label="Toggle navigation" (click)="drawer.toggle()">
+          <mat-icon>menu</mat-icon>
+        </button>
+      }
+      <span>Dashboard</span>
+    </mat-toolbar>
+  </mat-sidenav-content>
+</mat-sidenav-container>
+```
+
+In `over` mode the drawer floats above the content with a backdrop and closes on
+selection. In `side` mode it takes space in the layout and stays open.
+
+## API you will use
+
+| Name | Type | What it does |
+| --- | --- | --- |
+| `BreakpointObserver.observe(query)` | `Observable<BreakpointState>` | Emits now and on every change |
+| `BreakpointObserver.isMatched(query)` | `boolean` | One-off synchronous check |
+| `BreakpointState.matches` | `boolean` | True if any query matches |
+| `BreakpointState.breakpoints` | `{ [query: string]: boolean }` | Per-query result |
+| `Breakpoints.XSmall` … `XLarge` | `string` | Width-only queries |
+| `Breakpoints.Handset` / `Tablet` / `Web` | `string` | Width plus orientation |
+| `MediaMatcher.matchMedia(query)` | `MediaQueryList` | The raw browser API, server-safe |
+
+## Accessibility
+
+A layout change is a content change, and nothing announces it:
+
+- Keep focus somewhere sensible when the layout switches. Moving a control from
+  the toolbar into a drawer while it has focus drops focus to the body.
+- Keep the DOM order meaningful. Reordering with CSS leaves the tab order at the
+  old positions.
+- Do not remove functionality on small screens. A narrow layout that hides a
+  control also hides it from everyone using a screen magnifier.
+- Respect `prefers-reduced-motion` for any transition you add around the switch.
+
+## Common mistakes
+
+1. **Using it for styling.** If the change is only visual, a CSS media query is
+   smaller, faster and works before Angular boots.
+2. **No `initialValue` on `toSignal`.** The signal starts `undefined` and the
+   first render picks the wrong branch.
+3. **Subscribing without unsubscribing.** `observe()` never completes. Use
+   `toSignal`, `takeUntilDestroyed()` or the `async` pipe.
+4. **Mixing the size and device families.** `Small` and `Handset` do not have the
+   same edges, so two components disagree at the same window width.
+5. **Assuming it works on the server.** There is no `matchMedia` during
+   server-side rendering. The observer reports no match, so make the default
+   layout the one you want the server to send.
+
+## Related
+
+- [Drag and Drop](?path=/docs/cdk-drag-and-drop--docs) for a board that collapses to one column
+- [Accessibility](?path=/docs/cdk-accessibility--docs) for keeping focus sane across layout changes

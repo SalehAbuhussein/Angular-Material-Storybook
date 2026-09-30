@@ -1,0 +1,27 @@
+<div class="docs-surface">
+  <div class="toolbar">
+    <button matButton="outlined" (click)="toggleData()">
+      {{ dataSource.data.length ? 'Clear the data' : 'Load the data' }}
+    </button>
+  </div>
+  <table mat-table [dataSource]="dataSource">
+    <ng-container matColumnDef="version">
+      <th mat-header-cell *matHeaderCellDef>Version</th>
+      <td mat-cell *matCellDef="let row">{{ row.version }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="name">
+      <th mat-header-cell *matHeaderCellDef>Name</th>
+      <td mat-cell *matCellDef="let row">{{ row.name }}</td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="columns"></tr>
+    <tr mat-row *matRowDef="let row; columns: columns"></tr>
+
+    <tr class="mat-row empty-row" *matNoDataRow>
+      <td class="mat-cell" [attr.colspan]="columns.length">
+        Nothing to show yet. Releases appear here once they ship.
+      </td>
+    </tr>
+  </table>
+</div>

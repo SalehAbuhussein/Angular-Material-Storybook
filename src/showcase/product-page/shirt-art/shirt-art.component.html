@@ -1,0 +1,43 @@
+<svg
+  [attr.viewBox]="view()"
+  [attr.preserveAspectRatio]="crop() ? 'xMidYMid slice' : 'xMidYMid meet'"
+  aria-hidden="true"
+>
+  <defs>
+    <pattern [attr.id]="patternId + 'p'" width="7" height="10" patternUnits="userSpaceOnUse">
+      <rect width="7" height="10" [style.fill]="base()" />
+      <rect width="1.4" height="10" [style.fill]="stripe()" />
+    </pattern>
+    <linearGradient [attr.id]="patternId + 's'" x1="0" x2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.22" />
+      <stop offset="0.45" stop-color="#fff" stop-opacity="0" />
+      <stop offset="1" stop-color="#000" stop-opacity="0.16" />
+    </linearGradient>
+  </defs>
+
+  <!-- Hanger -->
+  <path d="M200 40 q12 0 12 11 q0 9 -12 13" class="hook" />
+  <path d="M142 92 L200 64 L258 92" class="hanger" />
+
+  <!-- Body and sleeves -->
+  <path [attr.d]="body" [attr.fill]="'url(#' + patternId + 'p)'" class="edge" />
+  <!-- Cuffs -->
+  <path d="M66 238 Q80 247 97 244 L100 232 Q83 235 69 226 Z" [style.fill]="base()" class="edge" />
+  <path d="M334 238 Q320 247 303 244 L300 232 Q317 235 331 226 Z" [style.fill]="base()" class="edge" />
+  <!-- Yoke seam and pocket -->
+  <path d="M124 112 Q200 126 276 112" class="seam" />
+  <rect x="146" y="150" width="34" height="38" rx="3" [attr.fill]="'url(#' + patternId + 'p)'" class="edge" />
+  <path d="M146 158 L180 158" class="seam" />
+  <!-- Placket -->
+  <rect x="193" y="108" width="14" height="236" [style.fill]="base()" class="edge" />
+  <!-- Inside of the collar, then the two collar points -->
+  <path d="M168 80 Q200 68 232 80 Q200 94 168 80 Z" [style.fill]="inside()" />
+  <path d="M168 79 L201 112 L180 120 L158 90 Z" [attr.fill]="'url(#' + patternId + 'p)'" class="edge" />
+  <path d="M232 79 L199 112 L220 120 L242 90 Z" [attr.fill]="'url(#' + patternId + 'p)'" class="edge" />
+  <!-- Buttons -->
+  @for (y of buttons; track y) {
+    <circle cx="200" [attr.cy]="y" r="3.6" class="btn" />
+  }
+  <!-- Soft light from the left, over everything -->
+  <path [attr.d]="body" [attr.fill]="'url(#' + patternId + 's)'" />
+</svg>

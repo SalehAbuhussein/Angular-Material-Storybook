@@ -1,0 +1,119 @@
+<div
+  class="glass"
+  [class.glass--dusk]="mood() === 'dusk'"
+  [class.glass--reef]="mood() === 'reef'"
+  [class.glass--ember]="mood() === 'ember'"
+  [style.height.px]="height()">
+  <!-- The aurora. Three blurred blobs, no images. -->
+  <div class="aura" aria-hidden="true">
+    <span class="blob blob--1"></span>
+    <span class="blob blob--2"></span>
+    <span class="blob blob--3"></span>
+  </div>
+
+  <div class="shell">
+    <header class="top">
+      <div class="title">
+        <mat-icon>hub</mat-icon>
+        <div>
+          <h1>Edge Network</h1>
+          <p class="sub">{{ nodes.length }} nodes &middot; {{ region() }}</p>
+        </div>
+      </div>
+
+      <mat-button-toggle-group
+        class="seg"
+        hideSingleSelectionIndicator
+        [value]="region()"
+        (valueChange)="region.set($event)"
+        aria-label="Region">
+        <mat-button-toggle value="Global">Global</mat-button-toggle>
+        <mat-button-toggle value="EU">EU</mat-button-toggle>
+        <mat-button-toggle value="APAC">APAC</mat-button-toggle>
+      </mat-button-toggle-group>
+
+      <button matButton="filled" class="cta" [matMenuTriggerFor]="menu">
+        <mat-icon>tune</mat-icon> Configure
+      </button>
+    </header>
+
+    <section class="cards">
+      <mat-card class="pane pane--hero">
+        <div class="pane__label">Throughput</div>
+        <div class="pane__value">{{ throughput() | number: '1.1-1' }}<span>&nbsp;Gb/s</span></div>
+
+        <svg class="spark" viewBox="0 0 300 80" preserveAspectRatio="none" role="img"
+             [attr.aria-label]="'Throughput over the last ' + points() + ' minutes'">
+          <defs>
+            <linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="currentColor" stop-opacity="0.45" />
+              <stop offset="100%" stop-color="currentColor" stop-opacity="0" />
+            </linearGradient>
+          </defs>
+          <path [attr.d]="areaPath()" fill="url(#sparkFill)" />
+          <path [attr.d]="linePath()" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linejoin="round" stroke-linecap="round" />
+        </svg>
+
+        <div class="pane__row">
+          <span class="sub">Detail</span>
+          <mat-slider class="slider" [min]="12" [max]="60" [step]="4" discrete>
+            <input matSliderThumb [ngModel]="points()" (ngModelChange)="points.set($event)"
+                   aria-label="Sample count" />
+          </mat-slider>
+        </div>
+      </mat-card>
+
+      <mat-card class="pane">
+        <div class="pane__label">Cache hit rate</div>
+        <!-- The number is a sibling, not a child: the ring carries a mask
+             and a mask clips its descendants too. -->
+        <div class="ring-wrap">
+          <div class="ring" [style.--pct]="hitRate()"></div>
+          <span class="ring__num">{{ hitRate() }}<small>%</small></span>
+        </div>
+        <p class="sub center">{{ hitRate() >= 90 ? 'Healthy' : 'Below target' }}</p>
+      </mat-card>
+
+      <mat-card class="pane">
+        <div class="pane__label">Controls</div>
+        <div class="switches">
+          <mat-slide-toggle [ngModel]="autoscale()" (ngModelChange)="autoscale.set($event)">
+            Autoscale
+          </mat-slide-toggle>
+          <mat-slide-toggle [ngModel]="shield()" (ngModelChange)="shield.set($event)">
+            DDoS shield
+          </mat-slide-toggle>
+          <mat-slide-toggle [ngModel]="beta()" (ngModelChange)="beta.set($event)">
+            Beta routing
+          </mat-slide-toggle>
+        </div>
+        <p class="sub">{{ activeCount() }} of 3 enabled</p>
+      </mat-card>
+
+      <mat-card class="pane pane--wide">
+        <div class="pane__label">Nodes</div>
+        <mat-list class="nodes">
+          @for (n of nodes; track n.name) {
+            <mat-list-item>
+              <span matListItemTitle class="node__name">{{ n.name }}</span>
+              <span matListItemLine class="sub">{{ n.region }}</span>
+              <span matListItemMeta class="node__meta">
+                <span class="dot" [class]="'dot--' + n.state" [matTooltip]="n.state"></span>
+                {{ n.load }}%
+              </span>
+            </mat-list-item>
+            <mat-progress-bar mode="determinate" [value]="n.load"
+                              [attr.aria-label]="n.name + ' load'" class="load" />
+          }
+        </mat-list>
+      </mat-card>
+    </section>
+  </div>
+</div>
+
+<mat-menu #menu class="glass-menu">
+  <button mat-menu-item><mat-icon>speed</mat-icon> Rate limits</button>
+  <button mat-menu-item><mat-icon>dns</mat-icon> Origins</button>
+  <button mat-menu-item><mat-icon>vpn_key</mat-icon> Certificates</button>
+</mat-menu>

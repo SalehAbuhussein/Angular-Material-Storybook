@@ -1,0 +1,142 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as RippleStories from './ripple.stories';
+
+<Meta of={RippleStories} />
+
+# Ripple
+
+**Import:** `import { MatRippleModule } from '@angular/material/core';`
+
+The ripple is the ink splash Material components show when you press them.
+Buttons, list items, and tabs already have it. `matRipple` puts the same
+feedback on a component you wrote yourself.
+
+```html
+<div matRipple class="my-card">Press me</div>
+```
+
+## Try it
+
+<Example of={RippleStories.Playground} />
+<Controls of={RippleStories.Playground} />
+
+## Centered
+
+By default the circle grows from the point you clicked, which makes the effect
+feel physical. `matRippleCentered` starts it from the middle instead. Use it for
+small round controls, where the offset would look like a glitch.
+
+<Example of={RippleStories.Centered} />
+
+## Unbounded and radius
+
+The directive adds a `mat-ripple` class that sets `position: relative` and
+`overflow: hidden`, so the splash is clipped to the element. `matRippleUnbounded`
+switches the overflow back to visible and lets the circle escape. That is how
+round controls such as checkboxes ripple beyond their box.
+
+`matRippleRadius` is the final radius in pixels. Leave it at 0 and the ripple
+expands to the furthest corner of the element, which is usually what you want for
+a rectangle. An unbounded ripple has no corner to aim at, so give it a radius.
+
+<Example of={RippleStories.Unbounded} />
+
+```html
+<div matRipple matRippleCentered matRippleUnbounded matRippleRadius="40" class="icon-target">
+  <mat-icon aria-hidden="true">favorite</mat-icon>
+</div>
+```
+
+## Colour
+
+`matRippleColor` takes any CSS colour string and is set on the ripple element as
+its background. Keep it translucent, or the splash hides the content underneath.
+When the colour belongs to a theme instead of a template, set the
+`--mat-ripple-color` custom property in CSS.
+
+<Example of={RippleStories.Color} />
+
+## Adding ripples to your own component
+
+<Example of={RippleStories.OnYourOwnComponent} />
+
+The ripple is feedback, not behaviour. A `<div matRipple>` looks pressable and
+does nothing else, so if the element is a control you have to build the rest:
+
+- `role="button"` so it is announced as a control
+- `tabindex="0"` so it can be reached by keyboard
+- `keydown.enter` and `keydown.space` handlers, because a div has no default activation
+- an accessible name, from its text or `aria-label`
+
+If all four apply, a real `<button>` styled as a card may be less work. Use
+`matRipple` when the element cannot be a button, such as a table row or a custom
+list item.
+
+## Launching a ripple from code
+
+The directive is exported as `matRipple`, so a template reference gives you the
+instance and its `launch()` method. `matRippleDisabled` stops pointer ripples but
+leaves `launch()` working, so you can fire one on a keyboard event or when a
+value arrives from elsewhere.
+
+<Example of={RippleStories.LaunchFromCode} />
+
+```ts
+@Component({
+  selector: 'app-target',
+  imports: [MatRippleModule],
+  template: `<div matRipple #target="matRipple" [matRippleDisabled]="true">...</div>`,
+})
+export class Target {
+  private readonly target = viewChild.required<MatRipple>('target');
+
+  ping(): void {
+    this.target().launch({ centered: true, persistent: false });
+  }
+}
+```
+
+`launch()` also takes viewport coordinates as `launch(x, y, config)`. A
+`persistent: true` ripple stays until you call `fadeOutAll()` on the directive.
+
+## API you will use
+
+| Input | Type | What it does |
+| --- | --- | --- |
+| `matRippleCentered` | `boolean` | Starts the ripple at the centre instead of the pointer |
+| `matRippleUnbounded` | `boolean` | Lets the circle grow past the element's bounds |
+| `matRippleRadius` | `number` | Final radius in pixels. 0 means "reach the furthest corner" |
+| `matRippleColor` | `string` | Any CSS colour for the ripple element |
+| `matRippleDisabled` | `boolean` | Stops pointer ripples. `launch()` still works |
+| `matRippleTrigger` | `HTMLElement` | Element whose pointer events drive the ripple, when it is not the host |
+| `matRippleAnimation` | `{ enterDuration, exitDuration }` | Animation timings in milliseconds |
+
+Methods on the exported `matRipple` instance: `launch(config)`,
+`launch(x, y, config)`, `fadeOutAll()`, and `fadeOutAllNonPersistent()`.
+
+## Accessibility
+
+A ripple is decoration. It conveys nothing to a screen reader or a keyboard
+user, so it can never be the only sign that an element is interactive. Add a
+visible focus indicator too, because keyboard users never see a ripple.
+
+Angular Material hides ripples in forced-colors mode, where the translucent
+splash would be unreadable, and honours reduced-motion settings for its own
+components. Do not fight either behaviour with custom CSS.
+
+`MAT_RIPPLE_GLOBAL_OPTIONS` turns ripples off across the app in one place,
+instead of `matRippleDisabled` on every element.
+
+## Common mistakes
+
+1. Adding `matRipple` to a Material component: buttons, list items, and tabs already ripple. A second directive gives you two splashes.
+2. A rippling div with no keyboard support: it looks pressable to a mouse user and is invisible to everyone else. Add `role`, `tabindex`, key handlers, and a name.
+3. An opaque `matRippleColor`: the splash covers the label. Use a translucent colour, for example `color-mix(in srgb, var(--mat-sys-primary) 24%, transparent)`.
+4. Unbounded with no radius: the ripple has no corner to expand to and ends up the wrong size. Set `matRippleRadius`.
+5. Fighting the clipping with your own `overflow`: the `mat-ripple` class already sets `position: relative` and `overflow: hidden`. Use `matRippleUnbounded` instead of overriding it.
+
+## Related
+
+- [Button](?path=/docs/buttons-and-indicators-button--docs) for ripples you get for free
+- [FAB](?path=/docs/buttons-and-indicators-fab--docs) for `disableRipple` on a floating action button

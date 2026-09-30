@@ -1,0 +1,85 @@
+docs-class-examples {
+  display: block;
+  width: min(1000px, 92vw);
+}
+docs-class-examples .ux-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+docs-class-examples .ux-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--mat-sys-corner-medium);
+  background: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+}
+docs-class-examples .ux-name {
+  margin: 0;
+  font: 500 0.875rem/1.4 'Roboto Mono', ui-monospace, monospace;
+  color: var(--mat-sys-primary);
+  overflow-wrap: anywhere;
+}
+docs-class-examples .ux-use {
+  margin: 0;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+/* The stage: centres the example and gives it room. Layout only, no colour. */
+docs-class-examples .ux-demo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 110px;
+  padding: 20px 12px;
+  border-radius: var(--mat-sys-corner-small);
+  background: var(--mat-sys-surface-container-lowest);
+  overflow: hidden;
+}
+/* The utility classes set no padding, so the stage adds it. */
+docs-class-examples .ux-demo > * {
+  margin: 0;
+  padding: 10px 18px;
+  max-width: 100%;
+  border-style: solid;
+  border-width: 0;
+}
+docs-class-examples .ux-demo > .mat-border,
+docs-class-examples .ux-demo > .mat-border-subtle {
+  border-width: 1px;
+}
+docs-class-examples .ux-demo > p,
+docs-class-examples .ux-demo > h1,
+docs-class-examples .ux-demo > h2,
+docs-class-examples .ux-demo > h3,
+docs-class-examples .ux-demo > a {
+  padding: 0;
+}
+docs-class-examples .ux-demo button {
+  cursor: pointer;
+}
+docs-class-examples .ux-demo button:disabled {
+  cursor: default;
+}
+docs-class-examples .ux-demo ul {
+  min-width: 160px;
+  padding: 8px 0;
+  list-style: none;
+}
+docs-class-examples .ux-demo li {
+  padding: 8px 16px;
+}
+docs-class-examples .ux-code {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--mat-sys-corner-small);
+  background: var(--mat-sys-surface-container);
+  color: var(--mat-sys-on-surface);
+  font: 0.75rem/1.5 'Roboto Mono', ui-monospace, monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

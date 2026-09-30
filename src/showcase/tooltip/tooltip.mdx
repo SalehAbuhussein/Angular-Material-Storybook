@@ -1,0 +1,138 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as TooltipStories from './tooltip.stories';
+
+<Meta of={TooltipStories} />
+
+# Tooltip
+
+**Import:** `import { MatTooltipModule } from '@angular/material/tooltip';`
+
+A short text hint shown on hover, long press or keyboard focus. It is a
+directive, so it attaches to the control it describes instead of rendering its
+own element.
+
+```html
+<button matIconButton aria-label="Archive" matTooltip="Archive">
+  <mat-icon>archive</mat-icon>
+</button>
+```
+
+## Try it
+
+<Example of={TooltipStories.Playground} />
+<Controls of={TooltipStories.Playground} />
+
+## Position
+
+`matTooltipPosition` takes six values. `above`, `below`, `left`, and `right` are
+absolute. `before` and `after` follow the reading direction, so they swap sides
+in a right-to-left layout. The default is `below`.
+
+<Example of={TooltipStories.Positions} />
+
+With no room on the preferred side, the tooltip flips to the opposite side
+instead of being clipped at the viewport edge.
+
+## Delays
+
+`matTooltipShowDelay` and `matTooltipHideDelay` are in milliseconds and both
+default to 0.
+
+<Example of={TooltipStories.Delays} />
+
+A show delay of 300 to 500ms stops a row of icon buttons flashing tooltips as the
+pointer sweeps across. A hide delay keeps the tooltip open long enough for
+people to move onto it, which matters when the text is long enough to reread.
+
+## Disabling
+
+`matTooltipDisabled` suppresses the tooltip without removing the directive. Use
+it when the hint only applies in one state.
+
+<Example of={TooltipStories.Disabled} />
+
+```html
+<button matButton="filled" matTooltip="You have unsaved changes" [matTooltipDisabled]="!dirty()">
+  Save
+</button>
+```
+
+## Icon buttons
+
+<Example of={TooltipStories.OnIconButtons} />
+
+Tooltips are built for this case: a control whose meaning rests on a glyph, where
+a hint on hover saves people guessing. Keep the `aria-label`, because the tooltip
+does not name the button.
+
+## A tooltip is not a label
+
+<Example of={TooltipStories.NotALabel} />
+
+`MatTooltip` wires the message up through `AriaDescriber`, which sets
+`aria-describedby` on the host. A description is supplementary. Screen readers
+read the name first and may skip the description, and many users have
+descriptions turned off.
+
+The hidden-label pattern also fails because:
+
+- Touch users only see it after a long press, which nothing tells them to try.
+- The text is invisible while scanning, so people cannot compare controls without hovering each one.
+- A tooltip that repeats the visible label is read twice.
+
+Put the name in the control, with visible text or `aria-label`, and let the
+tooltip add detail that was not worth the space.
+
+## Touch behaviour
+
+On touch devices the tooltip opens on a long press, not on tap, and hides shortly
+after the finger lifts. `matTooltipTouchGestures` controls this:
+
+| Value | Behaviour |
+| --- | --- |
+| `auto` (default) | Long press works everywhere, but native gestures are preserved on inputs, textareas, and draggable elements |
+| `on` | Long press everywhere, native gestures disabled with no exceptions |
+| `off` | No touch handling at all, so the tooltip never opens on a touch device |
+
+Use `off` on elements where the press gesture belongs to something else, such as
+a drag handle. Never let `off` be the only way a control is explained.
+
+## API you will use
+
+| Input | Type | What it does |
+| --- | --- | --- |
+| `matTooltip` | `string` | The message. An empty string renders nothing |
+| `matTooltipPosition` | `'above'\|'below'\|'left'\|'right'\|'before'\|'after'` | Preferred side. Default `below` |
+| `matTooltipShowDelay` | `number` | Milliseconds before showing. Default 0 |
+| `matTooltipHideDelay` | `number` | Milliseconds before hiding. Default 0 |
+| `matTooltipDisabled` | `boolean` | Suppresses the tooltip without removing the directive |
+| `matTooltipClass` | `string \| string[]` | Classes on the tooltip panel, for custom styling |
+| `matTooltipTouchGestures` | `'auto' \| 'on' \| 'off'` | How long press is handled |
+| `matTooltipPositionAtOrigin` | `boolean` | Positions relative to the pointer instead of the element box |
+
+The directive is exported as `matTooltip`, so a template reference variable gives
+you `show()`, `hide()`, and `toggle()` for opening it in code.
+
+## Accessibility
+
+You get `aria-describedby` wired to the message, keyboard focus as a trigger, and
+dismissal on Escape. You still supply the control's accessible name, and a
+message short enough to read in one breath.
+
+Never put a link, a button or any focusable element in a tooltip. The message is
+plain text, and nobody can reach interactive content inside it.
+
+## Common mistakes
+
+1. **Tooltip as the only label.** It becomes `aria-describedby`, not a name. Add visible text or `aria-label`.
+2. **Tooltip on a non-focusable element.** A `<div>` or `<span>` never receives keyboard focus, so keyboard users never see the hint. Put it on a control, or add `tabindex="0"`.
+3. **A sentence in a tooltip.** The panel is narrow and disappears when the pointer moves. Long explanations belong in the page or a dialog.
+4. **Zero show delay on a dense toolbar.** Tooltips fire as the pointer passes. Set 300 to 500ms.
+5. **Assuming touch users find it.** Nobody discovers a long press. On touch-first screens the information must be visible.
+
+## Related
+
+- [Button](?path=/docs/buttons-and-indicators-button--docs) for the control under the tooltip
+- [Icon](?path=/docs/buttons-and-indicators-icon--docs) for naming icon-only controls
+- [Badge](?path=/docs/buttons-and-indicators-badge--docs) for a persistent marker instead of a hover hint

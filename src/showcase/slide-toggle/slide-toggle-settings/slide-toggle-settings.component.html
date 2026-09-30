@@ -1,0 +1,6 @@
+<form [formGroup]="form" class="docs-settings">
+  <mat-slide-toggle formControlName="darkMode">Dark mode</mat-slide-toggle>
+  <mat-slide-toggle formControlName="analytics">Share anonymous usage data</mat-slide-toggle>
+  <mat-slide-toggle formControlName="beta">Enable beta features</mat-slide-toggle>
+</form>
+<p>Applied: {{ applied() }}</p>

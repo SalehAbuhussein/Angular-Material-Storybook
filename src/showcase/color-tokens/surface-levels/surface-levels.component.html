@@ -1,0 +1,8 @@
+<div class="ladder">
+  @for (s of steps; track s.token) {
+    <div class="step" [style.background]="'var(--mat-sys-' + s.token + ')'">
+      <code>--mat-sys-{{ s.token }}</code>
+      <span class="note">{{ s.note }}</span>
+    </div>
+  }
+</div>

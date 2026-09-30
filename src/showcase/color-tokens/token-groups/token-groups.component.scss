@@ -1,0 +1,13 @@
+:host {
+  display: block;
+  width: 100%;
+}
+.lead {
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+  margin: 0 0 12px;
+}
+code {
+  font-family: 'Roboto Mono', ui-monospace, monospace;
+  color: var(--mat-sys-on-surface);
+}

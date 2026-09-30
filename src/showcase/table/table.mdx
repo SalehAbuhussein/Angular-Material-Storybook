@@ -1,0 +1,172 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as TableStories from './table.stories';
+
+<Meta of={TableStories} />
+
+# Table
+
+**Import:** `import { MatTableModule } from '@angular/material/table';`
+
+`MatTable` is column-first. You declare one column definition per column, each
+with a header template and a cell template, then give the table a list of column
+names to render. Changing that list adds, removes or reorders columns without
+touching the definitions.
+
+```html
+<table mat-table [dataSource]="rows">
+  <ng-container matColumnDef="name">
+    <th mat-header-cell *matHeaderCellDef>Name</th>
+    <td mat-cell *matCellDef="let row">{{ row.name }}</td>
+  </ng-container>
+
+  <tr mat-header-row *matHeaderRowDef="columns"></tr>
+  <tr mat-row *matRowDef="let row; columns: columns"></tr>
+</table>
+```
+
+## Try it
+
+Uncheck a column and it disappears. The column definitions do not change.
+
+<Example of={TableStories.Playground} />
+<Controls of={TableStories.Playground} />
+
+## The five pieces of a table
+
+1. `<table mat-table [dataSource]="...">` is the host. The data source is an
+   array, an `Observable<T[]>`, or a `DataSource` such as `MatTableDataSource`.
+2. `<ng-container matColumnDef="name">` names one column. The name is the key
+   you later put in the displayed-columns array.
+3. `*matHeaderCellDef` and `*matCellDef="let row"` are the two templates inside
+   that column. The cell template gets one row of your data as `row`.
+4. `*matHeaderRowDef="columns"` says which columns the header row shows.
+5. `*matRowDef="let row; columns: columns"` says which columns each data row
+   shows. The table stamps this template once per item.
+
+<Example of={TableStories.PlainArray} />
+
+A plain array is enough when the data never changes. Reassigning the array reference re-renders the table; mutating it in
+place does not.
+
+## MatTableDataSource
+
+`MatTableDataSource` wraps your array and adds sorting, paging and filtering. Set `.data` to swap rows.
+
+```ts
+import { MatTableDataSource } from '@angular/material/table';
+
+readonly dataSource = new MatTableDataSource(RELEASES);
+
+reload(rows: Release[]) {
+  this.dataSource.data = rows;
+}
+```
+
+It keeps every row in memory, so it is for client-side data. For a server-backed
+table, write your own `DataSource` or feed the table an observable.
+
+## Sticky header and sticky columns
+
+Stickiness uses CSS `position: sticky`, so it only works inside an element that
+scrolls. Give the wrapper a `max-height` and `overflow: auto`, then:
+
+- `*matHeaderRowDef="columns; sticky: true"` pins the header row.
+- `sticky` on a `matColumnDef` pins that column to the start edge.
+- `stickyEnd` pins it to the end edge.
+
+<Example of={TableStories.StickyHeaderAndColumns} />
+
+```html
+<ng-container matColumnDef="version" sticky>…</ng-container>
+<ng-container matColumnDef="actions" stickyEnd>…</ng-container>
+
+<tr mat-header-row *matHeaderRowDef="columns; sticky: true"></tr>
+```
+
+Sticky cells are transparent by default, so content scrolls through them. Give
+them a background from a theme variable such as
+`var(--mat-sys-surface-container-low)`.
+
+## Expandable rows
+
+Set `multiTemplateDataRows` on the table and each data item can render more than
+one row template. Declare a second `matRowDef` with a single full-width column,
+and animate its height to open and close.
+
+<Example of={TableStories.ExpandableRows} />
+
+```html
+<table mat-table [dataSource]="data" multiTemplateDataRows>
+  <ng-container matColumnDef="detail">
+    <td mat-cell *matCellDef="let row" [attr.colspan]="columns.length">…</td>
+  </ng-container>
+
+  <tr mat-row *matRowDef="let row; columns: columns"></tr>
+  <tr mat-row *matRowDef="let row; columns: ['detail']" class="detail-row"></tr>
+</table>
+```
+
+Put the expand control in a real `<button>` with `aria-expanded`. A click handler
+on the `<tr>` is invisible to keyboard and screen reader users.
+
+## Empty state
+
+`matNoDataRow` is an `ng-template` the table renders when the data source
+produces no rows. It is the only empty state that respects filtering, because
+the table knows the rendered count and you do not.
+
+<Example of={TableStories.EmptyState} />
+
+```html
+<tr class="mat-row" *matNoDataRow>
+  <td class="mat-cell" [attr.colspan]="columns.length">No results.</td>
+</tr>
+```
+
+## API you will use
+
+| Name | Where | What it does |
+| --- | --- | --- |
+| `dataSource` | `mat-table` input | Array, observable or `DataSource` of rows |
+| `multiTemplateDataRows` | `mat-table` input | Allows several row templates per data item |
+| `trackBy` | `mat-table` input | Track function, same contract as `@for` |
+| `matColumnDef` | directive input | Names one column |
+| `sticky` / `stickyEnd` | `matColumnDef` inputs | Pins a column to the start or end edge |
+| `matHeaderRowDefSticky` | `matHeaderRowDef` input | Pins the header row (`; sticky: true`) |
+| `matRowDefWhen` | `matRowDef` input | Predicate choosing which row template to use |
+| `matNoDataRow` | directive | Template shown when there are zero rows |
+
+## Accessibility
+
+`<table mat-table>` gets native table semantics from the markup: rows, columns
+and header association. That is why you should prefer it over the `<mat-table>`
+element form.
+
+What you still have to supply:
+
+- A caption or an `aria-label` on the table saying what the data is.
+- An accessible name for every icon-only control inside a cell, since there is
+  no visible label.
+- `aria-expanded` on an expand toggle, and a real button instead of a row click.
+- Text, not colour alone, for status columns.
+
+## Common mistakes
+
+1. **Mutating the array instead of replacing it.** `rows.push(item)` does not
+   re-render. Assign `dataSource.data = [...rows, item]` or a new array.
+2. **A column name in `displayedColumns` with no matching `matColumnDef`.** The
+   table throws `Could not find column with id`. Names must match exactly,
+   including case.
+3. **Sticky with no scroll container.** `sticky` does nothing when the table is
+   not inside an element with a constrained height and `overflow: auto`.
+4. **Forgetting `[attr.colspan]` on a detail cell.** Without it the detail row
+   sits in the first column and the layout breaks.
+5. **Rendering an empty state next to the table.** Use `matNoDataRow` so filtered
+   results get the same treatment as an empty data set.
+
+## Related
+
+- [Sorting](?path=/docs/data-table-sorting--docs) for `matSort` and sort headers
+- [Pagination](?path=/docs/data-table-pagination--docs) for `mat-paginator`
+- [Filter and Selection](?path=/docs/data-table-filter-and-selection--docs) for filtering and row checkboxes

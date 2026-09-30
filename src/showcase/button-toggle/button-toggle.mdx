@@ -1,0 +1,135 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as ButtonToggleStories from './button-toggle.stories';
+
+<Meta of={ButtonToggleStories} />
+
+# Button toggle
+
+**Import:** `import { MatButtonToggleModule } from '@angular/material/button-toggle';`
+
+A button toggle group is a segmented control: two to five options joined into
+one block. It is the compact version of a radio group, and in `multiple` mode
+the compact version of a set of checkboxes.
+
+```html
+<mat-button-toggle-group [(ngModel)]="range" aria-label="Time range">
+  <mat-button-toggle value="day">Day</mat-button-toggle>
+  <mat-button-toggle value="week">Week</mat-button-toggle>
+</mat-button-toggle-group>
+```
+
+Use it when the options are short, mutually exclusive, and worth keeping on
+screen. Past five options the row gets too wide; use a
+[Select](?path=/docs/form-controls-select--docs).
+
+## Try it
+
+<Example of={ButtonToggleStories.Playground} />
+<Controls of={ButtonToggleStories.Playground} />
+
+## Single selection
+
+This is the default. The group holds one value, and clicking the selected toggle
+does not clear it, as with radios.
+
+<Example of={ButtonToggleStories.SingleSelection} />
+
+## Multiple selection
+
+With `multiple`, the value becomes an array and every toggle can be turned off
+independently. The classic case is a formatting toolbar.
+
+<Example of={ButtonToggleStories.MultipleSelection} />
+
+```html
+<mat-button-toggle-group multiple [(value)]="format" aria-label="Text formatting">
+  <mat-button-toggle value="bold" aria-label="Bold">
+    <mat-icon>format_bold</mat-icon>
+  </mat-button-toggle>
+</mat-button-toggle-group>
+```
+
+Like `<mat-select>`, `multiple` is read once during initialisation. Do not
+toggle it at runtime.
+
+## Appearance
+
+`standard` is the Material 3 look with a container and a selection checkmark.
+`legacy` is the older flat style kept for migration.
+
+<Example of={ButtonToggleStories.Appearance} />
+
+Use `standard`. `hideSingleSelectionIndicator` drops the checkmark if it makes
+the toggles too wide, but then selection is conveyed by colour alone, so check
+the contrast.
+
+## Vertical
+
+`vertical` stacks the toggles into a column.
+
+<Example of={ButtonToggleStories.Vertical} />
+
+## In reactive forms
+
+The group is the control. `formControlName` goes on
+`<mat-button-toggle-group>`, never on an individual toggle.
+
+<Example of={ButtonToggleStories.InReactiveForms} />
+
+```ts
+readonly form = this.fb.nonNullable.group({ view: ['grid'] });
+```
+
+```html
+<mat-button-toggle-group formControlName="view" aria-labelledby="view-label">
+  <mat-button-toggle value="grid" aria-label="Grid view">
+    <mat-icon>grid_view</mat-icon>
+  </mat-button-toggle>
+</mat-button-toggle-group>
+```
+
+## API you will use
+
+| Name | Where | What it does |
+| --- | --- | --- |
+| `value` | group | Selected value, or an array when `multiple`. |
+| `multiple` | group | Array value, and toggles can be switched off. |
+| `appearance` | group or toggle | `'standard'` (M3) or `'legacy'`. |
+| `vertical` | group | Stacks the toggles into a column. |
+| `disabled` | group or toggle | Disables the whole set, or just one. |
+| `hideSingleSelectionIndicator` | group | Removes the checkmark on the selected toggle. |
+| `change` | group | `MatButtonToggleChange` with `source` and `value`. |
+| `valueChange` | group | The new value only. Enables `[(value)]`. |
+
+## Accessibility
+
+In single mode the group is a `radiogroup` with `radio` children; in multiple
+mode the toggles are `button` elements with `aria-pressed`. Arrow keys move
+through the group.
+
+What you still supply:
+
+- A name for the group: `aria-label`, or `aria-labelledby` pointing at a visible
+  label.
+- An `aria-label` on every icon-only toggle. The icon is not a name.
+- Enough contrast on the selected state if you hide the selection indicator.
+
+## Common mistakes
+
+1. `formControlName` on `<mat-button-toggle>`. It goes on the group.
+2. Ten toggles in one group. It overflows on narrow screens. Use a
+   [Select](?path=/docs/form-controls-select--docs).
+3. Icon-only toggles with no `aria-label`. Screen readers announce nothing
+   useful.
+4. Using it as a set of actions. A toggle represents state. If pressing it
+   runs something, use a [Button](?path=/docs/buttons-and-indicators-button--docs).
+5. Changing `multiple` at runtime. It is read once at init. Render a
+   different group instead.
+
+## Related
+
+- [Radio](?path=/docs/form-controls-radio--docs) when the options need full labels
+- [Checkbox](?path=/docs/form-controls-checkbox--docs) for independent yes/no answers
+- [Select](?path=/docs/form-controls-select--docs) for longer lists
+- [Slide Toggle](?path=/docs/form-controls-slide-toggle--docs) for a single on/off setting

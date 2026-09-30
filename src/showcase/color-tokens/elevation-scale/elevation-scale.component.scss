@@ -1,0 +1,23 @@
+:host {
+  display: block;
+  width: 100%;
+}
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  padding: 16px 8px 24px;
+}
+.box {
+  display: grid;
+  place-items: center;
+  width: 104px;
+  height: 84px;
+  background: var(--mat-sys-surface-container-lowest);
+  color: var(--mat-sys-on-surface);
+  border-radius: var(--mat-sys-corner-medium);
+}
+code {
+  font-family: 'Roboto Mono', ui-monospace, monospace;
+  font-size: 0.75rem;
+}

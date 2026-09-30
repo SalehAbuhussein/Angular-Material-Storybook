@@ -1,0 +1,118 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as ProductStories from './product-page.stories';
+
+<Meta of={ProductStories} />
+
+# Product page
+
+A shop's product screen, modelled on the shopping example in the Material 3
+guidelines. One component covers both phone and tablet. It measures its own
+width, so the same markup becomes a bottom-bar layout or a rail layout.
+
+Click the palette button in the toolbar until it says `rose` to get the pink
+look from the M3 site. Nothing in the page names a color, so every palette
+works.
+
+## Try it
+
+Drag `width` past 720px to watch the layout switch. Pick a size and a color,
+then add it to the basket. The floating pill updates, and the snackbar's Undo
+takes it back out.
+
+<Example of={ProductStories.Playground} />
+<Controls of={ProductStories.Playground} />
+
+## Phone
+
+<Example of={ProductStories.Phone} />
+
+Top bar with back, title and price. The gallery swipes sideways with
+`scroll-snap-type: x mandatory`, and each photo is 78% wide so the next one
+peeks in to show there is more to swipe. Navigation sits in a bottom bar.
+
+## Tablet
+
+<Example of={ProductStories.Tablet} />
+
+The bottom bar becomes a navigation rail, and the page splits into two columns:
+photos stacked on the left, details on the right. The title grows to
+`display-small`, and the back button goes away because the rail already shows
+where you are.
+
+## One grid, two arrangements
+
+The layout switch is a container query, not a media query, so Storybook frames,
+a split view in your app, or a side panel each get the layout for the space they
+have.
+
+```scss
+:host {
+  container-type: inline-size;
+}
+
+.main {
+  display: grid;
+  grid-template-areas: 'title' 'crumbs' 'gallery' 'info';
+}
+
+@container (min-width: 720px) {
+  .main {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto auto 1fr;
+    grid-template-areas:
+      'gallery crumbs'
+      'gallery title'
+      'gallery info';
+  }
+}
+```
+
+The DOM order stays title, breadcrumb, photos, details in both layouts, so
+screen reader and keyboard order never change. Only the grid areas move.
+
+## What comes from Angular Material
+
+| Part | Built with |
+| --- | --- |
+| Size picker | `mat-chip-listbox` with `mat-chip-option`, `[hideSingleSelectionIndicator]="true"` |
+| Add to basket | `matButton="tonal"` |
+| Favourite | `matIconButton` with `aria-pressed` |
+| More details, reviews | `mat-accordion multi` with `mat-expansion-panel` |
+| Added, Undo | `MatSnackBar` with an action |
+| Ripples on the nav and basket | `matRipple` |
+
+Angular Material has no navigation bar or navigation rail component, so both
+are a plain `<nav>` of buttons styled with tokens. The active item gets
+`aria-current="page"`, and CSS paints its pill with `secondary-container`. The
+color swatches are native radio buttons under the swatch, so arrow keys work
+without extra code.
+
+## Tokens used
+
+| Element | Token |
+| --- | --- |
+| Page | `surface`, `on-surface` |
+| Bottom bar | `surface-container` |
+| Active nav pill | `secondary-container`, `on-secondary-container` |
+| Photo tiles | A backdrop from `surface-container-lowest` to `surface-container-high` |
+| Basket pill | `primary-container`, `on-primary-container`, `level3` |
+| Title | `title-large` on the phone, `display-small` on the tablet |
+
+The photos are one SVG drawing of the blouse, so the story needs no image files.
+Each shot is a different `viewBox` on the same drawing, and the fabric follows
+the colour you pick. In a real app, swap `<demo-shirt-art>` for `<img>` tags.
+
+## Accessibility
+
+- The breadcrumb is a `<nav aria-label="Breadcrumb">` with an `<ol>`, and the `›` separators are `aria-hidden`.
+- The gallery is a focusable region, so keyboard users can scroll it with the arrow keys.
+- Each photo has `role="img"` and an `aria-label` describing it.
+- The swatch radios carry their color name as visually hidden text, and the chosen name also shows next to them.
+- The basket's label includes the item count, since the thumbnails mean nothing to a screen reader.
+
+## Related
+
+- [Detail Page](?path=/docs/full-layouts-detail-page--docs) for a record screen with a metadata rail
+- [Chips](?path=/docs/form-controls-chips--docs) and [Expansion Panel](?path=/docs/layout-expansion-panel--docs)
+- [Utility Classes](?path=/docs/foundations-utility-classes--docs) for the same tokens as classes

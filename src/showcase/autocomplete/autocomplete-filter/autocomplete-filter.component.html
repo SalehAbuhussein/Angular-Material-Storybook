@@ -1,0 +1,11 @@
+<mat-form-field appearance="outline" class="docs-field">
+  <mat-label>State</mat-label>
+  <input matInput [formControl]="control" [matAutocomplete]="auto" placeholder="Start typing" />
+  <mat-autocomplete #auto="matAutocomplete">
+    @for (state of filtered(); track state) {
+      <mat-option [value]="state">{{ state }}</mat-option>
+    } @empty {
+      <mat-option disabled>No match</mat-option>
+    }
+  </mat-autocomplete>
+</mat-form-field>

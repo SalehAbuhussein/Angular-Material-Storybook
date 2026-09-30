@@ -1,0 +1,178 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as OverlayStories from './overlay.stories';
+
+<Meta of={OverlayStories} />
+
+# CDK Overlay
+
+**Import:** `import { OverlayModule } from '@angular/cdk/overlay';`
+
+Everything that floats above the page in Angular Material sits on the CDK
+Overlay: dialogs, snackbars, bottom sheets, menus, selects, autocompletes,
+tooltips and datepickers. Use it directly when you need a floating panel that
+Material does not ship, such as a custom dropdown, a popover or a colour picker.
+
+An overlay has two parts: a position strategy that decides where the panel goes,
+and a scroll strategy that decides what happens when the page moves under it.
+
+## Try it
+
+<Example of={OverlayStories.Playground} />
+<Controls of={OverlayStories.Playground} />
+
+## Two directives and a boolean
+
+Most of the time you want the declarative API. Mark the trigger with
+`cdkOverlayOrigin`, put the panel in an `<ng-template cdkConnectedOverlay>`, and
+drive it with a signal.
+
+<Example of={OverlayStories.Popover} />
+
+```html
+<button matButton cdkOverlayOrigin #trigger="cdkOverlayOrigin" (click)="isOpen.set(!isOpen())">
+  Open
+</button>
+
+<ng-template
+  cdkConnectedOverlay
+  [cdkConnectedOverlayOrigin]="trigger"
+  [cdkConnectedOverlayOpen]="isOpen()"
+  [cdkConnectedOverlayHasBackdrop]="true"
+  cdkConnectedOverlayBackdropClass="cdk-overlay-transparent-backdrop"
+  (backdropClick)="isOpen.set(false)"
+  (overlayKeydown)="onKeydown($event)">
+  <div class="panel">…</div>
+</ng-template>
+```
+
+The template is not rendered until `open` turns true, so a closed panel costs
+nothing. The panel attaches to the overlay container at the end of `<body>`, not
+where you wrote it, so global styles reach it and ancestor `overflow: hidden`
+does not clip it.
+
+## Positions
+
+`cdkConnectedOverlayPositions` takes an ordered list. The CDK uses the first
+position that fits in the viewport, which is how a dropdown flips above the
+trigger near the bottom of the screen.
+
+<Example of={OverlayStories.Positions} />
+
+```ts
+readonly positions: ConnectedPosition[] = [
+  { originX: 'start', originY: 'bottom', overlayX: 'start', overlayY: 'top', offsetY: 4 },
+  { originX: 'start', originY: 'top', overlayX: 'start', overlayY: 'bottom', offsetY: -4 },
+];
+```
+
+Read a pair as "put this corner of the overlay against that corner of the
+origin". `originX`/`overlayX` take `start`, `center` or `end`, which follow the
+text direction. `originY`/`overlayY` take `top`, `center` or `bottom`.
+
+The CDK ships two ready-made lists: `STANDARD_DROPDOWN_BELOW_POSITIONS` and
+`STANDARD_DROPDOWN_ADJACENT_POSITIONS`. Use them before writing your own.
+
+## Backdrop
+
+A backdrop catches the click that closes the panel. For a modal panel use the
+default backdrop. For a dropdown use
+`cdkConnectedOverlayBackdropClass="cdk-overlay-transparent-backdrop"`, which is
+invisible but still captures the click.
+
+Without a backdrop, a click elsewhere on the page never reaches you. You can
+listen to `(overlayOutsideClick)` instead, but then clicks also hit whatever is
+underneath, which you rarely want for a menu.
+
+## Scroll strategies
+
+<Example of={OverlayStories.ScrollStrategies} />
+
+| Strategy | Factory | Behaviour on scroll |
+| --- | --- | --- |
+| Reposition | `createRepositionScrollStrategy(injector)` | Panel follows the origin. Good for dropdowns. |
+| Close | `createCloseScrollStrategy(injector)` | Panel detaches. Good for tooltips and hints. |
+| Block | `createBlockScrollStrategy(injector)` | Page cannot scroll at all. Used by dialogs. |
+| Noop | `createNoopScrollStrategy()` | Panel stays where it was, detached from the origin. |
+
+```ts
+private readonly injector = inject(Injector);
+readonly strategy = createRepositionScrollStrategy(this.injector);
+```
+
+The CDK only sees window scroll. To reposition when a container scrolls, put
+`cdkScrollable` on that container.
+
+## Building an overlay from code
+
+When there is no template to put the directive on, call `createOverlayRef`.
+`MatDialog` itself uses this API.
+
+<Example of={OverlayStories.Imperative} />
+
+```ts
+private readonly injector = inject(Injector);
+
+open() {
+  const ref = createOverlayRef(this.injector, {
+    positionStrategy: createGlobalPositionStrategy(this.injector).centerHorizontally().top('80px'),
+    scrollStrategy: createBlockScrollStrategy(this.injector),
+    hasBackdrop: true,
+  });
+
+  ref.attach(new ComponentPortal(MyPanel));
+  ref.backdropClick().subscribe(() => ref.dispose());
+}
+```
+
+In Angular Material 22 these are standalone functions that take an `Injector`.
+The old `Overlay` service, with `overlay.create()`, `overlay.position()` and
+`overlay.scrollStrategies`, still exists, but the functions are the current API
+and they tree-shake.
+
+Position an overlay against an element instead of the viewport with
+`createFlexibleConnectedPositionStrategy(injector, originElement).withPositions([...])`.
+
+## API you will use
+
+| Member | Type | What it does |
+| --- | --- | --- |
+| `cdkOverlayOrigin` | directive | Marks the element the panel is measured against |
+| `cdkConnectedOverlayOrigin` | `CdkOverlayOrigin \| ElementRef` | The origin for this panel |
+| `cdkConnectedOverlayOpen` | `boolean` | Attaches and detaches the panel |
+| `cdkConnectedOverlayPositions` | `ConnectedPosition[]` | Ordered position candidates |
+| `cdkConnectedOverlayHasBackdrop` | `boolean` | Whether a backdrop is rendered |
+| `cdkConnectedOverlayScrollStrategy` | `ScrollStrategy` | What scrolling does to the panel |
+| `(backdropClick)` / `(overlayKeydown)` / `(detach)` | outputs | How you close the panel |
+| `createOverlayRef(injector, config)` | `OverlayRef` | Builds an overlay without a directive |
+
+## Accessibility
+
+The CDK positions a box for you. Everything else is yours.
+
+- The overlay has no role until you give it one. Add `role="dialog"` and an
+  `aria-label`, or `role="menu"` with `role="menuitem"` children, to match what
+  the panel is.
+- Wire the trigger to the panel with `aria-haspopup` and `aria-expanded`, so a
+  screen reader announces that the button opens something and whether it is open.
+- Handle Escape yourself through `(overlayKeydown)`. The connected overlay does
+  not close on Escape on its own.
+- Move focus into the panel when it opens and back to the trigger when it
+  closes. For a modal panel, use `cdkTrapFocus` from `@angular/cdk/a11y`. A
+  dialog gets this for free, a raw overlay does not.
+- If the component you are building already exists, use it. `MatMenu`,
+  `MatSelect` and `MatTooltip` handle all of the above.
+
+## Common mistakes
+
+1. **No backdrop and no outside-click handling.** The panel stays open forever. Add a transparent backdrop and close on `(backdropClick)`.
+2. **Styling the panel from the component's stylesheet.** The panel moves into the overlay container, so view-encapsulated styles miss it. Use `cdkConnectedOverlayPanelClass` and a global rule, or put the styles on the projected content's own component.
+3. **Forgetting Escape and focus.** A raw overlay has no focus trap and no Escape key handling. Add both, or use a dialog.
+4. **Reposition with no `cdkScrollable`.** The panel drifts away from the trigger inside a scrolling container, because the CDK only watches window scroll.
+5. **Using the overlay too early.** Angular Material's menu, select and tooltip are accessible out of the box. Drop down to the overlay only when none of them fits.
+
+## Related
+
+- [Dialog](?path=/docs/popups-and-modals-dialog--docs), built on a global position strategy and a block scroll strategy
+- [Snack Bar](?path=/docs/popups-and-modals-snack-bar--docs), built on a global position strategy
+- [Bottom Sheet](?path=/docs/popups-and-modals-bottom-sheet--docs), the same overlay anchored to the bottom edge

@@ -1,0 +1,93 @@
+:host {
+  display: block;
+  width: min(720px, 92vw);
+  --m3-spring: cubic-bezier(0.42, 1.67, 0.21, 0.9);
+  --m3-smooth: cubic-bezier(0.2, 0, 0, 1);
+}
+.carousel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-radius: var(--mat-sys-corner-extra-large);
+  touch-action: pan-y;
+  user-select: none;
+}
+.carousel:focus-visible {
+  outline: 2px solid var(--mat-sys-primary);
+  outline-offset: 4px;
+}
+.track {
+  display: flex;
+}
+/* Gap lives inside each slide so a hidden slide takes no space at all. */
+.slide {
+  position: relative;
+  flex: 0 1 0;
+  min-width: 0;
+  margin-right: 8px;
+  border-radius: var(--mat-sys-corner-extra-large);
+  overflow: hidden;
+  transition:
+    flex-grow 500ms var(--m3-smooth),
+    margin 500ms var(--m3-smooth),
+    opacity 300ms;
+}
+.slide:last-child {
+  margin-right: 0;
+}
+.slide--hidden {
+  margin-right: 0;
+  opacity: 0;
+}
+.slide__title {
+  position: absolute;
+  left: 20px;
+  bottom: 16px;
+  padding: 4px 12px;
+  border-radius: var(--mat-sys-corner-full);
+  background: color-mix(in srgb, var(--mat-sys-surface) 80%, transparent);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-title-medium);
+  white-space: nowrap;
+  transition: opacity 200ms;
+}
+/* The small edge item is a hint, not a card: no label. */
+.slide--small .slide__title {
+  opacity: 0;
+}
+.controls {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+}
+.count {
+  margin-right: auto;
+  font: var(--mat-sys-label-large);
+  color: var(--mat-sys-on-surface-variant);
+}
+.nav {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+  cursor: pointer;
+}
+.nav:disabled {
+  background: color-mix(in srgb, var(--mat-sys-on-surface) 12%, transparent);
+  color: color-mix(in srgb, var(--mat-sys-on-surface) 38%, transparent);
+  cursor: default;
+}
+.nav:focus-visible {
+  outline: 2px solid var(--mat-sys-primary);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .slide {
+    transition: none;
+  }
+}

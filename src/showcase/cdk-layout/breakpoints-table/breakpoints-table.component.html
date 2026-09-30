@@ -1,0 +1,20 @@
+<div class="docs-demo">
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Media query</th>
+        <th>Matches</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (row of rows(); track row.name) {
+        <tr>
+          <td>{{ row.name }}</td>
+          <td class="query">{{ row.query }}</td>
+          <td>{{ row.matches ? 'yes' : 'no' }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

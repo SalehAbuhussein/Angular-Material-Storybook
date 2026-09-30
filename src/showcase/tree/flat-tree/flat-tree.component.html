@@ -1,0 +1,22 @@
+<mat-tree #tree="matTree" [dataSource]="data" [childrenAccessor]="childrenAccessor">
+  <mat-tree-node
+    *matTreeNodeDef="let node"
+    matTreeNodePadding
+    [matTreeNodePaddingIndent]="indent()"
+  >
+    <span class="row-spacer"></span>
+    {{ node.name }}
+  </mat-tree-node>
+
+  <mat-tree-node
+    *matTreeNodeDef="let node; when: hasChild"
+    matTreeNodePadding
+    [matTreeNodePaddingIndent]="indent()"
+    [isExpandable]="true"
+  >
+    <button matIconButton matTreeNodeToggle [attr.aria-label]="'Toggle ' + node.name">
+      <mat-icon>{{ tree.isExpanded(node) ? 'expand_more' : 'chevron_right' }}</mat-icon>
+    </button>
+    {{ node.name }}
+  </mat-tree-node>
+</mat-tree>

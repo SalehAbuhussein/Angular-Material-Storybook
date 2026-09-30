@@ -1,0 +1,117 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as AppShellStories from './app-shell.stories';
+
+<Meta of={AppShellStories} />
+
+# App shell
+
+**Imports:** `MatSidenavModule`, `MatToolbarModule`, `MatListModule`, `MatIconModule`, `BreakpointObserver`
+
+The app shell is the frame that never unmounts: brand, navigation, a top bar and
+one content region the router fills. Build it once and route inside it.
+
+## Try it
+
+<Example of={AppShellStories.Playground} />
+<Controls of={AppShellStories.Playground} />
+
+## The layout skeleton
+
+```html
+<mat-sidenav-container>
+  <mat-sidenav [mode]="mode()" [opened]="opened()">…nav…</mat-sidenav>
+  <mat-sidenav-content>
+    <mat-toolbar>…</mat-toolbar>
+    <main id="main"><router-outlet /></main>
+  </mat-sidenav-content>
+</mat-sidenav-container>
+```
+
+`mat-sidenav-container` owns the flex row, the backdrop, the scroll container and
+the open and close animation. So the toolbar goes *inside*
+`mat-sidenav-content`, not above the container. The drawer should sit beside
+the toolbar in `side` mode and float over it in `over` mode, and only the
+container can arrange both.
+
+Give the container a real height. It has no intrinsic size, so a shell inside a
+page that does not stretch collapses to zero.
+
+## The state model
+
+| Signal | Type | What it does |
+| --- | --- | --- |
+| `isHandset` | `Signal<boolean>` | `toSignal` over `BreakpointObserver.observe(...)` |
+| `mode` | `computed<'side' \| 'over'>` | `over` on handset, `side` otherwise |
+| `drawerOpen` | `signal<boolean>` | Desktop-only preference, toggled by the menu button |
+| `opened` | `computed<boolean>` | `side` reads `drawerOpen`, `over` starts closed |
+| `active` | `signal<string>` | Current nav id, drives `activated` and `aria-current` |
+
+In `over` mode the toggle calls `drawer.toggle()` on the `viewChild(MatSidenav)`
+instead of flipping a boolean. The drawer also closes when the user picks a
+destination, because a backdrop left up after navigation traps them.
+
+## Responsive rules
+
+<Example of={AppShellStories.DesktopSide} />
+<Example of={AppShellStories.HandsetOver} />
+
+```ts
+private readonly breakpoints = inject(BreakpointObserver);
+
+readonly isHandset = toSignal(
+  this.breakpoints.observe([Breakpoints.Handset, Breakpoints.TabletPortrait])
+    .pipe(map((s) => s.matches)),
+  { initialValue: false },
+);
+
+readonly mode = computed(() => (this.isHandset() ? 'over' : 'side'));
+```
+
+Observe the breakpoint instead of reading `window.innerWidth`.
+`BreakpointObserver` uses `matchMedia`, so it also fires on orientation change
+and browser zoom, and `toSignal` unsubscribes with the component.
+
+The rail variant is pure CSS: the same drawer at `72px` with labels hidden and
+`matTooltip` supplying the names.
+
+<Example of={AppShellStories.IconRail} />
+
+## API you will use
+
+| Member | On | Notes |
+| --- | --- | --- |
+| `mode` | `mat-sidenav` | `'over' \| 'push' \| 'side'` |
+| `opened` | `mat-sidenav` | Two-way capable via `openedChange` |
+| `toggle() / open() / close()` | `MatSidenav` | Return a promise that resolves after the animation |
+| `fixedInViewport`, `fixedTopGap` | `mat-sidenav` | Pin the drawer to the viewport under a fixed bar |
+| `activated` | `a mat-list-item` | The selected look in a `mat-nav-list` |
+| `observe(query)` | `BreakpointObserver` | Emits `BreakpointState` with `matches` |
+
+`MatToolbar` has a `color` input, but under Material 3 it does nothing. Set the
+surface with `background: var(--mat-sys-surface-container-low)` instead.
+
+## Accessibility
+
+- One `<main>` per screen, and it is the only landmark inside the content region. `mat-sidenav` is a `<nav>` only if you make it one, so wrap the links or use `mat-nav-list` inside an element with `role="navigation"`.
+- Heading order starts at the routed view. The shell has no `<h1>`. The page inside does.
+- The skip link is the first focusable element and jumps to `#main`, which carries `tabindex="-1"` so it can receive focus.
+- The current item gets `aria-current="page"`. `activated` is only visual.
+- In `over` mode the drawer traps focus and restores it to the toggle button on close. That is `MatSidenav` behaviour. Do not fight it.
+- Give the toggle a stable `aria-label`. Changing it between "Open" and "Close" makes screen readers announce a control that seems to move.
+
+## Common mistakes
+
+1. **No height on the container.** `mat-sidenav-container` collapses to 0. Give it `height: 100dvh` in an app, or a fixed height in a doc page.
+2. **Toolbar outside the container.** The drawer then overlaps or underlaps it unpredictably. Put the toolbar inside `mat-sidenav-content`.
+3. **Binding `[opened]` and also calling `toggle()`.** The input wins on the next change detection and the drawer snaps back. Pick one owner: a two-way signal, or the template reference.
+4. **Switching mode with `window.innerWidth`.** It does not react to zoom or orientation. Use `BreakpointObserver`.
+5. **Leaving the drawer open after navigation on handset.** The backdrop covers the page the user just asked for. Close it in the click handler.
+
+## Related
+
+- [Sidenav](?path=/docs/navigation-sidenav--docs)
+- [Toolbar](?path=/docs/navigation-toolbar--docs)
+- [List](?path=/docs/layout-list--docs)
+- [Responsive Layout](?path=/docs/cdk-responsive-layout--docs)
+- [Dashboard](?path=/docs/full-layouts-dashboard--docs)

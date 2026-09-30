@@ -1,0 +1,34 @@
+<div class="docs-surface">
+  <table mat-table [dataSource]="dataSource">
+    <ng-container matColumnDef="version">
+      <th mat-header-cell *matHeaderCellDef>Version</th>
+      <td mat-cell *matCellDef="let row">{{ row.version }}</td>
+      <td mat-footer-cell *matFooterCellDef>{{ dataSource.data.length }} releases</td>
+    </ng-container>
+
+    <ng-container matColumnDef="name">
+      <th mat-header-cell *matHeaderCellDef>Name</th>
+      <td mat-cell *matCellDef="let row">{{ row.name }}</td>
+      <td mat-footer-cell *matFooterCellDef></td>
+    </ng-container>
+
+    <ng-container matColumnDef="released">
+      <th mat-header-cell *matHeaderCellDef>Released</th>
+      <td mat-cell *matCellDef="let row">{{ row.released }}</td>
+      <td mat-footer-cell *matFooterCellDef></td>
+    </ng-container>
+
+    <ng-container matColumnDef="status">
+      <th mat-header-cell *matHeaderCellDef>Status</th>
+      <td mat-cell *matCellDef="let row">{{ row.status }}</td>
+      <td mat-footer-cell *matFooterCellDef></td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns()"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns()"></tr>
+    <!-- Always define the footer row and toggle it with [hidden]. A row
+         definition inside @if is created after mat-table has collected its
+         row defs, so the table never renders it. -->
+    <tr mat-footer-row *matFooterRowDef="displayedColumns()" [hidden]="!showFooter()"></tr>
+  </table>
+</div>

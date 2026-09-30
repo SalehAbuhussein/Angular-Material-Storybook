@@ -1,0 +1,147 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as SoftStories from './soft-player.stories';
+
+<Meta of={SoftStories} />
+
+# Soft player
+
+Neumorphism: one background colour, two light sources, and every surface either
+extruded from the page or pressed into it. No borders, almost no contrast at the
+edges. The transport is `matIconButton`, the scrubber and volume are
+`mat-slider`, the queue is `mat-list`.
+
+## Try it
+
+Press play and the scrubber runs on a real clock. Pick a track, or toggle
+shuffle and repeat to see a button stay pressed in.
+
+<Example of={SoftStories.Playground} />
+<Controls of={SoftStories.Playground} />
+
+## Two shadows, reused everywhere
+
+The aesthetic rests on two custom properties:
+
+```scss
+.soft {
+  --bg: #e8ecf3;
+  --light: rgba(255, 255, 255, 0.95);
+  --dark: rgba(163, 177, 198, 0.62);
+
+  --out: -6px -6px 14px var(--light),  6px 6px 14px var(--dark);
+  --in:  inset -4px -4px 10px var(--light), inset 4px 4px 10px var(--dark);
+}
+```
+
+`--out` reads as raised, `--in` as pressed. Every element on this screen uses
+one or the other.
+
+Three rules make it work:
+
+1. **Elements must be the same colour as their parent.** A neumorphic surface is the same colour lit differently. Once a card has its own background, the illusion collapses.
+2. The light comes from one direction. Top left here, so the white shadow is negative on both axes and the dark shadow positive. Flip both to invert.
+3. The dark shadow is a tinted grey, not black. Sample it from the background and darken it, or the surfaces look dirty.
+
+## Pressed state comes free
+
+Because `--in` already exists, interaction is one line:
+
+```scss
+.key { box-shadow: var(--out); transition: box-shadow 120ms ease; }
+.key:active { box-shadow: var(--in); }
+.key--pressed { box-shadow: var(--in); }
+```
+
+`:active` handles the press, and a `--pressed` class handles toggle state, so
+shuffle and repeat stay pushed in. This is what the style does better than any
+other: on/off state is a physical metaphor instead of a colour change.
+
+Material's own ripple and state layers fight this, so turn them off:
+
+```scss
+.key {
+  --mat-icon-button-state-layer-color: transparent;
+  --mat-icon-button-hover-state-layer-opacity: 0;
+  --mat-icon-button-pressed-state-layer-opacity: 0;
+}
+```
+
+## Dark neumorphism needs a lighter light
+
+<Example of={SoftStories.Dark} />
+
+The naive inversion keeps white as the highlight, which blows out on a dark
+background. Make the "light" a lighter grey-blue instead:
+
+```scss
+.soft--dark {
+  --bg: #2a2e3b;
+  --light: rgba(76, 83, 104, 0.75);   // not white
+  --dark: rgba(15, 17, 24, 0.7);
+}
+```
+
+<Example of={SoftStories.Blush} />
+
+## A real clock with effect cleanup
+
+Play really plays:
+
+```ts
+effect((onCleanup) => {
+  if (!this.playing()) return;
+  const id = setInterval(() => {
+    this.position.update((p) => (p + 1 > this.current().length ? 0 : p + 1));
+  }, 1000);
+  onCleanup(() => clearInterval(id));
+});
+```
+
+The `onCleanup` callback runs before the effect re-runs and when the component is
+destroyed, so pausing clears the interval and nothing leaks. An `effect` that
+starts a timer without `onCleanup` stacks a new interval every time its
+dependencies change.
+
+## API you will use
+
+| Member | Type | What it does |
+| --- | --- | --- |
+| `--mat-icon-button-state-layer-color` | color | `transparent` removes the hover wash that fights a soft surface. |
+| `--mat-icon-button-icon-size` | length | Scale the glyph independently of the button. |
+| `--mat-icon-button-state-layer-size` | length | The button's real hit area. Keep it at least 44px. |
+| `--mat-slider-inactive-track-color` | color | `transparent` lets the pressed groove behind it show through. |
+| `--mat-slider-handle-color` | color | Must stay visible. See below. |
+| `--mat-list-list-item-hover-state-layer-opacity` | number | `0` so the list row's own shadow is the hover feedback. |
+| `effect((onCleanup) => …)` | Angular API | Timers and subscriptions inside an effect need this. |
+
+## Accessibility
+
+Neumorphism is the most accessibility-hostile style in this chapter. It works
+by **removing contrast at edges**, which is the signal people use to find
+controls.
+
+What this demo does about it:
+
+- The slider handles are the accent colour, not the background. Matching them to the surface looks clean and makes the control impossible to locate. This was a real bug here before it was a paragraph.
+- Icons keep full contrast against the surface even though the surface edges do not.
+- Toggle state is not shadow alone. Shuffle also shows a text pill, and both toggles carry `aria-pressed`, so assistive tech gets the state.
+- Hit targets stay large. The state layer size is the real touch target, so shrinking the icon does not shrink the button.
+- `prefers-reduced-motion` stops the spinning artwork.
+
+If you must meet WCAG on non-text contrast, this style will fight you at every
+step. Use it for a media player or a toy; think hard before a form.
+
+## Common mistakes
+
+1. Giving an element its own background colour. It stops looking extruded and starts looking like a floating rectangle.
+2. A handle that matches the surface. Beautiful, invisible, unusable.
+3. Pure black in the dark shadow. Surfaces look grubby. Tint it toward the background hue.
+4. Keeping white as the highlight in dark mode. It blows out. Use a lighter version of the background.
+5. A timer in an effect with no `onCleanup`. Every dependency change adds another interval.
+
+## Related
+
+- [Neo Brutalist Console](?path=/docs/beyond-material-neo-brutalist-console--docs), [Glass Dashboard](?path=/docs/beyond-material-glass-dashboard--docs), [Neon Terminal](?path=/docs/beyond-material-neon-terminal--docs), [Editorial Reader](?path=/docs/beyond-material-editorial-reader--docs)
+- [Slider](?path=/docs/form-controls-slider--docs), [Button](?path=/docs/buttons-and-indicators-button--docs), [List](?path=/docs/layout-list--docs)
+- [Color and Variables](?path=/docs/foundations-color-and-variables--docs)

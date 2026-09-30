@@ -1,0 +1,160 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as LoginStories from './login.stories';
+
+<Meta of={LoginStories} />
+
+# Sign in
+
+One card, two fields, and more edge cases than any other screen of its size.
+The layout takes ten minutes. The states take the rest of the day.
+
+## Try it
+
+Submit it empty to see validation. Sign in with the password `wrongpass` to see
+a rejected sign in, or any other 8+ character password to see success.
+
+<Example of={LoginStories.Playground} />
+<Controls of={LoginStories.Playground} />
+
+## The layout skeleton
+
+The layout is centring, which CSS grid does in two lines:
+
+```scss
+.screen {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;      // or 100% inside a shell
+  padding: 24px;
+}
+
+.card { width: min(100%, 420px); }
+```
+
+`place-items: center` handles both axes. `min(100%, 420px)` caps the card on a
+desktop and lets it fill a phone without a media query. The screen padding stops
+it touching the edges.
+
+Do not use `height: 100vh` on mobile. The browser chrome makes `vh` taller than
+the visible area, so the card sits slightly below centre and the page scrolls
+by a few pixels. Use `100dvh`, or a min-height on a flex parent.
+
+## Field errors versus form errors
+
+<Example of={LoginStories.Validation} />
+
+These belong in different places.
+
+A field error is something the browser can tell on its own: the email is
+malformed, the password is too short. It goes in `mat-error` under that field.
+
+```html
+<mat-form-field appearance="outline">
+  <mat-label>Email</mat-label>
+  <input matInput type="email" formControlName="email" autocomplete="username" />
+  @if (show('email', 'email')) {
+    <mat-error>That does not look like an email address</mat-error>
+  }
+</mat-form-field>
+```
+
+<Example of={LoginStories.FailedSignIn} />
+
+A form error comes back from the server, and for sign in it is vague on purpose.
+**Never mark the password field as wrong.** Telling an attacker that the email
+exists and only the password failed is an account enumeration bug. Show one
+message above the form, covering both fields:
+
+```html
+@if (error()) {
+  <div class="alert" role="alert">
+    <mat-icon>error</mat-icon>
+    <span>{{ error() }}</span>
+  </div>
+}
+```
+
+`role="alert"` makes a screen reader announce it as soon as it appears, without
+moving focus.
+
+## When errors appear
+
+Showing "Enter your email" before anyone has typed is hostile. Showing nothing
+after a failed submit is worse. This rule covers both:
+
+```ts
+show(control: 'email' | 'password', code: string): boolean {
+  const c = this.form.controls[control];
+  return c.hasError(code) && (c.touched || this.submitted());
+}
+```
+
+An error shows once the control has been blurred or the user has tried to
+submit. `markAllAsTouched()` on an invalid submit makes every error appear at
+once instead of one at a time.
+
+## The loading button
+
+`MatButton` in v22 has a `showProgress` input, so the spinner needs no wrapper:
+
+```html
+<button matButton="filled" type="submit" [disabled]="loading()" [showProgress]="loading()">
+  {{ loading() ? 'Signing in' : 'Sign in' }}
+</button>
+```
+
+Disable it while the request is in flight, because double submitted logins do
+happen. The button keeps its width, so the card does not resize under the
+cursor.
+
+## Password reveal
+
+The reveal toggle is a real button with state, not an icon:
+
+```html
+<button matIconButton matSuffix type="button"
+        (click)="reveal.set(!reveal())"
+        [attr.aria-label]="reveal() ? 'Hide password' : 'Show password'"
+        [attr.aria-pressed]="reveal()">
+  <mat-icon>{{ reveal() ? 'visibility_off' : 'visibility' }}</mat-icon>
+</button>
+```
+
+Inside a `<form>`, a button with no type submits, so without `type="button"` the
+first click on the eye icon logs the user in.
+
+## API you will use
+
+| Member | Type | What it does |
+| --- | --- | --- |
+| `matIconPrefix` / `matSuffix` | directives | Content before or after the input, inside the field outline. |
+| `showProgress` on `matButton` | boolean | Swaps the label for a spinner without changing the button's size. |
+| `mat-error` | content child | Only rendered when the control is invalid and touched. Material handles the wiring. |
+| `Validators.email` | validator | Format only. It does not check that the address exists. |
+| `markAllAsTouched()` | method | Reveals every error at once after a failed submit. |
+| `form.events` | `Observable<ControlEvent>` | What to feed `toSignal` so a `computed` reacts to `touched` and `dirty`. |
+| `autocomplete` | attribute | `username` and `current-password`. Password managers need these to fill the form. |
+
+## Accessibility
+
+- `autocomplete="username"` and `autocomplete="current-password"` are not optional. Without them password managers cannot fill the form, and people fall back to weaker passwords they can type.
+- The failure banner is `role="alert"` so it is announced when it appears. The success message is `role="status"`, which is polite and does not interrupt.
+- The reveal button has an `aria-label` that changes with state, plus `aria-pressed`. A static "Show password" label lies half the time.
+- Every field has a `mat-label`. Placeholder-only fields lose their label once someone types.
+- The submit button is a real `type="submit"` inside a `<form>`, so Enter works from either field.
+
+## Common mistakes
+
+1. **Marking the password field invalid on a failed sign in.** It tells an attacker the email exists. Use one vague form level message.
+2. **Omitting `type="button"` on the reveal toggle.** It submits the form on the first click.
+3. **Skipping `autocomplete`.** Password managers stop working, and people get annoyed instead of reporting a bug.
+4. **`height: 100vh` for centring.** On mobile the visual viewport is shorter than `100vh`, so the card sits off centre. Use `100dvh`.
+5. **Leaving the submit button enabled during the request.** Double submits reach the server and the second one usually fails in a confusing way.
+
+## Related
+
+- [Form Field](?path=/docs/form-controls-form-field--docs), [Input](?path=/docs/form-controls-input--docs), [Checkbox](?path=/docs/form-controls-checkbox--docs)
+- [Putting It Together](?path=/docs/form-controls-putting-it-together--docs) for a longer reactive form
+- [Button](?path=/docs/buttons-and-indicators-button--docs) for `showProgress` and the appearance scale
+- [Empty, Loading and Error](?path=/docs/full-layouts-empty-loading-and-error--docs) for the rest of the state set

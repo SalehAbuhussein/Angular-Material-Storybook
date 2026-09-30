@@ -1,0 +1,267 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Start Here/Install and Setup" />
+
+# Install and setup
+
+A working Material button takes two commands and one provider. This page shows
+what each one changes, so you can tell a broken install from a working one.
+
+## Create the app
+
+```bash
+npm install -g @angular/cli
+ng new my-app --style=scss --ssr=false
+cd my-app
+```
+
+`--style=scss` matters. Angular Material's theming API is a Sass mixin, so a CSS
+project cannot use it. If you already have a CSS project, rename `src/styles.css`
+to `src/styles.scss` and update the `styles` array in `angular.json` before going
+further.
+
+Angular 22 apps are zoneless by default. The generated `app.config.ts` has no
+`provideZoneChangeDetection` call and `package.json` has no `zone.js`. Angular
+Material 22 is fully zoneless-compatible, so you need to do nothing extra. Any
+third-party library that still requires Zone.js will not work here, though.
+
+## Add Angular Material
+
+```bash
+ng add @angular/material
+```
+
+This installs `@angular/material` and `@angular/cdk`, then runs a setup
+schematic. Answer the prompts as follows.
+
+### The project question
+
+You only see this in a workspace with more than one application. Pick the app you
+want themed, or skip the prompt by passing the name up front:
+
+```bash
+ng add @angular/material --project=my-app
+```
+
+### The theme question
+
+```
+Select a pair of starter prebuilt color palettes for your Angular Material theme
+> Azure/Blue
+  Rose/Red
+  Magenta/Violet
+  Cyan/Orange
+```
+
+Each option is a primary and a tertiary palette. The first colour drives buttons,
+links, checkboxes, sliders, and focus rings. The second is an accent for
+secondary emphasis. You are not locked in: the answer lands in `src/styles.scss`
+as two Sass variables you can change any time, and
+[Theming](?path=/docs/foundations-theming--docs) shows how to generate a palette
+from your own brand colour.
+
+Skip the prompt with `--theme=azure-blue`, `rose-red`, `magenta-violet`, or
+`cyan-orange`.
+
+### Typography and animations
+
+Older versions of the schematic also asked "set up global Angular Material
+typography styles" and "include and enable animations". Version 22 asks neither.
+
+Typography is now part of the theme mixin. The generated `styles.scss` already
+contains `typography: Roboto` inside `mat.theme()`, which sets the font for every
+component. See [Typography](?path=/docs/foundations-typography--docs) to change
+it.
+
+Animations are now a provider you add yourself, described next.
+
+## Add the animations provider
+
+Angular Material components animate: ripples, the form field label float, the
+dialog enter and leave, the menu open. Without the provider they still render and
+work, but every transition snaps instantly.
+
+Open `src/app/app.config.ts` and add `provideAnimationsAsync()`:
+
+```ts
+import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { provideRouter } from '@angular/router';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { routes } from './app.routes';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideBrowserGlobalErrorListeners(),
+    provideRouter(routes),
+    provideAnimationsAsync(),
+  ],
+};
+```
+
+Check the import path. `provideAnimationsAsync` comes from
+`@angular/platform-browser/animations/async`, not from
+`@angular/platform-browser/animations`. The async version lazy-loads the
+animations engine after bootstrap, which keeps it out of your initial bundle.
+It is the right default for almost every app.
+
+If you want no animation at all, for example in a test harness, use
+`provideNoopAnimations()` from `@angular/platform-browser/animations` instead.
+
+## What changed on disk
+
+Three files, and only three.
+
+| File | What the schematic did |
+| --- | --- |
+| `package.json` | Added `@angular/material` and `@angular/cdk` to `dependencies` |
+| `src/styles.scss` | Prepended the `mat.theme()` block and body defaults |
+| `src/index.html` | Appended font and preconnect links to `<head>` |
+
+Your `src/styles.scss` now starts with something close to this:
+
+```scss
+@use '@angular/material' as mat;
+
+html {
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$azure-palette,
+        tertiary: mat.$blue-palette,
+      ),
+      typography: Roboto,
+      density: 0,
+    )
+  );
+}
+
+body {
+  color-scheme: light;
+  background-color: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-medium);
+  margin: 0;
+  height: 100%;
+}
+```
+
+That `mat.theme()` call emits several hundred CSS custom properties on `html`.
+Every Material component reads from them, and your own components can too.
+[Theming](?path=/docs/foundations-theming--docs) takes this file apart line by
+line.
+
+`src/index.html` gained these lines in `<head>`:
+
+```html
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+```
+
+## Add the icon font
+
+The schematic adds Material Icons, the older icon font. Material 3 designs use
+Material Symbols, which has more icons and supports weight, fill, and optical
+size axes. Both work with `<mat-icon>`.
+
+To use Material Symbols, add this to `<head>` in `src/index.html`:
+
+```html
+<link
+  href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+  rel="stylesheet"
+/>
+```
+
+Then tell `<mat-icon>` to use it, either per icon:
+
+```html
+<mat-icon fontSet="material-symbols-outlined" fontIcon="home"></mat-icon>
+```
+
+Or once for the whole app, in `app.config.ts`:
+
+```ts
+import { MAT_ICON_DEFAULT_OPTIONS } from '@angular/material/icon';
+
+// inside the providers array
+{ provide: MAT_ICON_DEFAULT_OPTIONS, useValue: { fontSet: 'material-symbols-outlined' } },
+```
+
+`<mat-icon>` defaults to the `material-icons` font set. If you only load
+Material Symbols and never set `fontSet`, your icons render as plain text.
+[Icons](?path=/docs/foundations-icons--docs) covers both fonts, SVG icons, and
+the accessibility rules.
+
+For an offline app or a locked-down network, self-host the font instead of
+using the Google Fonts CDN. Install `material-symbols` from npm and point a
+`@font-face` rule at it.
+
+## Verify it worked
+
+Replace the contents of `src/app/app.ts`:
+
+```ts
+import { Component } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+
+@Component({
+  selector: 'app-root',
+  imports: [MatButtonModule, MatIconModule],
+  template: `
+    <button matButton="filled">
+      <mat-icon>check</mat-icon>
+      It works
+    </button>
+  `,
+})
+export class App {}
+```
+
+Run `ng serve` and open the app. You should see a pill-shaped filled button in
+your theme's primary colour, a check icon on the left, and a ripple that spreads
+from where you click.
+
+Check each part against this list:
+
+| What you see | What it means |
+| --- | --- |
+| Correct colour, icon, and ripple | Everything is wired up |
+| Unstyled text-only button | `styles.scss` is not loaded, or it is still a `.css` file |
+| The word `check` instead of an icon | The icon font link is missing from `index.html` |
+| Correct look, no ripple or transition | `provideAnimationsAsync()` is missing |
+| Black on white regardless of theme | The `mat.theme()` block is not on an ancestor of `<body>` |
+
+Buttons are directives on native elements. There is no `<mat-button>` element,
+and `mat-raised-button` from Material 2 is gone.
+[Button](?path=/docs/buttons-and-indicators-button--docs) has the full set.
+
+## Import modules per component
+
+Angular Material has no single root module. Each component ships its own
+`Mat*Module`, and you add the ones a template uses to that component's `imports`
+array:
+
+```ts
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+
+@Component({
+  selector: 'app-profile-form',
+  imports: [MatFormFieldModule, MatInputModule, MatSelectModule],
+  templateUrl: './profile-form.html',
+})
+export class ProfileForm {}
+```
+
+Do not build a shared barrel module that re-exports every Material module. It
+defeats tree shaking, and every component in your app then pulls in the whole
+library.
+
+## Next
+
+Read [How to Read These Docs](?path=/docs/start-here-how-to-read-these-docs--docs),
+then [Theming](?path=/docs/foundations-theming--docs).

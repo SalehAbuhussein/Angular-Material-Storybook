@@ -1,0 +1,14 @@
+<div class="docs-demo">
+  <div
+    class="list"
+    [class.list--horizontal]="orientation() === 'horizontal'"
+    cdkDropList
+    [cdkDropListOrientation]="orientation()"
+    [cdkDropListDisabled]="disabled()"
+    (cdkDropListDropped)="drop($event)"
+  >
+    @for (item of items(); track item) {
+      <div class="item" cdkDrag [cdkDragLockAxis]="axis()">{{ item }}</div>
+    }
+  </div>
+</div>

@@ -1,0 +1,132 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as RadioStories from './radio.stories';
+
+<Meta of={RadioStories} />
+
+# Radio
+
+**Import:** `import { MatRadioModule } from '@angular/material/radio';`
+
+Radio buttons are for one choice out of a small set where seeing all the options
+matters. The `<mat-radio-group>` is the control: it holds the value, generates
+the shared `name`, and manages focus. The buttons only carry a `value` and a
+label.
+
+```html
+<mat-radio-group [(ngModel)]="roast" aria-label="Roast">
+  <mat-radio-button value="light">Light</mat-radio-button>
+  <mat-radio-button value="dark">Dark</mat-radio-button>
+</mat-radio-group>
+```
+
+Use radios up to about five options. Past that, use
+[Select](?path=/docs/form-controls-select--docs).
+
+## Try it
+
+<Example of={RadioStories.Playground} />
+<Controls of={RadioStories.Playground} />
+
+## The group owns the value
+
+`labelPosition`, `disabled`, `required`, and `name` set on the group cascade to
+every button. Without the group wrapper the buttons share no name, so more than
+one can be selected at once.
+
+<Example of={RadioStories.Basic} />
+
+## Layout
+
+Material gives radios no layout of its own, because how they stack depends on
+label length. Short labels go in a row, sentence-length ones in a column.
+
+<Example of={RadioStories.Layout} />
+
+```html
+<mat-radio-group style="display: flex; flex-direction: column; gap: 4px;">
+```
+
+In a real app put that in a component style, not inline.
+
+## Disabling one option
+
+`disabled` on a single button leaves the rest of the group usable. Say why in
+the label, or a greyed-out option looks broken.
+
+<Example of={RadioStories.DisabledOption} />
+
+## In reactive forms
+
+Bind `formControlName` to the group, never to the individual buttons. Wrap the
+group in a `<fieldset>` with a `<legend>` so the whole set has a name.
+
+<Example of={RadioStories.InReactiveForms} />
+
+```ts
+readonly form = this.fb.nonNullable.group({
+  speed: ['', Validators.required],
+});
+```
+
+```html
+<fieldset>
+  <legend>Delivery speed</legend>
+  <mat-radio-group formControlName="speed">
+    <mat-radio-button value="standard">Standard</mat-radio-button>
+  </mat-radio-group>
+</fieldset>
+```
+
+Starting the control at `''` means `Validators.required` forces a decision.
+Start it at a real value when you have a sensible default and want to save
+people a click.
+
+## API you will use
+
+| Name | Type | What it does |
+| --- | --- | --- |
+| `value` (group) | `any` | The selected button's value. Two-way bindable. |
+| `name` (group) | `string` | Shared `name` for the inputs. Generated if you omit it. |
+| `labelPosition` (group) | `'after' \| 'before'` | Cascades to every button. |
+| `disabled` (group) | `boolean` | Disables the whole set. |
+| `required` (group) | `boolean` | Sets `aria-required` on the buttons. |
+| `value` (button) | `any` | What the group reports when this one is selected. |
+| `checked` (button) | `boolean` | Selects it directly, outside a group. |
+| `change` | `EventEmitter<MatRadioChange>` | Fires on user selection with `{ source, value }`. |
+
+## Accessibility
+
+The group renders as `role="radiogroup"`. Arrow keys move between options and
+select as they go, as radios should. Each button is a
+real `<input type="radio">`.
+
+What you still supply:
+
+- A name for the group: a `<fieldset>` with `<legend>`, or `aria-label` /
+  `aria-labelledby` on the `<mat-radio-group>`.
+- Labels that read on their own. "Yes" and "No" are meaningless without the
+  group name.
+- Never a disabled group as the only way to convey "not applicable". Hide the
+  question instead or explain it in text.
+
+## Common mistakes
+
+1. Radio buttons with no group. They stop being mutually exclusive. Always
+   wrap them in `<mat-radio-group>`.
+2. `formControlName` on `<mat-radio-button>`. It goes on the group. The
+   buttons are not controls.
+3. No accessible name on the group. Screen reader users hear the options
+   with no idea what the question is. Add a `<legend>` or `aria-label`.
+4. Radios for a yes/no. One checkbox or a
+   [Slide Toggle](?path=/docs/form-controls-slide-toggle--docs) is clearer, unless
+   the two answers need equal weight.
+5. Ten or more radios. The eye cannot scan them. Switch to a
+   [Select](?path=/docs/form-controls-select--docs).
+
+## Related
+
+- [Checkbox](?path=/docs/form-controls-checkbox--docs) for several independent yes/no answers
+- [Button Toggle](?path=/docs/form-controls-button-toggle--docs) for a compact set of two to five
+- [Select](?path=/docs/form-controls-select--docs) for longer lists
+- [Putting It Together](?path=/docs/form-controls-putting-it-together--docs) for the full form

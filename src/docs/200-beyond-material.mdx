@@ -1,0 +1,78 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Beyond Material/Overview" />
+
+# Beyond Material
+
+Five screens that do not look like Angular Material. Every control in them is an
+unmodified Angular Material component.
+
+**You do not have to choose between Material's behaviour and your own design.**
+The behaviour is the expensive part, and you keep it.
+
+## The five
+
+| Screen | Look | The technique it teaches |
+| --- | --- | --- |
+| [Neo Brutalist Console](?path=/docs/beyond-material-neo-brutalist-console--docs) | Flat fills, black rules, hard shadows | System vs component tokens, and finding the names |
+| [Glass Dashboard](?path=/docs/beyond-material-glass-dashboard--docs) | Aurora, frosted panels | `backdrop-filter`, masks, binding custom properties |
+| [Neon Terminal](?path=/docs/beyond-material-neon-terminal--docs) | CRT phosphor, scanlines | `color-mix`, overlays, the one place `::ng-deep` is right |
+| [Editorial Reader](?path=/docs/beyond-material-editorial-reader--docs) | Serif display, paper stock | Type as the main lever, measure, drop caps |
+| [Soft Player](?path=/docs/beyond-material-soft-player--docs) | Neumorphic, extruded | Two shadows, pressed state, and what it costs |
+
+## How all of it works
+
+Material 3 components read CSS custom properties: ordinary variables that
+cascade, that you can scope to one class, and that you can change at runtime.
+
+```scss
+.my-screen {
+  --mat-sys-primary: #d6f34b;          // theme-wide, this subtree only
+  --mat-chip-container-shape-radius: 0; // one component
+}
+```
+
+Two layers:
+
+- `--mat-sys-*` is the theme. Set `--mat-sys-corner-full: 0` and every pill in that subtree squares off.
+- `--mat-<component>-*` is one component. This is how chips go square while buttons stay round.
+
+Find the names in the Sass source of the version you have installed:
+
+```bash
+grep -oE "chip-[a-z0-9-]+" node_modules/@angular/material/chips/_m3-chip.scss | sort -u
+```
+
+Prefix the result with `--mat-`. Do not trust `--mdc-*` names from older
+articles; in v22 they are silently inert.
+
+## What to keep
+
+Restyle surfaces freely. Think twice before touching these, because they carry
+meaning, not taste:
+
+1. Focus indicators. Keyboard users navigate by them. Restyle them, never remove them.
+2. Touch target size. A 24px button looks tidy and fails on a phone. Shrink the icon, keep the hit area.
+3. Error colour. If your error state looks like your accent, the form stops communicating.
+4. Disabled state. It has to look unavailable and stay perceivable.
+5. Contrast. Every screen in this chapter was checked. The neumorphic one is documented as the compromise it is.
+
+## What you should not do
+
+Rebuilding the component. Once you copy Material's markup into your own
+component to style it, you inherit the maintenance and lose the focus
+management, keyboard handling, ARIA wiring, and upgrade path. A token override
+is five lines and survives the next major version.
+
+Reaching for `::ng-deep` first. It is deprecated and breaks when internal DOM
+changes. Use it only where no token exists, as the Neon Terminal does for tab
+body height, and always scope it under a class of your own.
+
+## A note on taste
+
+Five aesthetics in one chapter is a demonstration, not a recommendation. Pick one
+and commit. The screens in
+[Full Layouts](?path=/docs/full-layouts-app-shell--docs) are neutral on purpose,
+because most products are better served by a restrained system than a memorable
+one. When you do need a distinct look, it costs you a stylesheet, not your
+component library.

@@ -1,0 +1,261 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Foundations/Typography" />
+
+# Typography
+
+Material 3 defines fifteen text styles, arranged as five roles with three sizes
+each. `mat.theme()` emits all of them as CSS variables. Components use them, and
+you should too instead of inventing font sizes.
+
+A screen built from fifteen choices has a visible hierarchy. A screen built from
+forty ad hoc font sizes does not.
+
+## The five roles
+
+Display is the largest text on a page: a hero number, a marketing headline, a
+single word of branding. Most application screens never use it.
+
+Headline is for page and section titles, the top of the hierarchy in a normal
+app screen.
+
+Title is for the heading of a component: a card title, a dialog title, a
+toolbar title, a list section header.
+
+Body is running text. Paragraphs, descriptions, table cells, list item text.
+`body-medium` is the application default.
+
+Label is text on or next to a control. Button labels, chip text, form field
+helper text, tab labels, badges. Label styles are heavier than body styles at the
+same size, because short text on a coloured surface needs the extra weight.
+
+Each role comes in `large`, `medium`, and `small`. Step down a size before you
+step across to a different role: `title-small` and `body-large` are not
+interchangeable.
+
+## Setting the font
+
+The `typography` key of `mat.theme()` takes a family name:
+
+```scss
+@use '@angular/material' as mat;
+
+html {
+  @include mat.theme(
+    (
+      color: (primary: mat.$azure-palette),
+      typography: 'Inter',
+      density: 0,
+    )
+  );
+}
+```
+
+That sets the family for all fifteen styles. For finer control, pass a map:
+
+```scss
+html {
+  @include mat.theme(
+    (
+      color: (primary: mat.$azure-palette),
+      typography: (
+        plain-family: 'Inter',
+        brand-family: 'Playfair Display',
+        bold-weight: 700,
+        medium-weight: 500,
+        regular-weight: 400,
+      ),
+      density: 0,
+    )
+  );
+}
+```
+
+Display, headline, and `title-large` use `brand-family`, where a distinctive
+typeface pays off. Everything else uses `plain-family`, where legibility at small
+sizes matters more. Leave `brand-family` out and it falls back to `plain-family`.
+
+The three weight keys set which weight each style resolves to. Defaults are 700,
+500, and 400. Change them when your font names weights differently, for example
+a variable font where 600 reads as the medium.
+
+The mixin does not load the font. Add it to `src/index.html` yourself:
+
+```html
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet" />
+```
+
+Load the three weights you configured. The browser faux-bolds a missing weight,
+and it looks wrong at small sizes.
+
+## Applying a style
+
+Each style is available three ways. Pick whichever fits where you are writing.
+
+### The shorthand variable
+
+```scss
+.page-title {
+  font: var(--mat-sys-headline-small);
+  letter-spacing: var(--mat-sys-headline-small-tracking);
+}
+```
+
+`--mat-sys-headline-small` is a complete CSS `font` shorthand: weight, size, line
+height, and family in one value. Because `font` is a shorthand, it resets
+`letter-spacing`-adjacent properties it does not mention, so apply the matching
+`-tracking` variable on the next line. Every style has one.
+
+### The Sass mixin
+
+```scss
+@use '@angular/material' as mat;
+
+.page-title {
+  @include mat.typography-headline-small();
+}
+```
+
+This does what the two lines above do, including the tracking. There is one
+mixin per style: `mat.typography-display-large()` through
+`mat.typography-label-small()`.
+
+### The utility class
+
+Include the system classes once, anywhere in a global stylesheet:
+
+```scss
+@use '@angular/material' as mat;
+
+@include mat.system-classes();
+```
+
+Then use them in templates:
+
+```html
+<h1 class="mat-font-headline-lg">Reports</h1>
+<p class="mat-font-body-md">Everything that happened this week.</p>
+<span class="mat-font-label-sm">Updated 4 minutes ago</span>
+```
+
+The class names abbreviate the size: `-lg`, `-md`, `-sm`. The full set is
+`mat-font-display-lg` down to `mat-font-label-sm`, fifteen classes matching the
+fifteen styles. They set font and tracking and nothing else, so they compose with
+your own layout classes.
+
+### What about mat-typography?
+
+`mat.typography-hierarchy()` emits the older `.mat-typography` wrapper class,
+which styles bare `h1` through `h6` and `p` elements inside it. It still works,
+but it needs a theme object from the Material 2 API:
+
+```scss
+@include mat.typography-hierarchy(mat.define-theme());
+```
+
+and it bakes literal font values into the CSS instead of reading the variables
+`mat.theme()` emits, so it ignores your `mat.theme()` typography config. In new
+code, prefer `mat.system-classes()` or the per-style mixins, and treat
+`.mat-typography` as a migration aid.
+
+## The complete scale
+
+Sizes are in `rem` so they respond to the user's browser font size. Do not
+convert them to `px`.
+
+| Style | Variable | Weight | Size | Line height | Tracking | Family |
+| --- | --- | --- | --- | --- | --- | --- |
+| Display large | `--mat-sys-display-large` | regular | 3.562rem | 4rem | -0.016rem | brand |
+| Display medium | `--mat-sys-display-medium` | regular | 2.812rem | 3.25rem | 0 | brand |
+| Display small | `--mat-sys-display-small` | regular | 2.25rem | 2.75rem | 0 | brand |
+| Headline large | `--mat-sys-headline-large` | regular | 2rem | 2.5rem | 0 | brand |
+| Headline medium | `--mat-sys-headline-medium` | regular | 1.75rem | 2.25rem | 0 | brand |
+| Headline small | `--mat-sys-headline-small` | regular | 1.5rem | 2rem | 0 | brand |
+| Title large | `--mat-sys-title-large` | regular | 1.375rem | 1.75rem | 0 | brand |
+| Title medium | `--mat-sys-title-medium` | medium | 1rem | 1.5rem | 0.009rem | plain |
+| Title small | `--mat-sys-title-small` | medium | 0.875rem | 1.25rem | 0.006rem | plain |
+| Body large | `--mat-sys-body-large` | regular | 1rem | 1.5rem | 0.031rem | plain |
+| Body medium | `--mat-sys-body-medium` | regular | 0.875rem | 1.25rem | 0.016rem | plain |
+| Body small | `--mat-sys-body-small` | regular | 0.75rem | 1rem | 0.025rem | plain |
+| Label large | `--mat-sys-label-large` | medium | 0.875rem | 1.25rem | 0.006rem | plain |
+| Label medium | `--mat-sys-label-medium` | medium | 0.75rem | 1rem | 0.031rem | plain |
+| Label small | `--mat-sys-label-small` | medium | 0.688rem | 1rem | 0.031rem | plain |
+
+Weight is `regular` (400 by default) or `medium` (500 by default). `label-large`
+and `label-medium` also expose a prominent weight variable that resolves to the
+bold weight.
+
+## Per-part variables
+
+When the shorthand is too coarse, every style also exposes its parts. For
+`body-large` those are:
+
+```
+--mat-sys-body-large-font
+--mat-sys-body-large-size
+--mat-sys-body-large-weight
+--mat-sys-body-large-line-height
+--mat-sys-body-large-tracking
+```
+
+The same five exist for all fifteen styles, plus
+`--mat-sys-label-large-weight-prominent` and
+`--mat-sys-label-medium-weight-prominent`.
+
+Use them when you want one attribute of a style and not the rest:
+
+```scss
+.truncated-title {
+  font: var(--mat-sys-title-medium);
+  letter-spacing: var(--mat-sys-title-medium-tracking);
+  line-height: 1.2; // tighter than the token, deliberately
+}
+```
+
+```scss
+.emphasised-tab-label {
+  font-weight: var(--mat-sys-label-large-weight-prominent);
+}
+```
+
+## Picking a style
+
+| You are styling | Use |
+| --- | --- |
+| A page title | `headline-small` or `headline-medium` |
+| A section heading inside a page | `title-large` |
+| A card or dialog title | `title-large` |
+| A list item's primary line | `body-large` |
+| A list item's secondary line | `body-medium` with `on-surface-variant` colour |
+| A paragraph of running text | `body-medium` |
+| A table cell | `body-medium` |
+| A table header | `title-small` |
+| Form field hint or error text | `body-small` |
+| A button, tab, or chip label | `label-large` |
+| A badge or timestamp | `label-small` |
+| A large KPI figure | `display-small` |
+
+Headings should also be real heading elements. `headline-small` on a `<div>`
+gives you the look and none of the document structure screen readers navigate
+by. Use `<h1>` through `<h6>` in the right order and style them.
+
+## Common mistakes
+
+1. Hardcoding `font-size: 14px`. It ignores the user's browser font setting
+   and drifts from the rest of the app. Use a scale variable.
+2. Using `font:` without the tracking. The shorthand does not carry letter
+   spacing, so text ends up slightly too loose or too tight. Always add the
+   matching `-tracking` variable, or use the Sass mixin, which does it for you.
+3. Setting the family in `mat.theme()` and not loading it. Everything falls
+   back to the browser default and nothing looks broken enough to notice.
+4. Skipping heading levels for visual reasons. Pick the level by document
+   structure and the size with a class.
+5. Expecting `.mat-typography` to follow `mat.theme()`. It compiles literal
+   values from a separate theme object.
+
+## Related
+
+- [Theming](?path=/docs/foundations-theming--docs)
+- [Density](?path=/docs/foundations-density--docs)

@@ -1,0 +1,14 @@
+<form [formGroup]="form" (ngSubmit)="submitted.set(true)" class="docs-form">
+  <mat-checkbox formControlName="terms">I accept the terms of service</mat-checkbox>
+  @if (form.controls.terms.touched && form.controls.terms.invalid) {
+    <p class="docs-error">You have to accept the terms to continue</p>
+  }
+
+  <mat-checkbox formControlName="newsletter">Send me product updates</mat-checkbox>
+
+  <button matButton="filled" type="submit">Continue</button>
+
+  @if (submitted()) {
+    <p>Submitted: {{ form.getRawValue() | json }}</p>
+  }
+</form>

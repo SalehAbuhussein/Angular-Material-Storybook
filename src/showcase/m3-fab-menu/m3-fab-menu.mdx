@@ -1,0 +1,59 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as Stories from './m3-fab-menu.stories';
+
+<Meta of={Stories} />
+
+# FAB menu
+
+A FAB that opens into two to six related actions. It replaces the older speed
+dial. Use it when "create" has a few flavors, such as a new document, sheet or
+folder.
+
+## Try it
+
+Tap the FAB. It shrinks into a round close button in the solid color, and the
+actions rise out of it one after another. Tap an action or the close button to
+close it.
+
+<Example of={Stories.Playground} />
+<Controls of={Stories.Playground} />
+
+## The motion
+
+Three things move together, all on the same spring:
+
+1. The FAB goes from an 80px rounded square to a 56px circle.
+2. Its icon turns from `add` to `close`.
+3. Each action fades up from below, 30ms after the one under it.
+
+The stagger is one custom property per item:
+
+```css
+.items li {
+  transition-delay: calc(var(--i) * 30ms);
+}
+```
+
+```html
+<li [style.--i]="actions().length - 1 - i">
+```
+
+Counting from the bottom makes the nearest action appear first.
+
+## Colors
+
+<Example of={Stories.Tertiary} />
+
+| `color` | Closed FAB and actions | Open close button |
+| --- | --- | --- |
+| `primary` | `primary-container` | `primary` |
+| `secondary` | `secondary-container` | `secondary` |
+| `tertiary` | `tertiary-container` | `tertiary` |
+
+## Accessibility
+
+- The FAB has `aria-expanded` and `aria-controls`, and its label changes from "Create" to "Close menu".
+- Opening moves focus to the first action. Up and down arrows move between actions.
+- Escape closes the menu and puts focus back on the FAB.
+- Closed actions are `aria-hidden` and `tabindex="-1"`, so they stay out of the tab order.

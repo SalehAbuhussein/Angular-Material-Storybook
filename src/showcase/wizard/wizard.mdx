@@ -1,0 +1,153 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as WizardStories from './wizard.stories';
+
+<Meta of={WizardStories} />
+
+# Multi step form
+
+A long form split into steps, so each screen asks one thing. The stepper is the
+easy part. The hard part is deciding which steps are required, whether people
+can move freely between them, and how they check their answers before
+committing.
+
+## Try it
+
+Press Next with the first step empty and a linear stepper refuses to move. Fill
+it in, pick a plan, then use the review step to jump back and change an answer.
+
+<Example of={WizardStories.Playground} />
+<Controls of={WizardStories.Playground} />
+
+## One FormGroup per step
+
+```ts
+readonly account = this.fb.nonNullable.group({
+  workspace: ['', [Validators.required, Validators.minLength(3)]],
+  email: ['', [Validators.required, Validators.email]],
+  region: ['eu', [Validators.required]],
+});
+
+readonly plan = this.fb.nonNullable.group({ planId: ['team'], annual: [false] });
+readonly team = this.fb.nonNullable.group({ invites: [''] });
+```
+
+```html
+<mat-step [stepControl]="account" label="Account">
+```
+
+A linear stepper checks `stepControl` before letting anyone advance. One big form
+group for the whole wizard cannot express "step 2 is valid but step 3 has not
+been filled in yet", so `linear` has nothing to go on.
+
+The [Settings Page](?path=/docs/full-layouts-settings-page--docs) makes the
+opposite choice and uses one group for every section. Settings saves sections
+independently and needs one dirty flag. A wizard gates progress per step and
+needs per-step validity.
+
+## Linear or not
+
+<Example of={WizardStories.NonLinear} />
+
+`linear` blocks a step until the previous ones are valid. Use it for a first-run
+flow, where a later step depends on an earlier answer and a half finished record
+is worthless.
+
+Turn it off when someone is editing something that already exists. Forcing a
+user back through four valid steps to change one field on step five makes a form
+feel hostile.
+
+Mark a step `optional` when it can be skipped:
+
+```html
+<mat-step [stepControl]="team" label="Invite" optional>
+```
+
+That renders "Optional" under the label, so people do not hunt for what they are
+missing.
+
+## The review step
+
+A wizard hides earlier answers, so it needs a step that shows them all:
+
+```html
+<div>
+  <dt>Plan</dt>
+  <dd>{{ planName() }}</dd>
+  <button matButton type="button" (click)="goTo(1)">Change</button>
+</div>
+```
+
+```ts
+private readonly stepper = viewChild(MatStepper);
+
+goTo(index: number): void {
+  this.stepper()?.selectedIndex = index;
+}
+```
+
+Each row links back to the step that owns it. Without this, the only way to fix
+a typo on step one is Back, Back, Back, and then forward again through every
+step.
+
+## Reading form values in a computed
+
+A `FormGroup` is not a signal, so a `computed` that reads `form.value` will
+never re-run. Feed it from `form.events`:
+
+```ts
+private readonly events = toSignal(this.plan.events, { initialValue: null });
+
+readonly planName = computed(() => {
+  this.events();                    // the dependency
+  return PLANS.find((p) => p.id === this.plan.value.planId)?.name ?? '';
+});
+```
+
+Use `getRawValue()` instead of `.value` when you need the full type.
+`form.value` is a `Partial`, because disabled controls drop out of it, so
+`value.region` is `string | undefined` and cannot index a lookup object.
+
+## Orientation
+
+<Example of={WizardStories.Vertical} />
+
+Horizontal steppers put the labels in a row, which runs out of space fast. Go
+vertical below roughly 700px, or whenever the labels are more than one word.
+Switch it with `BreakpointObserver` the same way the
+[App Shell](?path=/docs/full-layouts-app-shell--docs) switches sidenav mode.
+
+## API you will use
+
+| Member | Type | What it does |
+| --- | --- | --- |
+| `mat-stepper` | `[linear]`, `[orientation]`, `[selectedIndex]`, `(selectionChange)` | The container. `linear` and `selectedIndex` are inherited from `CdkStepper`. |
+| `mat-step` | `[stepControl]`, `label`, `optional`, `editable`, `completed` | One step. `stepControl` is the `FormGroup` it gates on. |
+| `errorMessage` on `mat-step` | string | Shown on the step header when that step is invalid and has been visited. |
+| `matStepperNext` / `matStepperPrevious` | directives | Navigation buttons. Add `type="button"` so they do not submit. |
+| `MatStepper.selectedIndex` | number | Jump to a step programmatically, which is how "Change" links work. |
+| `MatStepper.reset()` | method | Clears completion state. Resetting the forms alone leaves the headers ticked. |
+| `form.getRawValue()` | method | The full, non-partial value. `form.value` omits disabled controls. |
+
+## Accessibility
+
+- Every navigation button is `type="button"`. Inside a form, an untyped button submits, so Back would submit the wizard.
+- `optional` renders visible text on the step header, not only a styling difference.
+- `errorMessage` gives the step header a real explanation instead of a red tint.
+- The review step is a `<dl>`, so each answer is programmatically tied to its label.
+- The stepper manages roving focus and arrow keys on the headers. Do not add your own `tabindex`.
+
+## Common mistakes
+
+1. **One `FormGroup` for the whole wizard.** `linear` has nothing to check, so Next never blocks and people reach the end with empty required fields.
+2. **No review step.** People cannot see what they are about to commit to, and fixing step one means clicking Back four times.
+3. **Forgetting `type="button"`.** `matStepperNext` inside a `<form>` submits it on the first click.
+4. **Reading `form.value` in a `computed` with no dependency.** The review step shows stale answers. Feed it from `form.events`.
+5. **Resetting the forms but not the stepper.** `stepper.reset()` is what clears the completed ticks on the headers.
+
+## Related
+
+- [Stepper](?path=/docs/navigation-stepper--docs) for the component on its own
+- [Settings Page](?path=/docs/full-layouts-settings-page--docs) for the opposite form structure and why
+- [Putting It Together](?path=/docs/form-controls-putting-it-together--docs) for reactive form basics
+- [Radio](?path=/docs/form-controls-radio--docs), [Select](?path=/docs/form-controls-select--docs), [Checkbox](?path=/docs/form-controls-checkbox--docs)

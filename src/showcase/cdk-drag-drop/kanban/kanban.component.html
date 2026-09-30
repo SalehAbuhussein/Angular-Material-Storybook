@@ -1,0 +1,26 @@
+<div class="docs-surface board" cdkDropListGroup>
+  @for (column of columns(); track column.name) {
+    <section class="column">
+      <header>
+        <h3>{{ column.name }}</h3>
+        <span class="count">{{ column.cards.length }}</span>
+      </header>
+      <div
+        class="list"
+        cdkDropList
+        [cdkDropListData]="column.cards"
+        (cdkDropListDropped)="drop($event)"
+      >
+        @for (card of column.cards; track card.title) {
+          <article class="card" cdkDrag>
+            <mat-icon cdkDragHandle aria-hidden="true">drag_indicator</mat-icon>
+            <div>
+              <p class="title">{{ card.title }}</p>
+              <p class="points">{{ card.points }} points</p>
+            </div>
+          </article>
+        }
+      </div>
+    </section>
+  }
+</div>

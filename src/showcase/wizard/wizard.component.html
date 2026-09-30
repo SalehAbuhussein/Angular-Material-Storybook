@@ -1,0 +1,143 @@
+<div class="page" [style.height.px]="height()">
+  <header class="head">
+    <h1>Create your workspace</h1>
+    <p class="muted">Three steps. You can go back and change anything before you finish.</p>
+  </header>
+
+  @if (done()) {
+    <mat-card appearance="outlined" class="done">
+      <mat-card-content>
+        <mat-icon class="done__icon">check_circle</mat-icon>
+        <h2>Workspace created</h2>
+        <p class="muted">
+          {{ account.value.workspace }} is ready on the
+          {{ planName() }} plan.
+        </p>
+        <button matButton="filled" (click)="startOver()">Start over</button>
+      </mat-card-content>
+    </mat-card>
+  } @else {
+    <mat-stepper
+      #stepper
+      [orientation]="orientation()"
+      [linear]="linear()"
+      class="stepper">
+      <mat-step [stepControl]="account" label="Account" errorMessage="Fill in the required fields">
+        <form [formGroup]="account" class="fields">
+          <mat-form-field appearance="outline">
+            <mat-label>Workspace name</mat-label>
+            <input matInput formControlName="workspace" />
+            @if (account.controls.workspace.touched && account.controls.workspace.invalid) {
+              <mat-error>At least 3 characters</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Work email</mat-label>
+            <input matInput type="email" formControlName="email" autocomplete="email" />
+            @if (account.controls.email.touched && account.controls.email.invalid) {
+              <mat-error>Enter a valid email address</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Region</mat-label>
+            <mat-select formControlName="region">
+              <mat-option value="eu">Europe</mat-option>
+              <mat-option value="us">United States</mat-option>
+              <mat-option value="me">Middle East</mat-option>
+            </mat-select>
+            <mat-hint>Where your data is stored. This cannot be changed later.</mat-hint>
+          </mat-form-field>
+        </form>
+
+        <div class="nav">
+          <button matButton="filled" matStepperNext type="button">Next</button>
+        </div>
+      </mat-step>
+
+      <mat-step [stepControl]="plan" label="Plan">
+        <form [formGroup]="plan">
+          <mat-radio-group formControlName="planId" class="plans" aria-label="Plan">
+            @for (p of plans; track p.id) {
+              <label class="plan" [class.plan--picked]="plan.value.planId === p.id">
+                <mat-radio-button [value]="p.id" />
+                <span class="plan__body">
+                  <span class="plan__name">{{ p.name }}</span>
+                  <span class="muted">{{ p.blurb }}</span>
+                </span>
+                <span class="plan__price">{{ p.price === 0 ? 'Free' : '$' + p.price + '/mo' }}</span>
+              </label>
+            }
+          </mat-radio-group>
+
+          <mat-checkbox formControlName="annual" class="annual">
+            Bill annually and save 20%
+          </mat-checkbox>
+        </form>
+
+        <div class="nav">
+          <button matButton matStepperPrevious type="button">Back</button>
+          <button matButton="filled" matStepperNext type="button">Next</button>
+        </div>
+      </mat-step>
+
+      <mat-step [stepControl]="team" label="Invite" optional>
+        <form [formGroup]="team" class="fields">
+          <mat-form-field appearance="outline">
+            <mat-label>Teammate emails</mat-label>
+            <textarea
+              matInput
+              rows="3"
+              formControlName="invites"
+              placeholder="one@example.com, two@example.com"></textarea>
+            <mat-hint>Separate with commas. You can do this later.</mat-hint>
+          </mat-form-field>
+        </form>
+
+        <div class="nav">
+          <button matButton matStepperPrevious type="button">Back</button>
+          <button matButton="filled" matStepperNext type="button">Review</button>
+        </div>
+      </mat-step>
+
+      <mat-step label="Review">
+        <!-- A review step is what stops a wizard feeling like a trap: every
+             answer is visible, and each one links back to its step. -->
+        <dl class="review">
+          <div>
+            <dt>Workspace</dt>
+            <dd>{{ account.value.workspace || '(not set)' }}</dd>
+            <button matButton type="button" (click)="goTo(0)">Change</button>
+          </div>
+          <div>
+            <dt>Email</dt>
+            <dd>{{ account.value.email || '(not set)' }}</dd>
+            <button matButton type="button" (click)="goTo(0)">Change</button>
+          </div>
+          <div>
+            <dt>Region</dt>
+            <dd>{{ regionName() }}</dd>
+            <button matButton type="button" (click)="goTo(0)">Change</button>
+          </div>
+          <mat-divider />
+          <div>
+            <dt>Plan</dt>
+            <dd>{{ planName() }} {{ plan.value.annual ? '(annual)' : '(monthly)' }}</dd>
+            <button matButton type="button" (click)="goTo(1)">Change</button>
+          </div>
+          <div>
+            <dt>Invites</dt>
+            <dd>{{ inviteCount() }} teammate{{ inviteCount() === 1 ? '' : 's' }}</dd>
+            <button matButton type="button" (click)="goTo(2)">Change</button>
+          </div>
+        </dl>
+
+        <div class="nav">
+          <button matButton matStepperPrevious type="button">Back</button>
+          <button matButton="filled" type="button" (click)="finish()">Create workspace</button>
+        </div>
+      </mat-step>
+    </mat-stepper>
+  }
+</div>

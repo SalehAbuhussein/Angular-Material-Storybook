@@ -1,0 +1,10 @@
+<div class="ux-grid">
+  @for (e of items(); track e.cls) {
+    <article class="ux-card">
+      <h3 class="ux-name">.{{ e.cls }}</h3>
+      <p class="ux-use">{{ e.use }}</p>
+      <div class="ux-demo" [innerHTML]="e.safe"></div>
+      <pre class="ux-code">{{ e.html }}</pre>
+    </article>
+  }
+</div>

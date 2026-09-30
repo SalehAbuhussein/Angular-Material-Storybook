@@ -1,0 +1,29 @@
+<div class="split" [class]="'split split--' + appearance() + ' split--' + size()">
+  <button type="button" class="lead" matRipple (click)="run(label())">
+    @if (icon()) {
+      <mat-icon aria-hidden="true">{{ icon() }}</mat-icon>
+    }
+    {{ label() }}
+  </button>
+  <button
+    type="button"
+    class="trail"
+    matRipple
+    [class.trail--open]="open()"
+    [matMenuTriggerFor]="menu"
+    (menuOpened)="open.set(true)"
+    (menuClosed)="open.set(false)"
+    [attr.aria-label]="'More ' + label().toLowerCase() + ' options'"
+  >
+    <mat-icon aria-hidden="true">keyboard_arrow_down</mat-icon>
+  </button>
+</div>
+
+<mat-menu #menu="matMenu" xPosition="before">
+  @for (o of options(); track o.label) {
+    <button mat-menu-item (click)="run(o.label)">
+      <mat-icon>{{ o.icon }}</mat-icon>
+      <span>{{ o.label }}</span>
+    </button>
+  }
+</mat-menu>

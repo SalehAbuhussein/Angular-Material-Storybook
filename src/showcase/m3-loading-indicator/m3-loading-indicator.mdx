@@ -1,0 +1,54 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as Stories from './m3-loading-indicator.stories';
+
+<Meta of={Stories} />
+
+# Loading indicator
+
+M3's newest progress shape: a blob that morphs through seven forms while it
+spins. It is for short waits, under about five seconds, where a spinner would
+do but you want something friendlier. For longer or measurable waits, use a
+progress bar.
+
+## Try it
+
+<Example of={Stories.Playground} />
+<Controls of={Stories.Playground} />
+
+## Plain and contained
+
+Use `contained` when the indicator sits on something busy, such as an image or
+a colored card. The circle behind it keeps it readable.
+
+<Example of={Stories.Variants} />
+
+## How the morph works
+
+Morphing between two SVG paths only looks smooth when both paths have the same
+number of points in the same order. So every shape is the same kind of curve,
+sampled at the same 96 angles:
+
+```ts
+// k lobes, each a deep
+const radius = (angle) => 1 + a * Math.cos(k * angle);
+```
+
+A 5-lobed curve looks like a soft pentagon. A 2-lobed curve looks like a pill.
+With matching points, the component can blend any two shapes point by point. It
+eases each blend with a small overshoot so it moves like M3's springs, and spins
+the whole thing as it goes.
+
+## Wavy progress bar
+
+The other new progress style. The filled part is a moving sine wave and the
+track stays flat, with a gap between them. Give it a `value` from 0 to
+100 for determinate progress, or leave it out for indeterminate.
+
+<Example of={Stories.WavyProgressBar} />
+
+## Accessibility
+
+- Both are `role="progressbar"` with an `aria-label`. The wavy bar also sets `aria-valuenow` when it has a value.
+- Under `prefers-reduced-motion: reduce` the shape stops morphing and only rotates slowly, and the wave stops moving.
+- The animation runs on `requestAnimationFrame` and stops when the component is destroyed.

@@ -1,0 +1,21 @@
+<mat-tree [dataSource]="visible()" [levelAccessor]="levelAccessor">
+  <mat-tree-node
+    *matTreeNodeDef="let node"
+    matTreeNodePadding
+    [isExpandable]="node.expandable"
+    [isExpanded]="expanded().has(node.id)"
+  >
+    @if (node.expandable) {
+      <button
+        matIconButton
+        (click)="toggle(node)"
+        [attr.aria-label]="'Toggle ' + node.name"
+      >
+        <mat-icon>{{ expanded().has(node.id) ? 'expand_more' : 'chevron_right' }}</mat-icon>
+      </button>
+    } @else {
+      <span style="display: inline-block; width: 40px"></span>
+    }
+    {{ node.name }}
+  </mat-tree-node>
+</mat-tree>

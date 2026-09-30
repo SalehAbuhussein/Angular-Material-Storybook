@@ -1,0 +1,20 @@
+<form [formGroup]="form" (ngSubmit)="submitted.set(true)" class="docs-form">
+  <fieldset class="docs-fieldset">
+    <legend>Delivery speed</legend>
+    <mat-radio-group formControlName="speed" class="docs-column">
+      @for (option of options; track option.value) {
+        <mat-radio-button [value]="option.value">{{ option.label }}</mat-radio-button>
+      }
+    </mat-radio-group>
+  </fieldset>
+
+  @if (form.controls.speed.touched && form.controls.speed.invalid) {
+    <p class="docs-error">Pick a delivery speed</p>
+  }
+
+  <button matButton="filled" type="submit">Continue</button>
+
+  @if (submitted()) {
+    <p>Chosen: {{ form.controls.speed.value || 'nothing' }}</p>
+  }
+</form>

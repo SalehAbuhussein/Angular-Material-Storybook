@@ -1,0 +1,121 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as SlideToggleStories from './slide-toggle.stories';
+
+<Meta of={SlideToggleStories} />
+
+# Slide toggle
+
+**Import:** `import { MatSlideToggleModule } from '@angular/material/slide-toggle';`
+
+A slide toggle is a switch. It holds the same boolean a checkbox does, but
+flipping it takes effect immediately.
+
+```html
+<mat-slide-toggle [(ngModel)]="darkMode">Dark mode</mat-slide-toggle>
+```
+
+## Try it
+
+<Example of={SlideToggleStories.Playground} />
+<Controls of={SlideToggleStories.Playground} />
+
+## Toggle or checkbox
+
+Ask when the change happens.
+
+| | Checkbox | Slide toggle |
+| --- | --- | --- |
+| Takes effect | On submit | Immediately |
+| Reads as | "this will be true" | "this is on" |
+| Belongs in | Forms, filters, multi-select lists | Settings screens, feature switches |
+| Group of them | Fine, that is the point | Fine, but each one is independent |
+| Indeterminate state | Supported | Not supported |
+
+<Example of={SlideToggleStories.VersusCheckbox} />
+
+If a toggle sits inside a form with a Save button, it is lying about when it
+applies. Use a checkbox there.
+
+## Full width
+
+`fullWidth` stretches the toggle so the label sits at the left edge and the
+switch at the right, the layout people expect in a settings list.
+
+<Example of={SlideToggleStories.FullWidth} />
+
+```html
+<mat-slide-toggle fullWidth>Wi-Fi</mat-slide-toggle>
+```
+
+## Hiding the thumb icon
+
+The thumb carries a checkmark when on. `hideIcon` removes it for a plainer
+switch. Keep the icon when the toggle sits on a coloured surface where the
+on/off colours are harder to tell apart.
+
+<Example of={SlideToggleStories.HideIcon} />
+
+## In reactive forms
+
+It is a `ControlValueAccessor`, so `formControlName` works. Save the value on
+change, not on submit.
+
+<Example of={SlideToggleStories.InReactiveForms} />
+
+```ts
+readonly form = this.fb.nonNullable.group({
+  darkMode: [true],
+  analytics: [false],
+});
+
+private readonly value = toSignal(this.form.valueChanges, {
+  initialValue: this.form.getRawValue(),
+});
+```
+
+`toSignal` leaves nothing to tear down, unlike a manual `subscribe`.
+
+## API you will use
+
+| Name | Type | What it does |
+| --- | --- | --- |
+| `checked` | `boolean` | Current state. Two-way bindable as `[(checked)]`. |
+| `disabled` | `boolean` | Greys it out and removes it from the tab order. |
+| `labelPosition` | `'after' \| 'before'` | Which side the label sits on. |
+| `fullWidth` | `boolean` | Label left, switch right, across the container. |
+| `hideIcon` | `boolean` | Removes the checkmark inside the thumb. |
+| `disabledInteractive` | `boolean` | Keeps a disabled toggle focusable for a tooltip. |
+| `change` | `EventEmitter<MatSlideToggleChange>` | Fires after a user flip with `{ source, checked }`. |
+| `toggleChange` | `EventEmitter<void>` | Fires as the toggle is dragged or clicked, before the value settles. |
+
+## Accessibility
+
+The toggle renders a real `<button role="switch">` with `aria-checked`, so it is
+announced as a switch rather than a checkbox. Space and Enter both flip it.
+
+What you still supply:
+
+- Label text, or an `aria-label` when there is none.
+- Feedback when the change fails. A toggle that flips and then silently reverts
+  is confusing; show a message and put it back.
+- A tooltip explaining why, if you disable one. Pair `disabledInteractive` with
+  `matTooltip` so the reason is reachable by keyboard.
+
+## Common mistakes
+
+1. A toggle inside a form with a Save button. It promises an instant change
+   and then does not deliver. Use a checkbox.
+2. Putting it in a `<mat-form-field>`. It is not a form field control and
+   the field throws.
+3. Expecting an indeterminate state. There is none. Use a
+   [Checkbox](?path=/docs/form-controls-checkbox--docs) if you need three states.
+4. No optimistic rollback. If the save fails, set `checked` back and say so.
+5. `toggleChange` to read the value. It fires before the value settles. Use
+   `change`, or the bound control.
+
+## Related
+
+- [Checkbox](?path=/docs/form-controls-checkbox--docs) for form values applied on submit
+- [Button Toggle](?path=/docs/form-controls-button-toggle--docs) for more than two states
+- [Putting It Together](?path=/docs/form-controls-putting-it-together--docs) for the full form

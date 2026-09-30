@@ -1,0 +1,11 @@
+<div class="docs-demo">
+  <div class="card" cdkMonitorSubtreeFocus (cdkFocusChange)="origin.set($event)">
+    <p>A toolbar with several controls.</p>
+    <div class="docs-demo docs-demo--row">
+      <button matButton="outlined">Cut</button>
+      <button matButton="outlined">Copy</button>
+      <button matButton="outlined">Paste</button>
+    </div>
+  </div>
+  <p class="log">Focus inside the card: {{ origin() ?? 'none' }}</p>
+</div>

@@ -1,0 +1,100 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as DividerStories from './divider.stories';
+
+<Meta of={DividerStories} />
+
+# Divider
+
+**Import:** `import { MatDividerModule } from '@angular/material/divider';`
+
+A themed separator line. It renders `role="separator"` with the right
+`aria-orientation` and uses the theme's outline colour, so it follows dark mode.
+A hand-rolled `border-bottom` does not.
+
+```html
+<mat-divider></mat-divider>
+```
+
+## Try it
+
+<Example of={DividerStories.Playground} />
+<Controls of={DividerStories.Playground} />
+
+## Inset
+
+`inset` indents the line from the leading edge so it starts under the text, not
+under the icon or avatar. Use it between items in the same group, and a
+full-bleed divider between groups.
+
+<Example of={DividerStories.Inset} />
+
+```html
+<mat-divider inset></mat-divider>
+```
+
+## Vertical
+
+<Example of={DividerStories.Vertical} />
+
+```html
+<div style="display: flex; height: 40px">
+  <button matButton>Cut</button>
+  <mat-divider [vertical]="true"></mat-divider>
+  <button matButton>Copy</button>
+</div>
+```
+
+A vertical divider has no height of its own. It stretches to its flex parent, so
+if nothing in the row sets a height, the line does not appear. This is the most
+common reason a vertical divider looks broken.
+
+## Inside a list
+
+<Example of={DividerStories.InsideAList} />
+
+Put `<mat-divider>` as a direct child of `<mat-list>`, between the items.
+`MatListItem` also projects a `mat-divider` placed inside an item, drawing the
+line at the bottom of that item.
+
+## Inside a card
+
+<Example of={DividerStories.InsideACard} />
+
+Put it between `mat-card-content` and `mat-card-actions`, where it reads better
+than extra margin.
+
+## API you will use
+
+| Name | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `vertical` | `boolean` | `false` | Also flips `aria-orientation` |
+| `inset` | `boolean` | `false` | Indents the line from the leading edge |
+| `role` | attribute | `separator` | Set for you, do not override |
+
+Both inputs coerce, so the bare attribute forms `inset` and `vertical` work as
+well as `[inset]="true"`.
+
+## Accessibility
+
+The component already carries `role="separator"` and the matching
+`aria-orientation`. Watch for two things:
+
+- Screen readers announce every separator. A dozen lines drawn only for visual
+  rhythm means a dozen announcements. Use CSS borders for pure decoration and
+  `<mat-divider>` where the line separates groups of content.
+- `role="separator"` on a focusable element becomes a different widget in ARIA.
+  Never put the directive on something interactive.
+
+## Common mistakes
+
+1. **A vertical divider with no height.** Nothing renders. Give the flex row a height, or `align-items: stretch`.
+2. **`<mat-divider>` outside its list.** Placed after `</mat-list>`, it loses the list's padding alignment. Put it between the items.
+3. **`inset` everywhere.** The indent means "these two items belong together". Use a full-width line between groups so the grouping still reads.
+4. **Using a divider to add space.** For breathing room, use margin. A separator that separates nothing is noise for screen reader users.
+
+## Related
+
+- [List](?path=/docs/layout-list--docs) for dividers between list items
+- [Card](?path=/docs/layout-card--docs) for the line above the actions
+- [Expansion Panel](?path=/docs/layout-expansion-panel--docs) which draws its own separators inside an accordion

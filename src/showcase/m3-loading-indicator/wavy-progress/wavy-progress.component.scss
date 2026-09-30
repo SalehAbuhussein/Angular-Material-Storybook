@@ -1,0 +1,21 @@
+:host {
+  display: block;
+}
+svg {
+  max-width: 100%;
+  overflow: visible;
+}
+path {
+  fill: none;
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+.wave {
+  stroke: var(--mat-sys-primary);
+}
+.track {
+  stroke: var(--mat-sys-secondary-container);
+}
+.stop {
+  fill: var(--mat-sys-primary);
+}

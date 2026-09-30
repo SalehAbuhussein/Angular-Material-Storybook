@@ -1,0 +1,53 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as Stories from './m3-floating-toolbar.stories';
+
+<Meta of={Stories} />
+
+# Floating toolbar
+
+A pill of actions that floats over the content instead of sitting in a bar
+across the screen. It fits screens where the content is the point, such as a
+canvas, a document or a photo editor. Keep it to about five actions.
+
+## Try it
+
+Scroll the text. Scrolling down slides the toolbar away and scrolling up brings
+it back. Pick a tool and it takes the selected shape.
+
+<Example of={Stories.Playground} />
+<Controls of={Stories.Playground} />
+
+## Vibrant
+
+The standard toolbar uses `surface-container`. Vibrant uses
+`primary-container`, for when the toolbar is the main way to work on the
+screen.
+
+<Example of={Stories.Vibrant} />
+
+## Hide on scroll
+
+```ts
+onScroll(e: Event) {
+  const top = (e.target as HTMLElement).scrollTop;
+  if (Math.abs(top - this.lastTop) < 6) return;
+  this.hidden.set(top > this.lastTop && top > 40);
+  this.lastTop = top;
+}
+```
+
+The 6px of slack stops the toolbar from flickering on small trackpad jitters.
+It never hides in the first 40px, so it is there when a page first loads.
+
+## The paired FAB
+
+The FAB sits beside the toolbar, not inside it, and holds the one action that
+matters most. It uses `tertiary-container` so it does not get lost next to a
+vibrant toolbar.
+
+## Accessibility
+
+- The pill is `role="toolbar"` with an `aria-label`.
+- Each tool is a `matIconButton` with `aria-pressed`, an `aria-label`, and a `matTooltip` for mouse users.
+- Hiding moves the toolbar off screen with a transform but keeps it in the tab order, so keyboard users can always reach it. Tabbing to it does not bring it back into view yet. Add that if keyboard use matters for your screen.

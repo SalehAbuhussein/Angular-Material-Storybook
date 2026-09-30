@@ -1,0 +1,154 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as InputStories from './input.stories';
+
+<Meta of={InputStories} />
+
+# Input
+
+**Import:** `import { MatInputModule } from '@angular/material/input';`
+
+`matInput` is a directive for a native `<input>`, `<textarea>`, or `<select>`.
+There is no `<mat-input>` element. The element stays native, so you keep
+autofill, native validation, `type`-specific mobile keyboards, and password
+managers.
+
+```html
+<mat-form-field>
+  <mat-label>Work email</mat-label>
+  <input matInput type="email" />
+</mat-form-field>
+```
+
+`matInput` only works inside a `<mat-form-field>`. On its own it has no styling
+and no label.
+
+## Try it
+
+<Example of={InputStories.Playground} />
+<Controls of={InputStories.Playground} />
+
+## Types
+
+`type` reaches the DOM unchanged, so the browser does the work. `type="tel"`
+gives a phone keypad on mobile, `type="number"` gives spinners, and
+`autocomplete` lets the browser fill the value.
+
+<Example of={InputStories.Types} />
+
+`matInput` rejects types that would break the field layout, among them
+`button`, `checkbox`, `file`, `hidden`, `image`, `radio`, `range`, `reset`, and
+`submit`. Passing one throws `getMatInputUnsupportedTypeError`. For a range use
+[Slider](?path=/docs/form-controls-slider--docs); for a checkbox use
+[Checkbox](?path=/docs/form-controls-checkbox--docs).
+
+## Textarea
+
+The same directive goes on `<textarea>`. Set `rows` for a fixed height, or use
+`cdkTextareaAutosize` from `@angular/cdk/text-field` when it should grow.
+
+<Example of={InputStories.Textarea} />
+
+```html
+<mat-form-field>
+  <mat-label>Description</mat-label>
+  <textarea matInput rows="4"></textarea>
+</mat-form-field>
+```
+
+## Native validation
+
+The basics need no Angular validators. `required`, `minlength`, `pattern`, and
+`type="email"` all feed the control's validity, and the form field switches to
+its error state from there.
+
+<Example of={InputStories.NativeValidation} />
+
+The error appears once the control is touched, so click into a field and then
+click away to see it.
+
+## Character counter
+
+Put the counter in a second hint with `align="end"`. Hold the value in a signal
+and the template recomputes on its own.
+
+<Example of={InputStories.CharacterCounter} />
+
+```ts
+readonly notes = signal('');
+```
+
+```html
+<mat-form-field>
+  <mat-label>Release notes</mat-label>
+  <textarea matInput maxlength="140"
+    [ngModel]="notes()" (ngModelChange)="notes.set($event)"></textarea>
+  <mat-hint align="end">{{ notes().length }} / 140</mat-hint>
+</mat-form-field>
+```
+
+`maxlength` stops typing at the limit. To let people overrun and see the count
+go red, drop `maxlength` and add `Validators.maxLength`.
+
+## Password toggle
+
+Bind `type` and swap it. The toggle button is a suffix, so it sits inside the
+field outline.
+
+<Example of={InputStories.PasswordToggle} />
+
+```html
+<input matInput [type]="hidden() ? 'password' : 'text'" />
+<button matIconButton matSuffix type="button" (click)="hidden.set(!hidden())"
+  [attr.aria-label]="hidden() ? 'Show password' : 'Hide password'"
+  [attr.aria-pressed]="!hidden()">
+  <mat-icon>{{ hidden() ? 'visibility_off' : 'visibility' }}</mat-icon>
+</button>
+```
+
+## API you will use
+
+| Name | Type | What it does |
+| --- | --- | --- |
+| `matInput` | directive | Marks the native control as the form field's control. |
+| `type` | `string` | Native input type. Unsupported types throw at runtime. |
+| `placeholder` | `string` | Example text. Not a replacement for `<mat-label>`. |
+| `required` | `boolean` | Adds the asterisk and the native validity check. |
+| `readonly` | `boolean` | Value is visible and selectable but not editable. |
+| `disabled` | `boolean` | Greys out the field and removes it from the tab order. |
+| `disabledInteractive` | `boolean` | Keeps a disabled input focusable so a tooltip can explain why. |
+| `errorStateMatcher` | `ErrorStateMatcher` | Overrides when the field shows its error state. |
+
+## Accessibility
+
+The `<mat-label>` becomes the control's accessible name, and hints and errors
+are linked with `aria-describedby`. `required` sets `aria-required`, and an
+invalid control gets `aria-invalid`.
+
+What you still supply:
+
+- `autocomplete` values so password managers and browser autofill work.
+- `aria-label` on any icon button in a prefix or suffix.
+- `inputmode` when the keyboard you want does not match the `type`, for example
+  `inputmode="numeric"` on a `type="text"` one-time-code field.
+
+## Common mistakes
+
+1. Writing `<mat-input>`. It does not exist. The directive goes on a native
+   element: `<input matInput>`.
+2. `matInput` outside a `<mat-form-field>`. You get an unstyled, unlabelled
+   input. Wrap it.
+3. `placeholder` instead of `<mat-label>`. The placeholder disappears when
+   someone types and is not a reliable accessible name.
+4. `type="file"` or `type="range"`. Both throw. Style a file input yourself and
+   use [Slider](?path=/docs/form-controls-slider--docs) for ranges.
+5. Setting `disabled` on the element with reactive forms. Angular warns about
+   it. Call `control.disable()` instead, or pass
+   `{ value: '', disabled: true }` when you build the control.
+
+## Related
+
+- [Form Field](?path=/docs/form-controls-form-field--docs) for the wrapper's own API
+- [Autocomplete](?path=/docs/form-controls-autocomplete--docs) to suggest values as people type
+- [Chips](?path=/docs/form-controls-chips--docs) for entering a list of tags in one field
+- [Putting It Together](?path=/docs/form-controls-putting-it-together--docs) for a full reactive form

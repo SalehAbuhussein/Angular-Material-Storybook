@@ -1,0 +1,157 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as SelectStories from './select.stories';
+
+<Meta of={SelectStories} />
+
+# Select
+
+**Import:** `import { MatSelectModule } from '@angular/material/select';`
+
+`<mat-select>` replaces the native dropdown with an overlay panel, so options
+can carry icons, checkboxes, and group headings. It lives inside a
+`<mat-form-field>` and holds `<mat-option>` children.
+
+```html
+<mat-form-field>
+  <mat-label>Fruit</mat-label>
+  <mat-select>
+    <mat-option value="apple">Apple</mat-option>
+  </mat-select>
+</mat-form-field>
+```
+
+For a plain list of strings with native mobile pickers, put
+`matNativeControl` on a real `<select>` instead. `<mat-select>` earns its keep
+when you need multiple selection, groups, or a custom trigger.
+
+## Try it
+
+<Example of={SelectStories.Playground} />
+<Controls of={SelectStories.Playground} />
+
+## Options and the empty option
+
+A `<mat-option>` with no `value` resets the select to `null`. Add one when the
+field is optional so people can undo their choice.
+
+<Example of={SelectStories.Basic} />
+
+## Groups
+
+`<mat-optgroup>` adds a heading and can disable everything under it in one go.
+
+<Example of={SelectStories.Groups} />
+
+```html
+<mat-select>
+  <mat-optgroup label="Out of season" disabled>
+    <mat-option value="rhubarb">Rhubarb</mat-option>
+  </mat-optgroup>
+</mat-select>
+```
+
+## Multiple selection
+
+`multiple` turns each option into a checkbox and makes the value an array. The
+closed field joins the selected labels with commas, in the order the options are
+declared rather than the order they were clicked.
+
+<Example of={SelectStories.Multiple} />
+
+Pass `sortComparator` if you want a different order in the trigger text.
+
+## compareWith
+
+When the option values are objects, the select uses identity to decide what is
+selected. A value loaded from an API is a different object from the one in your
+options array, so nothing preselects. `compareWith` fixes that by comparing on a
+key.
+
+<Example of={SelectStories.CompareWith} />
+
+```ts
+compareById = (a: Team | null, b: Team | null) => a?.id === b?.id;
+```
+
+```html
+<mat-select [(ngModel)]="selected" [compareWith]="compareById">
+```
+
+Declare it as a property, not a method call in the template, or Angular creates
+a new function on every change detection pass.
+
+## Custom trigger
+
+`<mat-select-trigger>` replaces the closed-state text. The usual reason
+is a multi-select that should read "Mozzarella (+2 more)" instead of a long
+comma list.
+
+<Example of={SelectStories.CustomTrigger} />
+
+```html
+<mat-select multiple [(ngModel)]="picked">
+  <mat-select-trigger>
+    {{ picked[0] ?? '' }}
+    @if (picked.length > 1) {
+      <span>(+{{ picked.length - 1 }} more)</span>
+    }
+  </mat-select-trigger>
+  <mat-option value="Mozzarella">Mozzarella</mat-option>
+</mat-select>
+```
+
+## Reacting to changes
+
+`selectionChange` emits a `MatSelectChange` with `source` and `value` on every
+user pick. It does not fire when you set the value in code, so use it for
+analytics or for loading dependent data.
+
+<Example of={SelectStories.SelectionChange} />
+
+## API you will use
+
+| Name | Type | What it does |
+| --- | --- | --- |
+| `value` | `any` | Current value. An array when `multiple` is on. |
+| `multiple` | `boolean` | Checkbox list, array value. Cannot change after init. |
+| `compareWith` | `(a, b) => boolean` | How to match bound values against option values. |
+| `placeholder` | `string` | Text shown when nothing is selected. |
+| `panelWidth` | `string \| number \| null` | `auto` sizes to content; a length pins it; `null` matches the field. |
+| `hideSingleSelectionIndicator` | `boolean` | Drops the checkmark on the selected option. |
+| `selectionChange` | `EventEmitter<MatSelectChange>` | Fires on user selection only. |
+| `opened` / `closed` | `EventEmitter<void>` | Panel lifecycle, useful for lazy loading. |
+
+## Accessibility
+
+The select renders as a `combobox` and the panel as a `listbox`, with roving
+focus, type-ahead, and Home/End handled for you. The `<mat-label>` supplies the
+accessible name.
+
+What you still supply:
+
+- A `<mat-label>`, or `aria-label` / `aria-labelledby` if the field has none.
+- Option text that reads on its own. An option that is only an icon needs an
+  `aria-label` on the icon.
+- A sensible number of options. Past roughly twenty, use
+  [Autocomplete](?path=/docs/form-controls-autocomplete--docs) so people can type.
+
+## Common mistakes
+
+1. Binding an object without `compareWith`. The field renders empty even
+   though the value is set. Add `compareWith` comparing on an id.
+2. Writing `compareWith="compareById()"`. Pass the function itself, not a
+   call. A new function each pass makes Angular re-run the comparison forever.
+3. Toggling `multiple` at runtime. It is read once during initialisation.
+   Render two different selects instead.
+4. Using `selectionChange` to keep a model in sync. Use `[(ngModel)]` or
+   `formControlName`. `selectionChange` is for side effects.
+5. Hundreds of options in one panel. The panel renders them all. Filter with
+   an autocomplete, or virtualise with `cdk-virtual-scroll-viewport`.
+
+## Related
+
+- [Form Field](?path=/docs/form-controls-form-field--docs) for the wrapper
+- [Autocomplete](?path=/docs/form-controls-autocomplete--docs) for long lists people type into
+- [Button Toggle](?path=/docs/form-controls-button-toggle--docs) for two to five visible choices
+- [Chips](?path=/docs/form-controls-chips--docs) for multi-select shown as removable tags

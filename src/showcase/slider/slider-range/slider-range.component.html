@@ -1,0 +1,16 @@
+<label id="price-label">Price range</label>
+<mat-slider min="0" max="500" step="10" discrete [displayWith]="formatPrice">
+  <input
+    matSliderStartThumb
+    [ngModel]="start()"
+    (ngModelChange)="start.set($event)"
+    aria-labelledby="price-label"
+    aria-label="Minimum price" />
+  <input
+    matSliderEndThumb
+    [ngModel]="end()"
+    (ngModelChange)="end.set($event)"
+    aria-labelledby="price-label"
+    aria-label="Maximum price" />
+</mat-slider>
+<p>{{ formatPrice(start()) }} to {{ formatPrice(end()) }}</p>

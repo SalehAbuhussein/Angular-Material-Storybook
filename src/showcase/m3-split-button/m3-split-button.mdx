@@ -1,0 +1,48 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as Stories from './m3-split-button.stories';
+
+<Meta of={Stories} />
+
+# Split button
+
+A main action on the left and a menu of related actions on the right, like
+"Send" with "Schedule send" behind it. Use it when one option is clearly the
+default and the others are variations of it.
+
+## Try it
+
+Open the menu. The trailing half turns from a half pill into a full circle and
+its chevron flips, so you can see which part you clicked.
+
+<Example of={Stories.Playground} />
+<Controls of={Stories.Playground} />
+
+## Appearances
+
+The same four emphasis levels as a normal button. Pick the one you would use
+for the main action alone.
+
+<Example of={Stories.Appearances} />
+
+## The shape
+
+Two buttons with a 2px gap. The outer corners are fully round, the inner ones
+are 4px:
+
+```css
+.lead  { border-radius: 28px 4px 4px 28px; }
+.trail { border-radius: 4px 28px 28px 4px; }
+.trail--open { border-radius: 28px; }
+```
+
+`trail--open` comes from `mat-menu`'s own `(menuOpened)` and `(menuClosed)`
+outputs, so it can never disagree with the menu.
+
+<Example of={Stories.Export} />
+
+## Accessibility
+
+- The menu is a real `mat-menu`: arrow keys, Escape, focus return and outside click all come from Angular Material.
+- The trailing button's `aria-label` names what it opens, such as "More send options". A lone chevron means nothing to a screen reader.
+- Both halves are full height, so each is a proper touch target.

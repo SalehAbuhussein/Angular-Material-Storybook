@@ -1,0 +1,161 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as StateStories from './empty-and-error.stories';
+
+<Meta of={StateStories} />
+
+# Empty, loading and error
+
+Every list view has five states and most apps ship one. The happy path gets the
+design review. Loading gets a spinner, empty gets a blank rectangle, and errors
+get whatever the framework prints. This page covers the other four.
+
+## Try it
+
+Switch states from the control panel, or leave it on `auto` and type in the
+search box to reach "no results" the way a user would.
+
+<Example of={StateStories.Playground} />
+<Controls of={StateStories.Playground} />
+
+## Model the states, do not derive them from booleans
+
+The usual version is `isLoading`, `hasError` and `items.length`, which allows
+combinations that make no sense: loading and error at once, empty while still
+loading. Use one value that holds one state at a time:
+
+```ts
+type ScreenState = 'loading' | 'error' | 'empty' | 'no-results' | 'ready';
+
+readonly state = computed<ScreenState>(() => {
+  if (this.loading()) return 'loading';
+  if (this.error()) return 'error';
+  if (this.results().length === 0) return this.query() ? 'no-results' : 'empty';
+  return 'ready';
+});
+```
+
+```html
+@switch (state()) {
+  @case ('loading') { … }
+  @case ('error') { … }
+  @default { … }
+}
+```
+
+`@switch` guarantees exactly one branch renders. Three booleans give eight
+combinations, five of which are bugs.
+
+## Loading: skeletons, not spinners
+
+<Example of={StateStories.Loading} />
+
+A centred spinner only tells you something is happening. Skeletons hold the
+shape of the content, so nothing moves when the data lands:
+
+```html
+@for (row of [1, 2, 3, 4]; track row) {
+  <div class="skeleton">
+    <div class="skeleton__line skeleton__line--title"></div>
+    <div class="skeleton__line skeleton__line--sub"></div>
+  </div>
+}
+```
+
+Roughly match the real row count and text widths. A skeleton of the wrong shape
+causes the layout jump you were trying to avoid.
+
+Honour the motion preference:
+
+```scss
+@media (prefers-reduced-motion: reduce) {
+  .skeleton__line { animation: none; }
+}
+```
+
+A spinner is still right for a short, bounded wait inside a button. See
+[Sign In](?path=/docs/full-layouts-sign-in--docs) for that case.
+
+## Empty is not the same as no results
+
+These get merged constantly, and they are opposites.
+
+<Example of={StateStories.EmptyFirstRun} />
+
+Empty means no data has ever existed. This is a first-run screen: explain what
+will appear here and offer the action that creates the first one. "Clear
+filters" would be nonsense, because no filter is applied.
+
+<Example of={StateStories.NoResults} />
+
+No results means the user did something. Name what they searched for, say
+how many records exist behind the filter, and offer to undo it. Do not offer
+"Create invoice" here: they are looking for one that already exists.
+
+## Errors
+
+<Example of={StateStories.Error} />
+
+An error state answers three questions in order:
+
+1. What happened, in their words, not the stack's. "Could not load invoices", not "Request failed".
+2. What it means for them. "Nothing has been lost" is the sentence people need.
+3. What to do now. A retry button first, an escape hatch second.
+
+Include a reference code. One line turns "it's broken" into a support ticket
+someone can act on.
+
+```html
+<div class="state" role="alert">
+  <h2>Could not load invoices</h2>
+  <p>The server returned a 503. Nothing has been lost, and retrying usually works.</p>
+  <button matButton="filled" (click)="retry()">Try again</button>
+  <p class="tiny">Reference: REQ-8f21c0</p>
+</div>
+```
+
+## Degraded, not broken
+
+<Example of={StateStories.OfflineBanner} />
+
+Offline is not an error state. The app still works and the data is only stale,
+so it gets a banner that says when the data is from. A blocking dialog would
+take away the read-only access the user still has.
+
+Reserve full-screen states for when there is nothing to show. Anything partial
+gets a banner.
+
+## API you will use
+
+| Member | Type | What it does |
+| --- | --- | --- |
+| `@switch` / `@case` / `@default` | control flow | One branch at a time, which is the point. |
+| `mat-progress-spinner` | `mode`, `diameter` | Short bounded waits. Not for a whole page. |
+| `mat-progress-bar` | `mode="indeterminate"` | A thin bar above content that stays in place. |
+| `aria-busy` | attribute | Put it on the region being replaced while it loads. |
+| `role="alert"` | attribute | Announced immediately. For errors that appear after load. |
+| `role="status"` | attribute | Polite, does not interrupt. For the offline banner. |
+| `prefers-reduced-motion` | media query | Turn off the skeleton pulse for people who asked for less motion. |
+
+## Accessibility
+
+- The loading region carries `aria-busy="true"` and `aria-live="polite"` with a label, so a screen reader hears "Loading invoices" instead of nothing.
+- The error block is `role="alert"`, announced as soon as it appears. The offline banner is `role="status"`, which waits its turn.
+- Every empty state has a real `<h2>`, so heading navigation still works. Heading navigation cannot find a lone icon and some grey text.
+- Icons in these states are decorative and the message is text. Nothing depends on recognising a glyph.
+- Keep the retry button focusable and first in order. It is the reason the screen exists.
+
+## Common mistakes
+
+1. **Three booleans instead of one state.** Sooner or later you render a spinner over an error message.
+2. **One empty state for both cases.** "Create your first invoice" shown to someone who just mistyped a search is insulting.
+3. **A bare spinner for a whole page.** It says nothing about what is coming and the layout jumps when it lands.
+4. **Errors that print the exception.** "TypeError: undefined" is not a message for a user. Say what failed and what to do.
+5. **A blocking dialog when offline.** The app still works read-only. Use a banner.
+
+## Related
+
+- [Data Table Page](?path=/docs/full-layouts-data-table-page--docs) for these states inside a real table
+- [Progress Spinner](?path=/docs/buttons-and-indicators-progress-spinner--docs), [Progress Bar](?path=/docs/buttons-and-indicators-progress-bar--docs)
+- [Snack Bar](?path=/docs/popups-and-modals-snack-bar--docs) for transient errors that do not replace the screen
+- [Accessibility](?path=/docs/cdk-accessibility--docs) for `LiveAnnouncer` and announcing state changes

@@ -1,0 +1,38 @@
+<div class="frame" [style.height.px]="height()">
+  <div class="scroll" (scroll)="onScroll($event)">
+    <article>
+      <h2>Field notes</h2>
+      @for (p of paragraphs; track $index) {
+        <p>{{ p }}</p>
+      }
+    </article>
+  </div>
+
+  <div class="dock" [class.dock--hidden]="hidden()">
+    <div
+      class="bar"
+      role="toolbar"
+      aria-label="Canvas tools"
+      [class.bar--vibrant]="variant() === 'vibrant'"
+    >
+      @for (t of tools; track t.label) {
+        <button
+          matIconButton
+          class="tool"
+          [class.tool--on]="tool() === t.label"
+          [attr.aria-pressed]="tool() === t.label"
+          [attr.aria-label]="t.label"
+          [matTooltip]="t.label"
+          (click)="tool.set(t.label)"
+        >
+          <mat-icon>{{ t.icon }}</mat-icon>
+        </button>
+      }
+    </div>
+    @if (withFab()) {
+      <button type="button" class="fab" matRipple aria-label="New page">
+        <mat-icon aria-hidden="true">add</mat-icon>
+      </button>
+    }
+  </div>
+</div>

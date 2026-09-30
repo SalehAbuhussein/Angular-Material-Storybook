@@ -1,0 +1,145 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as TabsStories from './tabs.stories';
+
+<Meta of={TabsStories} />
+
+# Tabs
+
+**Import:** `import { MatTabsModule } from '@angular/material/tabs';`
+
+Tabs split one screen into panels that share a header. The same import gives you
+two components: `<mat-tab-group>` owns the header and the content, and
+`mat-tab-nav-bar` is a header alone, for routed sections.
+
+```html
+<mat-tab-group>
+  <mat-tab label="Details">...</mat-tab>
+  <mat-tab label="Shipping">...</mat-tab>
+</mat-tab-group>
+```
+
+## Try it
+
+<Example of={TabsStories.Playground} />
+<Controls of={TabsStories.Playground} />
+
+## The basic group
+
+Each `<mat-tab>` is one label and the content behind it. The group handles the
+ink bar, arrow-key navigation and `aria-selected`.
+
+<Example of={TabsStories.BasicTabs} />
+
+## Lazy content
+
+Content written directly inside `<mat-tab>` is created with the group, even for
+tabs nobody opens. Content inside `<ng-template matTabContent>` is built the
+first time its tab is selected. Open the lazy tab below and compare the
+timestamps.
+
+<Example of={TabsStories.LazyContent} />
+
+```html
+<mat-tab label="Reports">
+  <ng-template matTabContent>
+    <app-expensive-chart />
+  </ng-template>
+</mat-tab>
+```
+
+Use it whenever a panel triggers a request, mounts a chart, or builds a big form.
+
+## Custom labels
+
+`label` only takes a string. For an icon, a badge or other markup, use
+`<ng-template mat-tab-label>` and drop the `label` input.
+
+<Example of={TabsStories.CustomLabels} />
+
+```html
+<mat-tab>
+  <ng-template mat-tab-label>
+    <mat-icon>inbox</mat-icon>
+    Inbox
+  </ng-template>
+  ...
+</mat-tab>
+```
+
+## Dynamic tabs
+
+Render `<mat-tab>` from a signal with `@for`, and track by a stable id. If you
+track by index, removing a tab re-creates the survivors. You manage
+`selectedIndex`, so when the selected tab disappears, clamp the index yourself.
+
+<Example of={TabsStories.DynamicTabs} />
+
+```html
+<mat-tab-group [selectedIndex]="selected()" (selectedIndexChange)="selected.set($event)">
+  @for (tab of tabs(); track tab.id) {
+    <mat-tab [label]="tab.label">...</mat-tab>
+  }
+</mat-tab-group>
+```
+
+## Tabs that are routes
+
+If each tab needs its own URL, do not use `mat-tab-group`. It keeps the selection
+in memory, so a reload or a shared link lands on tab zero. Use `mat-tab-nav-bar`
+instead. It renders only the header. The router renders the content, and
+`routerLinkActive` decides which link is active.
+
+<Example of={TabsStories.RouterNavBar} />
+
+```html
+<nav mat-tab-nav-bar [tabPanel]="tabPanel" aria-label="Project sections">
+  <a mat-tab-link routerLink="overview" routerLinkActive #o="routerLinkActive" [active]="o.isActive">
+    Overview
+  </a>
+</nav>
+<mat-tab-nav-panel #tabPanel>
+  <router-outlet />
+</mat-tab-nav-panel>
+```
+
+Pass `tabPanel`. It wires `aria-controls` on the links to the panel.
+
+## API you will use
+
+| Name | On | Type | Notes |
+| --- | --- | --- | --- |
+| `label` | `mat-tab` | `string` | Text only. Use `ng-template mat-tab-label` for markup. |
+| `disabled` | `mat-tab` | `boolean` | Skipped by the keyboard as well. |
+| `selectedIndex` | `mat-tab-group` | `number` | Two-way through `selectedIndexChange`. |
+| `selectedTabChange` | `mat-tab-group` | `EventEmitter<MatTabChangeEvent>` | Gives you the index and the `MatTab`. |
+| `mat-stretch-tabs` | `mat-tab-group` | `boolean` | Defaults to `true`. Turn it off before using `mat-align-tabs`. |
+| `mat-align-tabs` | `mat-tab-group` | `'start' \| 'center' \| 'end'` | Only visible when stretching is off. |
+| `dynamicHeight` | `mat-tab-group` | `boolean` | Animates the body height between tabs. |
+| `preserveContent` | `mat-tab-group` | `boolean` | Keeps inactive tabs in the DOM, so Ctrl+F finds them. |
+| `tabPanel` | `[mat-tab-nav-bar]` | `MatTabNavPanel` | Required for correct ARIA wiring. |
+| `active` | `[mat-tab-link]` | `boolean` | You set it, usually from `routerLinkActive`. |
+
+## Accessibility
+
+The group renders `role="tablist"`, `role="tab"` and `role="tabpanel"` and wires
+`aria-selected` and `aria-controls`. Arrow keys, Home and End move the
+selection, skipping disabled tabs.
+
+You supply an `aria-label` on the group or nav bar when no surrounding heading
+names it, and text labels that make sense out of context. Icon-only labels need
+an `aria-label` on the `<mat-tab>`.
+
+## Common mistakes
+
+1. **Tabs for routed sections.** The selection lives in memory, so a reload resets it and links cannot be shared. Use `mat-tab-nav-bar` with a `router-outlet`.
+2. **Expensive content without `matTabContent`.** Every hidden panel runs its requests on load. Wrap it in the lazy template.
+3. **`mat-align-tabs` with stretching still on.** Stretched tabs fill the header, so alignment appears to do nothing. Set `[mat-stretch-tabs]="false"` first.
+4. **Tracking `@for` by index.** Removing a tab shifts every index, and Angular rebuilds panels that did not change. Track by id.
+5. **A nav bar with no `tabPanel`.** The links lose `aria-controls`, and screen reader users cannot tell which region they control.
+
+## Related
+
+- [Stepper](?path=/docs/navigation-stepper--docs) when the panels have an order and must be completed
+- [Toolbar](?path=/docs/navigation-toolbar--docs) for the bar a nav bar usually sits under
+- [Sidenav](?path=/docs/navigation-sidenav--docs) for top-level navigation instead of in-page sections

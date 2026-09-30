@@ -1,0 +1,17 @@
+<div class="docs-demo" style="width: 320px">
+  <mat-action-list>
+    <button mat-list-item (click)="run('Duplicated')">
+      <mat-icon matListItemIcon>content_copy</mat-icon>
+      <span matListItemTitle>Duplicate</span>
+    </button>
+    <button mat-list-item (click)="run('Archived')">
+      <mat-icon matListItemIcon>archive</mat-icon>
+      <span matListItemTitle>Archive</span>
+    </button>
+    <button mat-list-item (click)="run('Deleted')">
+      <mat-icon matListItemIcon>delete</mat-icon>
+      <span matListItemTitle>Delete</span>
+    </button>
+  </mat-action-list>
+  <p>Last action: {{ last() || 'none yet' }}</p>
+</div>

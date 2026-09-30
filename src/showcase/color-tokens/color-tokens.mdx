@@ -1,0 +1,524 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as ColorTokenStories from './color-tokens.stories';
+
+<Meta of={ColorTokenStories} />
+
+# Color and variables
+
+**Use:** `color: var(--mat-sys-on-surface);`
+
+Every colour, font, corner radius, shadow and opacity in Angular Material is a
+CSS variable named `--mat-sys-<something>`. Components read these variables
+instead of fixed values. You read them too, and your own components then
+follow the theme, the palette and dark mode with no extra code.
+
+```scss
+.my-panel {
+  background: var(--mat-sys-surface-container-low);
+  color: var(--mat-sys-on-surface);
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--mat-sys-corner-large);
+}
+```
+
+This page goes from the idea to the full reference. Read the first three
+sections once; after that, jump to [Which token do I use](#which-token-do-i-use)
+or the [reference tables](#reference).
+
+## Try it
+
+Pick a token group from the dropdown and read the variable name off each tile.
+Then use the toolbar: the sun icon flips light and dark, and the palette
+button (labelled `azure`) swaps the primary palette. Nothing on this page is a
+hex value, so every tile repaints.
+
+<Example of={ColorTokenStories.Playground} />
+<Controls of={ColorTokenStories.Playground} />
+
+## 1. A variable names a job, not a colour
+
+`blue-500` tells you a colour. `primary` tells you a job: "the main accent".
+Material 3 calls these jobs roles, and every variable on this page is one.
+
+When you write `background: var(--mat-sys-primary)`, you describe what the
+element is for, and the theme fills in the colour, differently in light and
+dark. A palette swap or a scheme flip repaints everything that named a role
+and nothing that named a hex.
+
+| Role | Its job |
+| --- | --- |
+| `primary` | The one accent that marks the main action |
+| `secondary` | A calmer accent, same hue as primary |
+| `tertiary` | A contrasting accent, different hue |
+| `error` | Anything invalid or destructive |
+| `surface` | The background your content sits on |
+| `surface-container*` | Boxes that sit on the surface, in five steps |
+| `outline` | Borders and dividers |
+| `inverse-*` | A patch flipped against the scheme, such as a snackbar |
+| `*-fixed` | A role that keeps one value in light and dark |
+| `on-*` | Text and icons drawn on the matching role |
+| `*-container` | A softer, tinted version of a role, for filling an area |
+
+There are two kinds of variable. System tokens, `--mat-sys-*`, belong to the
+whole app and are what this page lists. Component tokens, `--mat-<component>-*`,
+belong to one component and by default point at a system token. You change
+those through `mat.<component>-overrides()`, covered in [Changing
+tokens](#changing-tokens).
+
+## 2. One palette becomes every value
+
+You pass `mat.theme()` a palette per accent, in `src/styles.scss`:
+
+```scss
+@use '@angular/material' as mat;
+
+html {
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$azure-palette,
+        tertiary: mat.$blue-palette,
+      ),
+      typography: Roboto,
+      density: 0,
+    )
+  );
+}
+```
+
+A palette is one hue as a ladder of tones, numbered 0 (black) to 100 (white).
+Each role points at a tone: in light mode `primary` is tone 40 and
+`on-primary` is tone 100; in dark mode they are tone 80 and tone 20. You never
+write tone numbers. `mat.theme()` picks them, and it measures both halves of a
+pair from the same ladder, which is how it can guarantee contrast.
+
+It writes each colour once as a native CSS `light-dark()` pair, and the
+`color-scheme` property on `body` chooses a side:
+
+```css
+--mat-sys-primary: light-dark(#005cbb, #abc7ff);
+```
+
+So a role's dark value is a different tone chosen for the same job, not the
+light value dimmed. You cannot derive one from the other in CSS; always use the
+variable. [Theming](?path=/docs/foundations-theming--docs) covers the prebuilt
+palettes and making one from a brand colour.
+
+## 3. Text on X uses on-X
+
+Every fill role has exactly one text partner. Change one side, change the
+other.
+
+```scss
+.cta {
+  background: var(--mat-sys-primary);
+  color: var(--mat-sys-on-primary);
+}
+```
+
+`primary` goes with `on-primary`, `primary-container` with
+`on-primary-container`, `surface` with `on-surface`. The whole
+`surface-container` ladder is neutral, so it all uses `on-surface`, with
+`on-surface-variant` for quieter text. There is no `on-surface-container`.
+
+<Example of={ColorTokenStories.RolePairs} />
+
+The contrast guarantee covers these documented pairs and nothing else.
+`on-primary` on `primary` is safe; `on-surface` on `primary` is not, even when
+it happens to look fine in the theme in front of you. In another palette or the
+other scheme the same mix can drop near 2:1.
+
+## Which token do I use
+
+The quick answer for the most common jobs.
+
+| You are styling | Use |
+| --- | --- |
+| Page background | `--mat-sys-surface` |
+| A card or panel on the page | `--mat-sys-surface-container-low` |
+| A header strip inside that card | `--mat-sys-surface-container-high` |
+| Body text | `--mat-sys-on-surface` |
+| Muted or helper text, inactive icons | `--mat-sys-on-surface-variant` |
+| A visible border | `--mat-sys-outline` |
+| A subtle divider | `--mat-sys-outline-variant` |
+| The primary action's fill | `--mat-sys-primary` with `--mat-sys-on-primary` |
+| A destructive action's fill | `--mat-sys-error` with `--mat-sys-on-error` |
+| An error message next to a field | `--mat-sys-error` |
+| A disabled control | `--mat-sys-on-surface` at 38% opacity |
+| A badge or accent chip | `--mat-sys-tertiary-container` with `--mat-sys-on-tertiary-container` |
+
+There is no disabled token. Material draws a disabled control in the normal
+content colour at reduced opacity, so match that:
+
+```scss
+.my-control[aria-disabled='true'] {
+  color: var(--mat-sys-on-surface);
+  opacity: 0.38;
+}
+```
+
+## Surfaces: how raised is this box
+
+The surface itself, five container steps from `lowest` to `highest`, and a
+`dim` and a `bright` variant. Pick a step by how raised the box should feel,
+the way you would use `z-index` for stacking. Going up a step separates a card
+from the page without a border. The order runs the other way in dark mode,
+which is why you pick by height and not by how light it looks.
+
+<Example of={ColorTokenStories.SurfaceLevels} />
+
+```scss
+.page { background: var(--mat-sys-surface); }
+.card { background: var(--mat-sys-surface-container-low); }
+.card__header { background: var(--mat-sys-surface-container-high); }
+```
+
+## Primary, secondary and tertiary
+
+A theme has three accent colours.
+
+<Example of={ColorTokenStories.AccentRoles} />
+
+- **Primary** is the main action. If everything is primary, nothing stands out.
+- **Secondary** is primary with less colour: selected chips, selected list items, tonal buttons.
+- **Tertiary** is a different hue, for the one thing that should stand apart and is not the main action.
+
+Angular Material itself barely uses tertiary; in v22 only the datepicker's
+comparison range reads it. It is there for your own highlights:
+
+<Example of={ColorTokenStories.TertiaryInUse} />
+
+1. A recommended option. Primary would make it look like "the button"; tertiary makes it look "picked for you".
+2. A category marker, such as "New". It sits next to primary content without competing.
+3. The one value in a chart that matters, with the rest in a faded primary.
+
+To recolour a Material component, set its own tokens. The recommended plan's
+button is a normal `matButton="filled"`:
+
+```css
+.btn-tertiary {
+  --mat-button-filled-container-color: var(--mat-sys-tertiary);
+  --mat-button-filled-label-text-color: var(--mat-sys-on-tertiary);
+}
+```
+
+**Leave `tertiary` out of `mat.theme()` and it copies primary**, silently:
+
+```scss
+@include mat.theme((color: (primary: mat.$violet-palette)));
+// --mat-sys-tertiary is now the same #7d00fa as --mat-sys-primary
+```
+
+This repo sets it, but to a neighbour of azure (`mat.$blue-palette`), so the two
+look alike here. Tertiary pays off when its hue is far from primary. Cycle the
+toolbar palette to rose or orange: tertiary stays blue and the difference shows.
+Keep it to one or two things per screen.
+
+## Outline, shadow, scrim, inverse and fixed
+
+- **Outline** is a border strong enough to read as an edge, such as an outlined field. **Outline variant** is the quieter one for dividers.
+- **Shadow** and **scrim** are near black in both schemes, so they have no `on-*` partner. The scrim is the dim sheet behind a dialog.
+- **Inverse** roles flip against the scheme, so a snackbar is dark on a light page.
+- **Fixed** roles keep one value in light and dark, for a brand strip that must not flip. `*-fixed-dim` is the darker half of each pair.
+
+<Example of={ColorTokenStories.StateAndOutline} />
+
+## Using tokens in your own component
+
+This card has no Material component and no hex value, and it follows palette
+changes, font changes and dark mode. The tabs below are the component's real
+files. Every colour, font, corner and shadow in the `.scss` is a `--mat-sys-*`
+variable, and the `.ts` shows how to read a token's resolved value in code.
+
+<Example of={ColorTokenStories.UsingTokensInYourOwnComponent} />
+
+If you would rather not write CSS for this, the same tokens exist as classes.
+See [Utility Classes](?path=/docs/foundations-utility-classes--docs).
+
+## Elevation and corners
+
+`--mat-sys-level0` to `--mat-sys-level5` are finished `box-shadow` values,
+three stacked shadows each, so assign them straight to `box-shadow`.
+
+<Example of={ColorTokenStories.Elevation} />
+
+The corner scale is the other one you will use daily. The directional tokens
+expand to a four-value radius for sheets and side panels.
+
+<Example of={ColorTokenStories.CornerRadius} />
+
+```scss
+.raised { box-shadow: var(--mat-sys-level2); }
+.sheet { border-radius: var(--mat-sys-corner-extra-large-top); }
+.pill { border-radius: var(--mat-sys-corner-full); }
+```
+
+## Reference
+
+Every `--mat-sys-*` variable `mat.theme()` emits, with what to use it for. If a
+name is not in these tables, it does not exist. The source files are listed in
+[Finding names yourself](#finding-names-yourself).
+
+### Primary
+
+| Variable | Use it for |
+| --- | --- |
+| `--mat-sys-primary` | A "Pay now" button, a checked checkbox, the active tab's underline, a slider handle |
+| `--mat-sys-on-primary` | The label on that button, the tick inside that checkbox |
+| `--mat-sys-primary-container` | A FAB, or a tinted notice such as "Your trial ends in 3 days" |
+| `--mat-sys-on-primary-container` | The icon on the FAB, the text in the notice |
+| `--mat-sys-primary-fixed` | A brand banner that must look the same in light and dark mode |
+| `--mat-sys-primary-fixed-dim` | A second, darker stripe or icon on that banner |
+| `--mat-sys-on-primary-fixed` | The headline on that banner |
+| `--mat-sys-on-primary-fixed-variant` | Smaller supporting text on that banner |
+| `--mat-sys-inverse-primary` | The "Undo" action inside a snackbar |
+| `--mat-sys-surface-tint` | Rarely set by hand. The tint Material mixes into raised surfaces |
+
+### Secondary
+
+| Variable | Use it for |
+| --- | --- |
+| `--mat-sys-secondary` | A quieter solid marker, such as a "Step 2 of 4" pill |
+| `--mat-sys-on-secondary` | The text on that pill |
+| `--mat-sys-secondary-container` | A selected filter chip, the tonal button, the selected row in a nav list |
+| `--mat-sys-on-secondary-container` | The text and icons on those |
+| `--mat-sys-secondary-fixed` | A supporting block that stays the same in light and dark, such as a category strip |
+| `--mat-sys-secondary-fixed-dim` | A darker accent on that strip |
+| `--mat-sys-on-secondary-fixed` | Text on that strip |
+| `--mat-sys-on-secondary-fixed-variant` | Smaller text on that strip |
+
+### Tertiary
+
+| Variable | Use it for |
+| --- | --- |
+| `--mat-sys-tertiary` | The "Recommended" badge on a plan, the one highlighted bar in a chart |
+| `--mat-sys-on-tertiary` | The text on that badge |
+| `--mat-sys-tertiary-container` | A "New" tag, the card of a recommended plan |
+| `--mat-sys-on-tertiary-container` | The text on that tag or card |
+| `--mat-sys-tertiary-fixed` | A highlight that must look the same in light and dark, such as a sale banner |
+| `--mat-sys-tertiary-fixed-dim` | A darker accent on that banner |
+| `--mat-sys-on-tertiary-fixed` | The headline on that banner |
+| `--mat-sys-on-tertiary-fixed-variant` | Smaller text on that banner |
+
+### Error
+
+| Variable | Use it for |
+| --- | --- |
+| `--mat-sys-error` | A "Delete account" button, an invalid field's outline, "Email is required" text, an unread count badge |
+| `--mat-sys-on-error` | The label on that button, the number in that badge |
+| `--mat-sys-error-container` | A "Payment failed" banner above a form |
+| `--mat-sys-on-error-container` | The text and icon in that banner |
+
+There are no `error-fixed` tokens. Error has only these four.
+
+### Surface and background
+
+| Variable | Use it for |
+| --- | --- |
+| `--mat-sys-surface` | The page background, dialogs, tables, toolbars |
+| `--mat-sys-on-surface` | Body text, headings and icons on the page or any container |
+| `--mat-sys-surface-variant` | A filled form field, a progress bar's track, a search box |
+| `--mat-sys-on-surface-variant` | Helper text, captions, timestamps, inactive icons |
+| `--mat-sys-surface-container-lowest` | The lightest box, such as a text area inside a card |
+| `--mat-sys-surface-container-low` | A card resting on the page, a bottom sheet |
+| `--mat-sys-surface-container` | A menu, a side panel, a navigation bar |
+| `--mat-sys-surface-container-high` | A date picker, a search bar in a toolbar |
+| `--mat-sys-surface-container-highest` | A filled card, the most raised neutral box |
+| `--mat-sys-surface-dim` | A page background that should read darker than `surface` |
+| `--mat-sys-surface-bright` | A page background that should read lighter than `surface`, mostly in dark mode |
+| `--mat-sys-background` | Same value as `surface`. Kept for compatibility; prefer `surface` |
+| `--mat-sys-on-background` | Text on `background` |
+
+### Outline, shadow and inverse
+
+| Variable | Use it for |
+| --- | --- |
+| `--mat-sys-outline` | The border of an outlined button or an outlined text field |
+| `--mat-sys-outline-variant` | Card borders, list dividers, table row lines |
+| `--mat-sys-shadow` | The colour inside your own `box-shadow` |
+| `--mat-sys-scrim` | The dark layer behind an open dialog or drawer |
+| `--mat-sys-inverse-surface` | A snackbar or tooltip background |
+| `--mat-sys-inverse-on-surface` | The text in that snackbar or tooltip |
+
+`--mat-sys-neutral10` and `--mat-sys-neutral-variant20` also exist. They are raw
+palette tones a few components use internally; do not build on them.
+
+### Typography
+
+Fifteen type scales. Each variable is a CSS `font` shorthand, so it sets family,
+size, weight and line height at once.
+
+| Scale | Shorthand variable | Use it for |
+| --- | --- | --- |
+| Display large / medium / small | `--mat-sys-display-large`, `-medium`, `-small` | One big number on a dashboard ("$4,280"), a hero date |
+| Headline large / medium / small | `--mat-sys-headline-large`, `-medium`, `-small` | Page title, section title, dialog title |
+| Title large / medium / small | `--mat-sys-title-large`, `-medium`, `-small` | Card title, the main line of a list item, a table header |
+| Body large / medium / small | `--mat-sys-body-large`, `-medium`, `-small` | Intro paragraph, normal text, hints under a field |
+| Label large / medium / small | `--mat-sys-label-large`, `-medium`, `-small` | Button label, a slider value, badge text |
+
+The shorthand cannot carry letter spacing, so that is a separate variable:
+
+```scss
+.field-label {
+  font: var(--mat-sys-label-medium);
+  letter-spacing: var(--mat-sys-label-medium-tracking);
+}
+```
+
+Each scale also has `-font`, `-size`, `-line-height`, `-weight` and `-tracking`
+parts, such as `--mat-sys-body-medium-size`. Only `label-large` and
+`label-medium` add a `-weight-prominent`. More in
+[Typography](?path=/docs/foundations-typography--docs).
+
+### Corner radius
+
+| Variable | Value | Use it for |
+| --- | --- | --- |
+| `--mat-sys-corner-none` | `0` | Full-width bars and anything that touches a screen edge |
+| `--mat-sys-corner-extra-small` | `4px` | Tooltips, snackbars, menus |
+| `--mat-sys-corner-small` | `8px` | Chips, small text fields |
+| `--mat-sys-corner-medium` | `12px` | Cards |
+| `--mat-sys-corner-large` | `16px` | FABs, the date picker |
+| `--mat-sys-corner-extra-large` | `28px` | Dialogs |
+| `--mat-sys-corner-full` | `9999px` | Pills: buttons, badges, avatars |
+| `--mat-sys-corner-extra-small-top` | `4px 4px 0 0` | A filled text field, flat at the bottom |
+| `--mat-sys-corner-large-top` | `16px 16px 0 0` | A panel docked to the bottom of the screen |
+| `--mat-sys-corner-large-start` | `16px 0 0 16px` | A panel docked to the right edge |
+| `--mat-sys-corner-large-end` | `0 16px 16px 0` | A panel docked to the left edge, such as a drawer |
+| `--mat-sys-corner-extra-large-top` | `28px 28px 0 0` | A bottom sheet |
+
+The directional set is exactly these five. There is no `corner-medium-top`,
+`corner-small-start` or `corner-full-top`.
+
+### Elevation
+
+| Variable | Use it for |
+| --- | --- |
+| `--mat-sys-level0` | Removing a shadow, such as a card that should sit flat in a list |
+| `--mat-sys-level1` | An elevated card resting on the page |
+| `--mat-sys-level2` | A menu or a select panel |
+| `--mat-sys-level3` | A FAB, a dialog, a date picker |
+| `--mat-sys-level4` | A navigation drawer, or a FAB while hovered |
+| `--mat-sys-level5` | Something being dragged, the highest lift |
+
+### State layers
+
+Material has no separate hover colour per control. It lays a see-through sheet
+of the text colour over the control, at one of four opacities. Because the
+sheet uses the text colour, one rule gives a correct hover on any background.
+Use the same values on your own clickable elements.
+
+| Variable | Value | Use it for |
+| --- | --- | --- |
+| `--mat-sys-hover-state-layer-opacity` | `0.08` | The tint on your own clickable row or card while hovered |
+| `--mat-sys-focus-state-layer-opacity` | `0.12` | The same tint while it has keyboard focus |
+| `--mat-sys-pressed-state-layer-opacity` | `0.12` | The same tint while pressed |
+| `--mat-sys-dragged-state-layer-opacity` | `0.16` | The tint on an item while it is being dragged |
+
+```scss
+.my-row:hover::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--mat-sys-on-surface);
+  opacity: var(--mat-sys-hover-state-layer-opacity);
+}
+```
+
+## Changing tokens
+
+`mat.theme-overrides()` rewrites system tokens on the selector you call it in.
+Write the names without the `--mat-sys-` prefix. It silently ignores unknown
+names, so a typo produces no variable instead of a broken one.
+
+```scss
+@use '@angular/material' as mat;
+
+html {
+  @include mat.theme-overrides(
+    (
+      primary: #6750a4,
+      on-primary: #ffffff,
+      corner-medium: 4px,
+    )
+  );
+}
+```
+
+Variables inherit, so a wrapper class scopes the change to its children. Point
+the override at another system variable, not a hex, so it still follows light
+and dark:
+
+```scss
+.checkout-panel {
+  @include mat.theme-overrides(
+    (
+      primary: var(--mat-sys-tertiary),
+      on-primary: var(--mat-sys-on-tertiary),
+    )
+  );
+}
+```
+
+```html
+<div class="checkout-panel">
+  <button matButton="filled">Pay now</button>
+</div>
+```
+
+Dialogs, menus, select panels and tooltips opened inside that region render in
+the CDK overlay container on `<body>`, outside the wrapper, so they keep the
+root values. When one has to match, give it a `panelClass` and apply the same
+block to that class.
+
+## Common mistakes
+
+1. **Hardcoding a hex.** It looks right in the theme you built it in and breaks in the other scheme or after a palette change.
+2. **Using `primary` for a large area.** It is a full-strength accent for small things. For a panel, use `primary-container` or a surface container step.
+3. **Pairing the wrong `on-*`.** `background: var(--mat-sys-primary); color: var(--mat-sys-on-surface);` renders and fails contrast. Change both sides together.
+4. **Reading a token in TypeScript too early.** `getComputedStyle(el).getPropertyValue('--mat-sys-primary')` in a constructor or `ngOnInit` returns an empty string, because the element is not in the document yet. Read it in `afterNextRender`, and remember it goes stale when the scheme changes. Prefer plain CSS.
+5. **Using a name that does not exist.** `--mat-sys-on-surface-container`, `--mat-sys-primary-dark`, `--mat-sys-elevation-2` and `--mat-sys-error-fixed` are all invented. An unknown variable resolves to nothing, usually a transparent background, so the bug is easy to miss. Check the reference tables.
+6. **Relying on colour alone.** An invalid field needs text in `--mat-sys-error` saying what is wrong, plus `aria-invalid` and `aria-describedby`.
+
+## Finding names yourself
+
+The system tokens are defined in five files in
+`node_modules/@angular/material/core/tokens/m3/`:
+
+| File | What is in it |
+| --- | --- |
+| `_md-sys-color.scss` | Every colour role |
+| `_md-sys-typescale.scss` | The fifteen type scales |
+| `_md-sys-shape.scss` | The corner scale |
+| `_md-sys-elevation.scss` | The six elevation levels |
+| `_md-sys-state.scss` | The state layer opacities |
+
+Add `--mat-sys-` to any map key in them to get the variable name.
+
+VS Code hides `node_modules` from search and from Ctrl+P, so these files do not
+show up when you look for them. Open one from the terminal instead:
+
+```bash
+code node_modules/@angular/material/core/tokens/m3/_md-sys-color.scss
+```
+
+Or expand `node_modules` → `@angular` → `material` → `core` → `tokens` → `m3`
+in the Explorer.
+
+Component tokens live in `node_modules/@angular/material/<component>/_m3-<component>.scss`,
+for example `button/_m3-button.scss`, and you set them through
+`mat.<component>-overrides()`.
+
+The same lists online:
+
+- [System variables](https://material.angular.dev/guide/system-variables): every `--mat-sys-*` name with a live preview
+- Each component's Styling tab, for example [Button styling](https://material.angular.dev/components/button/styling): the tokens `mat.button-overrides()` accepts
+- [Design tokens in the M3 spec](https://m3.material.io/foundations/design-tokens): the Material 3 guide's own explanation
+
+## Related
+
+- [Utility Classes](?path=/docs/foundations-utility-classes--docs) for the same tokens as ready-made classes
+- [Theming](?path=/docs/foundations-theming--docs) for the `mat.theme()` mixin and palettes
+- [Typography](?path=/docs/foundations-typography--docs) for the type scale in detail
+- [Dark Mode](?path=/docs/foundations-dark-mode--docs) for `color-scheme` and the light/dark pair

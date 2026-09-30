@@ -1,0 +1,148 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as SidenavStories from './sidenav.stories';
+
+<Meta of={SidenavStories} />
+
+# Sidenav
+
+**Import:** `import { MatSidenavModule } from '@angular/material/sidenav';`
+
+A sidenav is a navigation drawer that slides in beside your content. It always
+has three parts: a container, one or two drawers, and the content. The container
+does the work, so the content must live inside it too.
+
+```html
+<mat-sidenav-container>
+  <mat-sidenav mode="side" opened>...</mat-sidenav>
+  <mat-sidenav-content>...</mat-sidenav-content>
+</mat-sidenav-container>
+```
+
+## Try it
+
+The container does not measure the page, so give it a height: `height: 100vh` in
+an app shell, or a fixed height inside a page.
+
+<Example of={SidenavStories.Playground} />
+<Controls of={SidenavStories.Playground} />
+
+## The three modes
+
+`mode` is the only input that changes how the drawer feels. Pick by screen size,
+not by taste.
+
+| Mode | Content behaviour | Backdrop | Use for |
+| --- | --- | --- | --- |
+| `side` | Shrinks to share the row | No | Desktop, drawer always visible |
+| `over` | Untouched, drawer floats above | Yes | Phones, temporary drawer |
+| `push` | Slides sideways, stays full width | Yes | Tablets, when losing context is bad |
+
+<Example of={SidenavStories.SideMode} />
+
+In `over` mode the drawer traps focus and closes on Escape or a backdrop click.
+Toggle it from a template reference variable so the drawer stays the single
+source of truth for its own state.
+
+<Example of={SidenavStories.OverMode} />
+
+```html
+<mat-sidenav-container>
+  <mat-sidenav #drawer mode="over">...</mat-sidenav>
+  <mat-sidenav-content>
+    <button matIconButton (click)="drawer.toggle()" aria-label="Toggle navigation">
+      <mat-icon>menu</mat-icon>
+    </button>
+  </mat-sidenav-content>
+</mat-sidenav-container>
+```
+
+## Fixed in the viewport
+
+By default the drawer is positioned against the container. `fixedInViewport`
+positions it against the viewport instead, which suits a page that scrolls under
+a fixed toolbar. `fixedTopGap` and `fixedBottomGap` take pixel numbers.
+
+<Example of={SidenavStories.FixedInViewport} />
+
+```html
+<mat-sidenav mode="side" opened fixedInViewport [fixedTopGap]="64">...</mat-sidenav>
+```
+
+## Drawer versus sidenav
+
+`mat-drawer` is the base component. `mat-sidenav` extends it and adds only the
+app-shell extras: `fixedInViewport`, `fixedTopGap` and `fixedBottomGap`. Use
+`mat-drawer` for a filter panel or an inspector inside a page, and `mat-sidenav`
+for the application's own navigation. Never mix the two element families. A
+`mat-drawer-container` expects `mat-drawer-content`.
+
+<Example of={SidenavStories.DrawerInsteadOfSidenav} />
+
+## The responsive pattern
+
+One drawer, two modes, chosen by `BreakpointObserver` from `@angular/cdk/layout`.
+The Angular Material schematic generates this layout, and most apps end up with it.
+
+<Example of={SidenavStories.ResponsivePattern} />
+
+```ts
+import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs/operators';
+
+export class Shell {
+  private breakpoints = inject(BreakpointObserver);
+
+  readonly isHandset = toSignal(
+    this.breakpoints.observe(Breakpoints.Handset).pipe(map((s) => s.matches)),
+    { initialValue: false },
+  );
+}
+```
+
+```html
+<mat-sidenav #drawer [mode]="isHandset() ? 'over' : 'side'" [opened]="!isHandset()">
+```
+
+## API you will use
+
+| Name | On | Type | Notes |
+| --- | --- | --- | --- |
+| `mode` | `mat-sidenav` | `'over' \| 'push' \| 'side'` | Defaults to `over`. |
+| `opened` | `mat-sidenav` | `boolean` | Supports `[(opened)]` through `openedChange`. |
+| `position` | `mat-sidenav` | `'start' \| 'end'` | Direction-aware, so it flips in RTL. |
+| `disableClose` | `mat-sidenav` | `boolean` | Blocks Escape and backdrop clicks. |
+| `fixedInViewport` | `mat-sidenav` | `boolean` | Plus `fixedTopGap` and `fixedBottomGap` in pixels. |
+| `openedChange` | `mat-sidenav` | `EventEmitter<boolean>` | Fires when the open state settles. |
+| `toggle()` / `open()` / `close()` | `mat-sidenav` | `Promise<'open' \| 'close'>` | Resolves when the animation ends. |
+| `hasBackdrop` | `mat-sidenav-container` | `boolean` | Forces the backdrop on, even in `side` mode. |
+| `backdropClick` | `mat-sidenav-container` | `EventEmitter<void>` | Fires on the container, not the drawer. |
+
+## Accessibility
+
+In `over` and `push` mode the drawer traps focus while open, closes on Escape,
+and restores focus to the trigger when it closes. In `side` mode it does not trap
+focus, because the drawer is part of the page.
+
+You still supply:
+
+- Put the links in `<nav>` with an `aria-label`, so screen reader users can tell
+  two navigation regions apart.
+- Give the toggle button an `aria-label` and keep it in the DOM whenever the
+  drawer can be closed.
+- Mark the current page with `aria-current="page"` on its link.
+
+## Common mistakes
+
+1. **Content outside `mat-sidenav-content`.** Anything after the container is not pushed or shrunk, and `push` mode silently does nothing. All page content belongs inside the content element.
+2. **No height on the container.** It collapses to zero and you see an empty canvas. Set `height: 100vh` or a fixed height.
+3. **Tracking `opened` in your own boolean and also calling `toggle()`.** The two fight each other. Bind `[(opened)]` or call the methods, not both.
+4. **Mixing `mat-drawer-container` with `mat-sidenav-content`.** The container projects by selector, so your content lands in the wrong slot.
+5. **Leaving the default `over` mode on desktop.** A full-width backdrop covers the app the first time someone opens the menu. Set `mode="side"` for wide screens.
+
+## Related
+
+- [Toolbar](?path=/docs/navigation-toolbar--docs) for the bar that holds the menu button
+- [Menu](?path=/docs/navigation-menu--docs) for overflow actions rather than navigation
+- [Tabs](?path=/docs/navigation-tabs--docs) for switching sections inside one page

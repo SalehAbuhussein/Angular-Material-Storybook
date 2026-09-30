@@ -1,0 +1,280 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Foundations/Dark Mode" />
+
+# Dark mode
+
+Angular Material 3 does dark mode with one CSS property, `color-scheme`. You
+need no second theme, extra stylesheet, or root class toggle.
+
+```css
+body {
+  color-scheme: light dark;
+}
+```
+
+That is complete dark mode for a default Material app. This page explains why it
+works and how to put a switch in front of it.
+
+## How light-dark() powers the tokens
+
+By default `mat.theme()` runs in `color-scheme` mode, which emits every colour
+token once as a CSS `light-dark()` value holding both colours:
+
+```css
+--mat-sys-primary: light-dark(#005cbb, #abc7ff);
+--mat-sys-surface: light-dark(#faf9fd, #111318);
+--mat-sys-on-surface: light-dark(#1a1b20, #e2e2e9);
+```
+
+`light-dark()` resolves against the `color-scheme` in effect on the element. Set
+`color-scheme: dark` on an ancestor and every one of those variables resolves to
+its second argument. No JavaScript recalculates anything and no component
+re-renders, because from the component's point of view the variable never
+changed.
+
+That is why these docs keep telling you to use `var(--mat-sys-...)` in your own
+styles. Do that and your components get dark mode for free. Write `#ffffff` and
+they do not.
+
+## Three ways to decide
+
+Follow the operating system. One line, no UI, no state:
+
+```scss
+body {
+  color-scheme: light dark;
+}
+```
+
+The browser reads the user's system setting. This is the right default for most
+apps and costs nothing.
+
+Force one appearance. Pin the value:
+
+```scss
+body {
+  color-scheme: light;
+}
+```
+
+This is what `ng add` generates, and what `src/styles.scss` in this repository
+uses, because a light-only starting point is easier to design against.
+
+Bake it into the theme. Pass `theme-type` and the tokens become plain colours
+instead of `light-dark()` pairs:
+
+```scss
+html {
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$azure-palette,
+        theme-type: dark,
+      ),
+    )
+  );
+}
+```
+
+Valid values are `light`, `dark`, and `color-scheme`. Use `light` or `dark` only
+when the app will only ever have one appearance, because you lose the ability to
+switch. Prefer the default.
+
+## Building a runtime toggle
+
+Most apps want three states: light, dark, and follow the system. Here it is as a
+signal-based service.
+
+```ts
+import { Injectable, effect, signal } from '@angular/core';
+
+export type ThemeMode = 'light' | 'dark' | 'system';
+
+const STORAGE_KEY = 'theme-mode';
+
+@Injectable({ providedIn: 'root' })
+export class ThemeService {
+  /** The user's choice. `system` defers to the operating system setting. */
+  readonly mode = signal<ThemeMode>(readStoredMode());
+
+  constructor() {
+    effect(() => {
+      const mode = this.mode();
+      document.body.style.colorScheme = mode === 'system' ? 'light dark' : mode;
+      localStorage.setItem(STORAGE_KEY, mode);
+    });
+  }
+
+  toggle(): void {
+    this.mode.update((mode) => (mode === 'dark' ? 'light' : 'dark'));
+  }
+}
+
+function readStoredMode(): ThemeMode {
+  const stored = localStorage.getItem(STORAGE_KEY);
+  return stored === 'light' || stored === 'dark' ? stored : 'system';
+}
+```
+
+The `effect` runs whenever `mode` changes and writes `color-scheme` to the body
+element. Setting it to `'light dark'` hands the decision back to the operating
+system.
+
+Wire it to a button:
+
+```ts
+import { Component, inject } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { ThemeService } from './theme.service';
+
+@Component({
+  selector: 'app-theme-toggle',
+  imports: [MatButtonModule, MatIconModule],
+  template: `
+    <button
+      matIconButton
+      (click)="theme.toggle()"
+      [attr.aria-label]="theme.mode() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'"
+    >
+      <mat-icon>{{ theme.mode() === 'dark' ? 'light_mode' : 'dark_mode' }}</mat-icon>
+    </button>
+  `,
+})
+export class ThemeToggle {
+  protected readonly theme = inject(ThemeService);
+}
+```
+
+Three details matter.
+
+Write to `document.body`, not `document.documentElement`. The theme variables are
+emitted on `html`, and `color-scheme` needs to apply to the elements that consume
+them. Setting it on `body` covers the page, and since the CDK appends the overlay
+container inside `body`, it covers dialogs, menus, and tooltips too.
+
+Persist the choice. Without `localStorage` the page flashes back to the default
+on every reload.
+
+Label the button by what it does, not by what it shows. Screen reader users
+cannot see the icon, so "Switch to dark theme" is useful and "Theme" is not. The
+label flips with the state.
+
+### Avoiding the flash on load
+
+Angular bootstraps after the first paint, so the stored preference arrives a
+moment late and a dark-mode user sees a white flash. Fix it with a small inline
+script at the top of `<body>` in `src/index.html`, where `document.body` already
+exists and the app has not loaded yet:
+
+```html
+<body>
+  <script>
+    (function () {
+      var mode = localStorage.getItem('theme-mode');
+      document.body.style.colorScheme = mode === 'light' || mode === 'dark' ? mode : 'light dark';
+    })();
+  </script>
+  <app-root></app-root>
+</body>
+```
+
+Or default to `color-scheme: light dark` in `styles.scss`, so the first paint
+already matches the system setting.
+
+### Server-side rendering
+
+`localStorage` and `document` do not exist on the server. If your app uses SSR,
+guard the service:
+
+```ts
+import { PLATFORM_ID, inject } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+
+// inside the service
+private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+```
+
+and skip the effect body when `isBrowser` is false. The server renders the CSS
+default, which is another reason to make that default `light dark`.
+
+## How this Storybook's switch works
+
+The paintbrush control in the toolbar is a Storybook global. A decorator in
+`.storybook/preview.ts` reads its value:
+
+```ts
+(story, context) => {
+  const scheme = context.globals['scheme'] ?? 'light';
+  document.body.style.colorScheme = scheme;
+  document.body.dataset['scheme'] = scheme;
+  return story();
+};
+```
+
+It is the same mechanism as the service above: set `color-scheme` on `body`. The
+`data-scheme` attribute only lets the Storybook chrome match; it plays no part in
+theming the components.
+
+Pick either item in the toolbar and every story on the page changes instantly,
+including anything already open in an overlay.
+
+## Designing for both
+
+Surfaces get lighter as they rise. In dark mode a card on the page uses
+`--mat-sys-surface-container-low`, which is lighter than `--mat-sys-surface`. Do
+not reach for a darker colour to create depth. Use the container tokens in order.
+
+Shadows barely register. On a dark background a `box-shadow` is nearly
+invisible, so depth comes from surface tone. That is why the container scale
+exists.
+
+Avoid pure black and pure white. `--mat-sys-surface` in dark mode is a dark
+blue-grey, not `#000000`, and `--mat-sys-on-surface` is a soft off-white.
+Full-contrast black on white causes halation and eye strain over long sessions.
+
+Check images and illustrations. A logo with a transparent background and dark
+strokes vanishes in dark mode. Supply a second asset behind a
+`prefers-color-scheme` media query, or give the image a fixed light background
+with padding.
+
+Check anything that is not a Material component. Third-party charts, embedded
+iframes, syntax highlighters, and map tiles have their own theming and do not
+read `--mat-sys-` variables.
+
+## Testing it
+
+Flip the toolbar switch on every page you build and check that:
+
+- Text on every surface is still readable, especially secondary text using
+  `on-surface-variant`.
+- Borders drawn with `outline-variant` are still visible.
+- Focus rings are visible against the background.
+- Disabled controls still read as disabled, not invisible.
+- Any colour you wrote yourself changed with everything else. A patch that
+  stayed the same is a hardcoded value.
+
+The Accessibility panel's colour contrast check runs against the active theme,
+so run it in both.
+
+## Common mistakes
+
+1. Setting `color-scheme` on `html` only. It works for the page but the
+   nesting is easy to break later. Set it on `body`, which is also where the
+   overlay container lives.
+2. Using `theme-type: light` and then trying to toggle. That mode emits plain
+   colours, so `color-scheme` has nothing to switch. Leave the default.
+3. Adding a `.dark-theme` class and a second `mat.theme()` block. That is the
+   Material 2 pattern. It doubles your CSS for no benefit.
+4. Hardcoded colours in your own components. The most common cause of a broken
+   dark mode. Use `var(--mat-sys-...)`.
+5. Forgetting to persist the choice. The user picks dark, reloads, and gets
+   light again.
+6. A toggle with no accessible name. An icon button with no `aria-label`
+   announces as "button".
+
+## Related
+
+- [Theming](?path=/docs/foundations-theming--docs)
+- [Icons](?path=/docs/foundations-icons--docs)

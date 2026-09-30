@@ -1,0 +1,102 @@
+<div
+  class="mag"
+  [class.mag--night]="paper() === 'night'"
+  [class.mag--sepia]="paper() === 'sepia'"
+  [style.height.px]="height()"
+  [style.--measure]="measure()">
+  <mat-progress-bar
+    mode="determinate"
+    class="read"
+    [value]="progress()"
+    aria-label="Reading progress" />
+
+  <div class="frame" #frame (scroll)="onScroll($event)">
+    <header class="masthead">
+      <div class="masthead__kicker">
+        <mat-chip [disableRipple]="true" class="kicker">ESSAY</mat-chip>
+        <span class="meta">Issue 07 &middot; 6 min read</span>
+      </div>
+
+      <h1 class="hed">Everything is<br /><em>a variable</em></h1>
+
+      <p class="dek">
+        On design tokens, the end of the fork, and why the best component
+        library is the one that gets out of the way.
+      </p>
+
+      <div class="byline">
+        <span class="byline__dot" aria-hidden="true"></span>
+        <span>By <strong>S. Al-Khatib</strong></span>
+        <span class="meta">19 September 2026</span>
+        <span class="spacer"></span>
+        <button matIconButton class="ghost" matTooltip="Save" aria-label="Save article">
+          <mat-icon>bookmark_border</mat-icon>
+        </button>
+        <button matIconButton class="ghost" [matMenuTriggerFor]="share" aria-label="Share article">
+          <mat-icon>ios_share</mat-icon>
+        </button>
+      </div>
+    </header>
+
+    <mat-divider class="rule" />
+
+    <div class="body">
+      <article class="column">
+        @for (block of body; track block.id) {
+          <section [id]="block.id">
+            <h2>{{ block.heading }}</h2>
+            @for (p of block.paras; track $index) {
+              <p [class.lead]="block.lead && $first">{{ p }}</p>
+            }
+          </section>
+        }
+
+        <blockquote>
+          Change the surface. Keep the behaviour.
+        </blockquote>
+
+        <p class="end">&#9632;</p>
+      </article>
+
+      <aside class="rail" aria-label="Article tools">
+        <div class="rail__block">
+          <h3>Contents</h3>
+          <mat-list class="toc">
+            @for (s of sections; track s.id) {
+              <mat-list-item>
+                <a matListItemTitle [href]="'#' + s.id">{{ s.label }}</a>
+              </mat-list-item>
+            }
+          </mat-list>
+        </div>
+
+        <mat-divider />
+
+        <div class="rail__block">
+          <h3>Measure</h3>
+          <p class="meta">{{ measure() }} characters per line</p>
+          <mat-slider class="sl" [min]="45" [max]="90" [step]="5" discrete>
+            <input matSliderThumb [ngModel]="measure()" (ngModelChange)="measure.set($event)"
+                   aria-label="Line length in characters" />
+          </mat-slider>
+        </div>
+
+        <mat-divider />
+
+        <div class="rail__block">
+          <h3>Filed under</h3>
+          <mat-chip-set class="tags">
+            <mat-chip [disableRipple]="true">design systems</mat-chip>
+            <mat-chip [disableRipple]="true">css</mat-chip>
+            <mat-chip [disableRipple]="true">angular</mat-chip>
+          </mat-chip-set>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+
+<mat-menu #share>
+  <button mat-menu-item><mat-icon>link</mat-icon> Copy link</button>
+  <button mat-menu-item><mat-icon>mail</mat-icon> Email</button>
+</mat-menu>

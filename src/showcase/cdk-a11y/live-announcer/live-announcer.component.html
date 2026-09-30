@@ -1,0 +1,8 @@
+<div class="docs-demo">
+  <div class="docs-demo docs-demo--row">
+    <button matButton="outlined" (click)="add()">Add to cart</button>
+    <button matButton="outlined" (click)="remove()" [disabled]="items() === 0">Remove</button>
+  </div>
+  <p>Cart: {{ items() }} item(s)</p>
+  <p class="log">Last announcement: {{ last() }}</p>
+</div>

@@ -1,0 +1,160 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as TableRecipeStories from './table-recipes.stories';
+
+<Meta of={TableRecipeStories} />
+
+# Filter and selection
+
+**Import:**
+
+```ts
+import { MatTableModule, MatTableDataSource } from '@angular/material/table';
+import { SelectionModel } from '@angular/cdk/collections';
+```
+
+Neither feature lives in the table markup. Filtering is a property on
+`MatTableDataSource`, and selection is a `SelectionModel` you keep next to the
+data source. The table renders what it is given.
+
+## Try it
+
+<Example of={TableRecipeStories.Playground} />
+<Controls of={TableRecipeStories.Playground} />
+
+## Filtering
+
+Set `dataSource.filter` to a string and the data source re-renders with the
+matching rows. There is no built-in filter input, so use a `mat-form-field` and
+pass the value across.
+
+<Example of={TableRecipeStories.FilterInput} />
+
+```ts
+applyFilter(event: Event) {
+  const value = (event.target as HTMLInputElement).value;
+  this.dataSource.filter = value.trim().toLowerCase();
+}
+```
+
+Lowercase it. The default predicate lowercases the row data but not your filter,
+so `Ada` matches nothing while `ada` matches.
+
+## Deciding what the filter means
+
+The default predicate concatenates every value of the row and checks whether the
+filter string appears anywhere in it. Past the first demo that is rarely what you
+want: an id column makes `1` match half the table.
+
+`filterPredicate` takes the row and the filter string and returns a boolean, so
+it can search one column, several columns, or a structured query.
+
+<Example of={TableRecipeStories.CustomFilterPredicate} />
+
+```ts
+this.dataSource.filterPredicate = (row, filter) => {
+  if (filter.startsWith('role:')) {
+    return row.role === filter.slice(5);
+  }
+  return row.name.toLowerCase().includes(filter);
+};
+```
+
+For several independent filters, serialise them into the filter string as JSON
+and parse it in the predicate. The filter must stay a `string`, because that is
+what the data source watches.
+
+## Selection
+
+`SelectionModel<T>` from `@angular/cdk/collections` tracks which rows are
+selected. The constructor's first argument is whether selection is multiple.
+
+```ts
+readonly selection = new SelectionModel<Member>(true, []);
+
+this.selection.toggle(row);
+this.selection.isSelected(row);
+this.selection.selected;   // the selected rows
+this.selection.hasValue(); // at least one
+this.selection.clear();
+```
+
+Pass `false` for single selection and the model deselects the previous row.
+
+<Example of={TableRecipeStories.SingleSelection} />
+
+## The select-all header checkbox
+
+A header checkbox has three states: checked when every row is selected,
+indeterminate when some are, and unchecked otherwise.
+
+```html
+<mat-checkbox
+  [checked]="allSelected()"
+  [indeterminate]="someSelected()"
+  (change)="toggleAll()"
+  aria-label="Select all members" />
+```
+
+```ts
+readonly allSelected = computed(() =>
+  this.selection.selected.length === this.dataSource.data.length);
+
+readonly someSelected = computed(() =>
+  this.selection.hasValue() && !this.allSelected());
+```
+
+`SelectionModel` is not a signal, so nothing recomputes when it changes. Either
+bump a version signal after each change, as the playground does, or keep the
+selection in a `signal<Set<T>>` and drop the model.
+
+With filtering on, decide what "all" means. Selecting `dataSource.data` selects
+every row, including hidden ones. Selecting `dataSource.filteredData` selects
+only what people can see, which is almost always the honest choice.
+
+## API you will use
+
+| Name | Where | What it does |
+| --- | --- | --- |
+| `filter` | `MatTableDataSource` | The current filter string; setting it re-renders |
+| `filterPredicate` | `MatTableDataSource` | `(row, filter) => boolean` |
+| `filteredData` | `MatTableDataSource` | Rows that survived the filter, before paging |
+| `data` | `MatTableDataSource` | All rows |
+| `new SelectionModel(multiple, initial)` | CDK | Creates the model |
+| `select` / `deselect` / `toggle` / `clear` | `SelectionModel` | Change the selection |
+| `isSelected` / `hasValue` / `selected` | `SelectionModel` | Read the selection |
+| `changed` | `SelectionModel` | `Subject<SelectionChange<T>>` for reacting to changes |
+
+## Accessibility
+
+What you have to supply:
+
+- An `aria-label` on every row checkbox naming the row. A column of checkboxes
+  all announced as "checkbox" is unusable.
+- An `aria-label` on the header checkbox, such as "Select all members".
+- A label on the filter field, not only a placeholder. Placeholders disappear
+  once someone types.
+- An announcement of the result count after filtering. A changing table body is
+  silent for a screen reader. A live region with "4 of 12 members" is not.
+- More than a background colour for a selected row. The checkbox state is the
+  real signal, and the colour is decoration.
+
+## Common mistakes
+
+1. **Not lowercasing the filter.** The default predicate lowercases the row, so a
+   capitalised filter never matches.
+2. **Leaving the default predicate in place.** It matches every column,
+   including ids and timestamps, which gives strange results.
+3. **Selecting `data` instead of `filteredData` in select-all.** People select 900
+   rows while looking at 12.
+4. **Expecting `SelectionModel` to trigger change detection.** It is a plain
+   object. In a zoneless app you need a signal in the loop.
+5. **Filtering without resetting the paginator.** Set `paginator.firstPage()`
+   after the filter changes, or the table shows an empty page 5.
+
+## Related
+
+- [Table](?path=/docs/data-table-table--docs) for columns, rows and empty states
+- [Sorting](?path=/docs/data-table-sorting--docs) for `matSort`
+- [Pagination](?path=/docs/data-table-pagination--docs) for paging filtered results
+- [Checkbox](?path=/docs/form-controls-checkbox--docs) for the checkbox itself

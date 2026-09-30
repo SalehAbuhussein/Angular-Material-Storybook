@@ -1,0 +1,90 @@
+<div
+  class="soft"
+  [class.soft--dark]="tone() === 'dark'"
+  [class.soft--blush]="tone() === 'blush'"
+  [style.height.px]="height()">
+  <div class="unit">
+    <div class="unit__top">
+      <div class="art" [class.art--spin]="playing()" aria-hidden="true">
+        <span class="art__hole"></span>
+      </div>
+
+      <div class="now">
+        <p class="now__label">Now playing</p>
+        <h1>{{ current().title }}</h1>
+        <p class="now__artist">{{ current().artist }}</p>
+
+        <div class="badges">
+          <span class="pill">{{ mmss(current().length) }}</span>
+          <span class="pill">{{ index() + 1 }} of {{ queue.length }}</span>
+          @if (shuffle()) { <span class="pill pill--on">SHUFFLE</span> }
+        </div>
+      </div>
+    </div>
+
+    <div class="scrub">
+      <span class="time">{{ mmss(position()) }}</span>
+      <mat-slider class="bar" [min]="0" [max]="current().length" [step]="1">
+        <input matSliderThumb [ngModel]="position()" (ngModelChange)="position.set($event)"
+               aria-label="Seek" />
+      </mat-slider>
+      <span class="time">-{{ mmss(current().length - position()) }}</span>
+    </div>
+
+    <div class="transport">
+      <button matIconButton class="key" (click)="prev()" aria-label="Previous track"
+              matTooltip="Previous">
+        <mat-icon>skip_previous</mat-icon>
+      </button>
+
+      <button matIconButton class="key key--main" (click)="toggle()"
+              [attr.aria-label]="playing() ? 'Pause' : 'Play'"
+              [attr.aria-pressed]="playing()">
+        <mat-icon>{{ playing() ? 'pause' : 'play_arrow' }}</mat-icon>
+      </button>
+
+      <button matIconButton class="key" (click)="next()" aria-label="Next track"
+              matTooltip="Next">
+        <mat-icon>skip_next</mat-icon>
+      </button>
+
+      <span class="gap"></span>
+
+      <button matIconButton class="key key--small" [class.key--pressed]="shuffle()"
+              (click)="shuffle.set(!shuffle())"
+              [attr.aria-pressed]="shuffle()" aria-label="Shuffle" matTooltip="Shuffle">
+        <mat-icon>shuffle</mat-icon>
+      </button>
+      <button matIconButton class="key key--small" [class.key--pressed]="repeat()"
+              (click)="repeat.set(!repeat())"
+              [attr.aria-pressed]="repeat()" aria-label="Repeat" matTooltip="Repeat">
+        <mat-icon>repeat</mat-icon>
+      </button>
+    </div>
+
+    <div class="vol">
+      <mat-icon class="vol__icon">{{ volume() === 0 ? 'volume_off' : 'volume_up' }}</mat-icon>
+      <mat-slider class="bar bar--vol" [min]="0" [max]="100" [step]="1">
+        <input matSliderThumb [ngModel]="volume()" (ngModelChange)="volume.set($event)"
+               aria-label="Volume" />
+      </mat-slider>
+      <span class="time">{{ volume() }}</span>
+    </div>
+
+    <div class="queue">
+      <p class="now__label">Up next</p>
+      <mat-list class="list">
+        @for (t of queue; track t.title; let i = $index) {
+          <mat-list-item
+            class="row"
+            [class.row--active]="i === index()"
+            (click)="select(i)">
+            <span matListItemTitle class="row__title">{{ t.title }}</span>
+            <span matListItemLine class="row__artist">{{ t.artist }}</span>
+            <span matListItemMeta class="row__len">{{ mmss(t.length) }}</span>
+          </mat-list-item>
+        }
+      </mat-list>
+    </div>
+  </div>
+</div>

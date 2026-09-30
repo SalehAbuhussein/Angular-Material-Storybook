@@ -1,0 +1,120 @@
+<div class="page" [style.height.px]="height()">
+  <header class="page__head">
+    <div>
+      <h1>Overview</h1>
+      <p class="muted">Store performance for the last {{ range() }} days</p>
+    </div>
+
+    <div class="page__actions">
+      <mat-button-toggle-group
+        [value]="range()"
+        (valueChange)="range.set($event)"
+        aria-label="Reporting range">
+        <mat-button-toggle [value]="7">7d</mat-button-toggle>
+        <mat-button-toggle [value]="30">30d</mat-button-toggle>
+        <mat-button-toggle [value]="90">90d</mat-button-toggle>
+      </mat-button-toggle-group>
+
+      <button matButton="filled" (click)="refresh()" [disabled]="loading()">
+        <mat-icon>refresh</mat-icon>
+        Refresh
+      </button>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <mat-progress-bar mode="indeterminate" aria-label="Loading dashboard data" />
+  }
+
+  <section class="kpis" [class.kpis--loading]="loading()" aria-label="Key metrics">
+    @for (kpi of kpis(); track kpi.id) {
+      <mat-card appearance="outlined" class="kpi">
+        <mat-card-content>
+          <div class="kpi__top">
+            <mat-icon class="kpi__icon">{{ kpi.icon }}</mat-icon>
+            <span class="muted">{{ kpi.label }}</span>
+          </div>
+          <div class="kpi__value">
+            {{ kpi.prefix }}{{ kpi.value | number: '1.0-0' }}{{ kpi.suffix }}
+          </div>
+          <div class="kpi__delta" [class.kpi__delta--down]="kpi.delta < 0">
+            <mat-icon>{{ kpi.delta < 0 ? 'trending_down' : 'trending_up' }}</mat-icon>
+            {{ kpi.delta | percent: '1.1-1' }}
+            <span class="muted">vs previous</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    }
+  </section>
+
+  <div class="grid">
+    <mat-card appearance="outlined" class="grid__chart">
+      <mat-card-header>
+        <mat-card-title>Revenue trend</mat-card-title>
+        <mat-card-subtitle>{{ range() }} day window</mat-card-subtitle>
+        <button matIconButton [matMenuTriggerFor]="chartMenu" aria-label="Chart options">
+          <mat-icon>more_vert</mat-icon>
+        </button>
+      </mat-card-header>
+      <mat-card-content>
+        <!-- A real chart would go here. The bars are data driven so the card
+             still proves the layout works at every range. -->
+        <div class="chart" role="img" [attr.aria-label]="chartLabel()">
+          @for (point of chart(); track $index) {
+            <div
+              class="chart__bar"
+              [style.height.%]="point"
+              [matTooltip]="'Day ' + ($index + 1) + ': ' + point"></div>
+          }
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card appearance="outlined" class="grid__activity">
+      <mat-card-header><mat-card-title>Recent activity</mat-card-title></mat-card-header>
+      <mat-list>
+        @for (item of activity; track item.title) {
+          <mat-list-item>
+            <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+            <span matListItemTitle>{{ item.title }}</span>
+            <span matListItemLine>{{ item.meta }} &middot; {{ item.ago }}</span>
+          </mat-list-item>
+        }
+      </mat-list>
+    </mat-card>
+
+    <mat-card appearance="outlined" class="grid__table">
+      <mat-card-header>
+        <mat-card-title>Latest orders</mat-card-title>
+        <a matButton href="#orders">View all</a>
+      </mat-card-header>
+      <table mat-table [dataSource]="orders" class="orders">
+        <ng-container matColumnDef="id">
+          <th mat-header-cell *matHeaderCellDef>Order</th>
+          <td mat-cell *matCellDef="let row">{{ row.id }}</td>
+        </ng-container>
+        <ng-container matColumnDef="customer">
+          <th mat-header-cell *matHeaderCellDef>Customer</th>
+          <td mat-cell *matCellDef="let row">{{ row.customer }}</td>
+        </ng-container>
+        <ng-container matColumnDef="total">
+          <th mat-header-cell *matHeaderCellDef class="num">Total</th>
+          <td mat-cell *matCellDef="let row" class="num">{{ row.total | number: '1.2-2' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let row">
+            <span class="pill" [class.pill--warn]="row.status === 'Refunded'">{{ row.status }}</span>
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="columns"></tr>
+        <tr mat-row *matRowDef="let row; columns: columns"></tr>
+      </table>
+    </mat-card>
+  </div>
+</div>
+
+<mat-menu #chartMenu>
+  <button mat-menu-item><mat-icon>download</mat-icon> Export CSV</button>
+  <button mat-menu-item><mat-icon>share</mat-icon> Share</button>
+</mat-menu>

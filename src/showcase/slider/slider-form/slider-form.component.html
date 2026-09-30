@@ -1,0 +1,7 @@
+<form [formGroup]="form" class="docs-form">
+  <label id="volume-label">Volume</label>
+  <mat-slider min="0" max="100" step="5" discrete [displayWith]="formatPercent">
+    <input matSliderThumb formControlName="volume" aria-labelledby="volume-label" />
+  </mat-slider>
+  <p>Control value: {{ form.controls.volume.value }}</p>
+</form>

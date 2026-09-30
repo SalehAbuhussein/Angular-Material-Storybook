@@ -1,0 +1,13 @@
+<div class="docs-demo" style="width: 100%; max-width: 420px;">
+  <mat-progress-bar
+    mode="determinate"
+    [value]="value()"
+    (animationEnd)="settled.set($event.value)"
+  />
+  <p>Uploading {{ value() }}% of 12 files</p>
+  <div class="docs-demo docs-demo--row" style="padding: 0;">
+    <button matButton="outlined" (click)="value.set(Math.max(0, value() - 20))">Back 20%</button>
+    <button matButton="filled" (click)="value.set(Math.min(100, value() + 20))">Forward 20%</button>
+  </div>
+  <p>Last settled value: {{ settled() }}</p>
+</div>

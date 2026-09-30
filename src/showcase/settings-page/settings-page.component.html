@@ -1,0 +1,169 @@
+<div class="page" [style.height.px]="height()">
+  <header class="page__head">
+    <h1>Settings</h1>
+    <p class="muted">Manage your account and workspace preferences</p>
+  </header>
+
+  <div class="page__body" [class.page__body--stacked]="stacked()">
+    <nav class="nav" aria-label="Settings sections">
+      <mat-nav-list>
+        @for (section of sections; track section.id) {
+          <a
+            mat-list-item
+            href="#"
+            [activated]="active() === section.id"
+            (click)="select($event, section.id)">
+            <mat-icon matListItemIcon>{{ section.icon }}</mat-icon>
+            <span matListItemTitle>{{ section.label }}</span>
+          </a>
+        }
+      </mat-nav-list>
+    </nav>
+
+    <main class="content">
+      <form [formGroup]="form" (ngSubmit)="save()">
+        @switch (active()) {
+          @case ('profile') {
+            <mat-card appearance="outlined">
+              <mat-card-header>
+                <mat-card-title>Profile</mat-card-title>
+                <mat-card-subtitle>How you appear to your team</mat-card-subtitle>
+              </mat-card-header>
+              <mat-card-content class="fields">
+                <mat-form-field appearance="outline">
+                  <mat-label>Display name</mat-label>
+                  <input matInput formControlName="name" autocomplete="name" />
+                  @if (form.controls.name.hasError('required')) {
+                    <mat-error>A display name is required</mat-error>
+                  }
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Email</mat-label>
+                  <input matInput formControlName="email" type="email" autocomplete="email" />
+                  @if (form.controls.email.hasError('email')) {
+                    <mat-error>That does not look like an email address</mat-error>
+                  }
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Bio</mat-label>
+                  <textarea matInput formControlName="bio" rows="3"></textarea>
+                  <mat-hint align="end">{{ form.controls.bio.value?.length ?? 0 }} / 160</mat-hint>
+                </mat-form-field>
+              </mat-card-content>
+            </mat-card>
+          }
+
+          @case ('notifications') {
+            <mat-card appearance="outlined">
+              <mat-card-header>
+                <mat-card-title>Notifications</mat-card-title>
+                <mat-card-subtitle>Choose what reaches your inbox</mat-card-subtitle>
+              </mat-card-header>
+              <mat-card-content class="fields">
+                <mat-slide-toggle formControlName="emailDigest">
+                  Weekly email digest
+                </mat-slide-toggle>
+                <mat-slide-toggle formControlName="mentions">
+                  Notify me when someone mentions me
+                </mat-slide-toggle>
+                <mat-slide-toggle formControlName="deploys">
+                  Deploy and incident alerts
+                </mat-slide-toggle>
+
+                <mat-divider />
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Digest day</mat-label>
+                  <mat-select formControlName="digestDay">
+                    @for (day of days; track day) {
+                      <mat-option [value]="day">{{ day }}</mat-option>
+                    }
+                  </mat-select>
+                  <mat-hint>Only used when the weekly digest is on</mat-hint>
+                </mat-form-field>
+              </mat-card-content>
+            </mat-card>
+          }
+
+          @case ('appearance') {
+            <mat-card appearance="outlined">
+              <mat-card-header>
+                <mat-card-title>Appearance</mat-card-title>
+                <mat-card-subtitle>Theme and layout density</mat-card-subtitle>
+              </mat-card-header>
+              <mat-card-content class="fields">
+                <div>
+                  <p class="label">Colour scheme</p>
+                  <mat-radio-group formControlName="scheme" class="radio-row">
+                    <mat-radio-button value="light">Light</mat-radio-button>
+                    <mat-radio-button value="dark">Dark</mat-radio-button>
+                    <mat-radio-button value="system">Match system</mat-radio-button>
+                  </mat-radio-group>
+                </div>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Density</mat-label>
+                  <mat-select formControlName="density">
+                    <mat-option [value]="0">Comfortable</mat-option>
+                    <mat-option [value]="-2">Compact</mat-option>
+                    <mat-option [value]="-4">Dense</mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <mat-checkbox formControlName="reduceMotion">
+                  Reduce motion
+                </mat-checkbox>
+              </mat-card-content>
+            </mat-card>
+          }
+
+          @case ('security') {
+            <mat-card appearance="outlined">
+              <mat-card-header>
+                <mat-card-title>Security</mat-card-title>
+                <mat-card-subtitle>Protect your account</mat-card-subtitle>
+              </mat-card-header>
+              <mat-card-content class="fields">
+                <mat-slide-toggle formControlName="twoFactor">
+                  Two factor authentication
+                </mat-slide-toggle>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Session timeout</mat-label>
+                  <mat-select formControlName="timeout">
+                    <mat-option [value]="15">15 minutes</mat-option>
+                    <mat-option [value]="60">1 hour</mat-option>
+                    <mat-option [value]="480">8 hours</mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <div class="danger">
+                  <div>
+                    <p class="label">Delete this workspace</p>
+                    <p class="muted">Everything in it is removed. This cannot be undone.</p>
+                  </div>
+                  <button matButton="outlined" type="button" class="danger__button">Delete</button>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          }
+        }
+      </form>
+    </main>
+  </div>
+
+  <!-- The save bar is only useful when there is something to save. -->
+  @if (dirty()) {
+    <footer class="savebar">
+      <mat-icon>info</mat-icon>
+      <span>You have unsaved changes</span>
+      <span class="spacer"></span>
+      <button matButton type="button" (click)="discard()">Discard</button>
+      <button matButton="filled" type="button" [disabled]="form.invalid" (click)="save()">
+        Save changes
+      </button>
+    </footer>
+  }
+</div>

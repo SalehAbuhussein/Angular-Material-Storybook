@@ -1,0 +1,34 @@
+<div class="stage" [class]="'stage stage--' + color()" (keydown.escape)="close()">
+  <ul class="items" id="fab-menu-items" [class.items--open]="open()" [attr.aria-hidden]="!open()">
+    @for (a of actions(); track a.label; let i = $index) {
+      <li [style.--i]="actions().length - 1 - i">
+        <button
+          #item
+          type="button"
+          class="item"
+          matRipple
+          [attr.tabindex]="open() ? 0 : -1"
+          (click)="pick(a.label)"
+          (keydown.arrowdown)="move($event, 1)"
+          (keydown.arrowup)="move($event, -1)"
+        >
+          <mat-icon aria-hidden="true">{{ a.icon }}</mat-icon>
+          {{ a.label }}
+        </button>
+      </li>
+    }
+  </ul>
+  <button
+    #fab
+    type="button"
+    class="fab"
+    matRipple
+    [class.fab--open]="open()"
+    aria-controls="fab-menu-items"
+    [attr.aria-expanded]="open()"
+    [attr.aria-label]="open() ? 'Close menu' : 'Create'"
+    (click)="open() ? close() : show()"
+  >
+    <mat-icon class="fab__icon" aria-hidden="true">{{ open() ? 'close' : 'add' }}</mat-icon>
+  </button>
+</div>

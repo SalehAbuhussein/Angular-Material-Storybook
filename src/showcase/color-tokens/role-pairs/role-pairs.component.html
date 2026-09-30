@@ -1,0 +1,22 @@
+<div class="rows">
+  @for (p of pairs; track p.token) {
+    <div class="row">
+      <div
+        class="half"
+        [style.background]="'var(--mat-sys-' + p.token + ')'"
+        [style.color]="'var(--mat-sys-' + p.on + ')'"
+      >
+        <span class="label">--mat-sys-{{ p.token }}</span>
+        <span class="body">Readable text drawn with --mat-sys-{{ p.on }}</span>
+      </div>
+      <div
+        class="half flip"
+        [style.background]="'var(--mat-sys-' + p.on + ')'"
+        [style.color]="'var(--mat-sys-' + p.token + ')'"
+      >
+        <span class="label">--mat-sys-{{ p.on }}</span>
+        <span class="body">The same pair inverted still reads.</span>
+      </div>
+    </div>
+  }
+</div>

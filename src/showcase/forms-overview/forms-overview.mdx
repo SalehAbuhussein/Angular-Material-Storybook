@@ -1,0 +1,212 @@
+import { Meta, Canvas } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as FormsOverviewStories from './forms-overview.stories';
+
+<Meta of={FormsOverviewStories} />
+
+# Putting it together
+
+**Import:** `import { ReactiveFormsModule } from '@angular/forms';`
+
+Every control in this chapter binds the same way. Once you have built one
+reactive form, the rest is picking the right control for each question. Three
+rules apply to all of them:
+
+1. Bind with `formControlName` on the control that owns the value. On a
+   [Radio](?path=/docs/form-controls-radio--docs) group that is
+   `<mat-radio-group>`, on a [Slider](?path=/docs/form-controls-slider--docs) it
+   is the thumb `<input>`, on a
+   [Button Toggle](?path=/docs/form-controls-button-toggle--docs) it is the group.
+2. Put the validators on the control, not in the template.
+3. Show the message in `<mat-error>`, and let the form field decide when.
+
+## Try it
+
+Submit the form empty to see every error at once, then fill it in and watch them
+clear one by one.
+
+<Example of={FormsOverviewStories.Playground} />
+
+## Building the group
+
+`FormBuilder` with `nonNullable` gives you a typed group whose controls reset to
+their initial value instead of `null`, which is almost always what you want.
+
+```ts
+private readonly fb = inject(FormBuilder);
+
+readonly form = this.fb.nonNullable.group({
+  name: ['', [Validators.required, Validators.minLength(2)]],
+  email: ['', [Validators.required, Validators.email]],
+  passwords: this.fb.nonNullable.group(
+    {
+      password: ['', [Validators.required, Validators.minLength(8)]],
+      confirm: ['', Validators.required],
+    },
+    { validators: passwordsMatch },
+  ),
+  source: ['', Validators.required],
+  plan: ['free'],
+  newsletter: [true],
+  terms: [false, Validators.requiredTrue],
+});
+```
+
+Two details worth copying:
+
+- `source` starts at `''` so `Validators.required` forces a real choice, while
+  `plan` starts at `'free'` because a sensible default saves a click.
+- `terms` uses `Validators.requiredTrue`. Plain `Validators.required` is the
+  wrong tool for a checkbox.
+
+## Cross-field validation
+
+A rule about two controls belongs on the group that contains them.
+
+```ts
+function passwordsMatch(group: AbstractControl): ValidationErrors | null {
+  const password = group.get('password')?.value;
+  const confirm = group.get('confirm')?.value;
+  return password && confirm && password !== confirm ? { passwordsMismatch: true } : null;
+}
+```
+
+```ts
+passwords: this.fb.nonNullable.group({ ... }, { validators: passwordsMatch }),
+```
+
+The error lands on the group, so `<mat-error>` inside either field will not show
+it. Render it yourself under the pair:
+
+```html
+@if (passwords.hasError('passwordsMismatch') && passwords.controls.confirm.touched) {
+  <p class="docs-error">The two passwords do not match</p>
+}
+```
+
+## Showing errors only after touched
+
+People get this part wrong. A form that turns red before anyone has typed
+accuses people of a mistake they have not had a chance to make.
+
+`<mat-error>` already handles the timing. The form field asks an
+`ErrorStateMatcher`, and the default one shows the error when the control is
+invalid **and** either touched or inside a submitted form. You never write that
+condition.
+
+<Example of={FormsOverviewStories.WhenErrorsAppear} />
+
+| State | Means | Set when |
+| --- | --- | --- |
+| `touched` | The control has been focused and blurred | The user leaves the field |
+| `dirty` | The value has changed | The user types |
+| `invalid` | A validator failed | Any time the value changes |
+
+Typing an invalid address makes the control `dirty` and `invalid` straight away,
+but the message waits for the blur: correct me when I am done, not mid-word.
+
+On submit, touch everything so the errors on fields nobody visited appear too:
+
+```ts
+submit() {
+  this.form.markAllAsTouched();
+  if (this.form.invalid) {
+    return;
+  }
+  // ...
+}
+```
+
+## One message per condition
+
+Put a single `<mat-error>` in the field and branch inside it. Two `<mat-error>`
+elements both render, so people see two messages for one problem.
+
+```html
+<mat-error>
+  @if (form.controls.email.hasError('required')) {
+    An email address is required
+  } @else if (form.controls.email.hasError('email')) {
+    That does not look like an email address
+  }
+</mat-error>
+```
+
+Write the message as the fix, not as the failure. "At least eight characters"
+beats "Invalid password".
+
+## Submitting
+
+<Example of={FormsOverviewStories.SignupForm} />
+
+Keep the submit button enabled. A disabled button gives no reason, and on touch
+devices people cannot tap it to find out. Let them submit, then touch everything
+and let the messages explain.
+
+`getRawValue()` includes disabled controls; `value` does not. Use `getRawValue()`
+when a control is disabled for display reasons but its value still matters.
+
+## Picking the control
+
+| Question | Control |
+| --- | --- |
+| Free text, one line or many | [Input](?path=/docs/form-controls-input--docs) |
+| One of many, long list | [Select](?path=/docs/form-controls-select--docs) |
+| One of many, long list, people know the answer | [Autocomplete](?path=/docs/form-controls-autocomplete--docs) |
+| One of two to five, all visible | [Radio](?path=/docs/form-controls-radio--docs) or [Button Toggle](?path=/docs/form-controls-button-toggle--docs) |
+| Several independent yes/no answers | [Checkbox](?path=/docs/form-controls-checkbox--docs) |
+| One setting that applies immediately | [Slide Toggle](?path=/docs/form-controls-slide-toggle--docs) |
+| A number where approximate is fine | [Slider](?path=/docs/form-controls-slider--docs) |
+| A date or a date range | [Datepicker](?path=/docs/form-controls-datepicker--docs) |
+| A list the user types | [Chips](?path=/docs/form-controls-chips--docs) |
+
+## API you will use
+
+| Name | Type | What it does |
+| --- | --- | --- |
+| `fb.nonNullable.group()` | `FormBuilder` | Typed group whose controls reset to their initial value. |
+| `Validators.required` | validator | Fails on empty. Not for checkboxes. |
+| `Validators.requiredTrue` | validator | Fails on `false`. The one for a terms checkbox. |
+| `Validators.email` | validator | Adds an `email` error key. |
+| `{ validators: fn }` | group options | Cross-field rule. The error lands on the group. |
+| `control.hasError(key)` | method | What you branch on inside `<mat-error>`. |
+| `form.markAllAsTouched()` | method | Reveals every error at once on submit. |
+| `form.getRawValue()` | method | The value including disabled controls. |
+
+## Accessibility
+
+The form field wires labels, hints, and errors together with `aria-describedby`,
+and marks invalid controls with `aria-invalid`. Errors are announced as they
+appear.
+
+What you still supply:
+
+- A `<mat-label>` on every field, and a `<fieldset>` with `<legend>` around every
+  radio or checkbox group.
+- `autocomplete` values so browsers and password managers can fill the form.
+- `novalidate` on the `<form>` so the browser's own bubbles do not fight your
+  messages.
+- A summary for long forms. After a failed submit, move focus to the first
+  invalid control so keyboard users are not left hunting.
+
+## Common mistakes
+
+1. Showing errors on `dirty` instead of `touched`. The field turns red while
+   someone is still typing the first character. Let `<mat-error>` decide.
+2. Disabling the submit button while the form is invalid. People cannot tell
+   what is wrong. Keep it enabled, call `markAllAsTouched()`, and let the
+   messages do the work.
+3. A cross-field error inside `<mat-error>`. The error lives on the group,
+   and the field only looks at its own control. Render it yourself.
+4. `Validators.required` on a checkbox. Use `Validators.requiredTrue`.
+5. `disabled` in the template with reactive forms. Angular warns about it.
+   Pass `{ value: '', disabled: true }` to the control or call
+   `control.disable()`.
+
+## Related
+
+- [Form Field](?path=/docs/form-controls-form-field--docs) for labels, hints and the error line
+- [Input](?path=/docs/form-controls-input--docs) for the most common control
+- [Select](?path=/docs/form-controls-select--docs) and [Autocomplete](?path=/docs/form-controls-autocomplete--docs) for choosing from a list
+- [Checkbox](?path=/docs/form-controls-checkbox--docs), [Radio](?path=/docs/form-controls-radio--docs) and [Slide Toggle](?path=/docs/form-controls-slide-toggle--docs) for the boolean and single-choice cases
+- [Datepicker](?path=/docs/form-controls-datepicker--docs) and [Chips](?path=/docs/form-controls-chips--docs) for dates and tag lists

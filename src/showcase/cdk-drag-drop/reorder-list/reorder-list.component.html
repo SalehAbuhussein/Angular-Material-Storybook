@@ -1,0 +1,8 @@
+<div class="docs-demo">
+  <div class="list" cdkDropList (cdkDropListDropped)="drop($event)">
+    @for (step of steps(); track step) {
+      <div class="item" cdkDrag>{{ step }}</div>
+    }
+  </div>
+  <p class="log">Order: {{ steps().join(' , ') }}</p>
+</div>

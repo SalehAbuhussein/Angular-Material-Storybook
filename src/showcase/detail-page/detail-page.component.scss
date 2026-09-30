@@ -1,0 +1,77 @@
+:host { display: block; }
+
+.page {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  overflow: auto;
+  background: var(--mat-sys-surface-container-lowest);
+  color: var(--mat-sys-on-surface);
+}
+
+.head {
+  padding: 20px 24px 12px;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+  background: var(--mat-sys-surface);
+}
+.head__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+.head__title { display: flex; align-items: center; gap: 12px; }
+.head__actions { display: flex; gap: 8px; align-items: center; }
+
+h1 { margin: 0; font: var(--mat-sys-headline-small); }
+.muted { margin: 0; color: var(--mat-sys-on-surface-variant); font: var(--mat-sys-body-small); }
+
+.crumbs ol {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+.crumbs a { color: inherit; }
+
+.chip { font: var(--mat-sys-label-medium); }
+.chip--shipped { --mdc-chip-elevated-container-color: var(--mat-sys-secondary-container); }
+.chip--processing { --mdc-chip-elevated-container-color: var(--mat-sys-tertiary-container); }
+.chip--cancelled { --mdc-chip-elevated-container-color: var(--mat-sys-error-container); }
+
+.body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 20px;
+  padding: 20px 24px 24px;
+  align-items: start;
+}
+.body--stacked { grid-template-columns: 1fr; }
+@media (max-width: 900px) { .body { grid-template-columns: 1fr; } }
+
+.main { min-width: 0; background: var(--mat-sys-surface); border-radius: var(--mat-sys-corner-medium); }
+.rail { display: flex; flex-direction: column; gap: 16px; }
+
+.lines { width: 100%; background: transparent; }
+.num { text-align: right; }
+.stack { display: flex; flex-direction: column; padding: 6px 0; }
+.pad { padding: 24px; }
+
+.totals {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 24px 24px;
+  margin-left: auto;
+  max-width: 280px;
+}
+.totals div { display: flex; justify-content: space-between; gap: 24px; }
+.totals__grand { font: var(--mat-sys-title-medium); }
+
+.meta { display: flex; flex-direction: column; gap: 8px; }
+.meta div { display: flex; justify-content: space-between; gap: 16px; }

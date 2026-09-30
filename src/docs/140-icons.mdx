@@ -1,0 +1,399 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Foundations/Icons" />
+
+# Icons
+
+**Import:** `import { MatIconModule } from '@angular/material/icon';`
+
+`<mat-icon>` renders an icon two ways: as a ligature from an icon font, or as an
+inline SVG pulled from a registry. Font icons need less setup; SVG icons let you
+use your own artwork. The component handles the accessibility defaults either
+way.
+
+```html
+<mat-icon>settings</mat-icon>
+```
+
+It renders as a 24 by 24 pixel inline block that inherits `color` from its
+parent, with `role="img"` and `aria-hidden="true"` on the host element.
+
+## Ligature icons
+
+An icon font maps a word to a glyph. Put the word inside the element and the font
+draws the picture. Material Icons and Material Symbols both work this way:
+`settings` becomes a gear and `delete` becomes a bin.
+
+```html
+<mat-icon>home</mat-icon>
+<mat-icon>search</mat-icon>
+<mat-icon>expand_more</mat-icon>
+```
+
+You can also pass the name as an attribute:
+
+```html
+<mat-icon fontIcon="home"></mat-icon>
+```
+
+Prefer the attribute form in two cases: when the icon sits inside selectable text
+(the ligature word would be copied along with the text), and when a search engine
+indexes the page (the word shows up in the snippet). Otherwise the content form
+reads better.
+
+Load the font in `src/index.html`. `ng add @angular/material` adds Material
+Icons:
+
+```html
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+```
+
+Material Symbols is the newer set, with more icons and adjustable weight, fill,
+and optical size:
+
+```html
+<link
+  href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+  rel="stylesheet"
+/>
+```
+
+Browse the full list at [fonts.google.com/icons](https://fonts.google.com/icons).
+Names are snake case: `arrow_back`, `check_circle`, `more_vert`.
+
+If an icon shows up as its own name in plain text, the font did not load or you
+used a name from a font you have not linked.
+
+## Choosing a font set
+
+`<mat-icon>` defaults to the CSS classes `material-icons mat-ligature-font`. To
+use a different font, set `fontSet`:
+
+```html
+<mat-icon fontSet="material-symbols-outlined" fontIcon="home"></mat-icon>
+```
+
+To change the default for the whole app, provide `MAT_ICON_DEFAULT_OPTIONS`:
+
+```ts
+import { ApplicationConfig } from '@angular/core';
+import { MAT_ICON_DEFAULT_OPTIONS } from '@angular/material/icon';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    { provide: MAT_ICON_DEFAULT_OPTIONS, useValue: { fontSet: 'material-symbols-outlined' } },
+  ],
+};
+```
+
+Or set it on the registry at startup:
+
+```ts
+import { inject, provideAppInitializer } from '@angular/core';
+import { MatIconRegistry } from '@angular/material/icon';
+
+provideAppInitializer(() => {
+  inject(MatIconRegistry).setDefaultFontSetClass('material-symbols-outlined');
+});
+```
+
+For a font that uses classes instead of ligatures, such as Font Awesome 4,
+register an alias and let `fontIcon` supply the per-icon class:
+
+```ts
+inject(MatIconRegistry).registerFontClassAlias('fa', 'fa');
+```
+
+```html
+<mat-icon fontSet="fa" fontIcon="fa-bell"></mat-icon>
+```
+
+The class `mat-ligature-font` tells `<mat-icon>` the font is ligature-based.
+Include it in the alias when your font works that way, for example `registerFontClassAlias('sym', 'material-symbols-outlined mat-ligature-font')`.
+
+## SVG icons
+
+Use SVG when you need artwork the icon fonts do not have: a product logo, a brand
+mark, an industry-specific glyph. Register the file once, then reference it by
+name.
+
+```ts
+import { Component, inject } from '@angular/core';
+import { DomSanitizer } from '@angular/platform-browser';
+import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
+
+@Component({
+  selector: 'app-root',
+  imports: [MatIconModule],
+  template: `<mat-icon svgIcon="logo"></mat-icon>`,
+})
+export class App {
+  constructor() {
+    const registry = inject(MatIconRegistry);
+    const sanitizer = inject(DomSanitizer);
+
+    registry.addSvgIcon('logo', sanitizer.bypassSecurityTrustResourceUrl('assets/logo.svg'));
+  }
+}
+```
+
+Register icons once at application startup, not in every component that uses
+them:
+
+```ts
+import { ApplicationConfig, inject, provideAppInitializer } from '@angular/core';
+import { provideHttpClient } from '@angular/common/http';
+import { DomSanitizer } from '@angular/platform-browser';
+import { MatIconRegistry } from '@angular/material/icon';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideHttpClient(),
+    provideAppInitializer(() => {
+      const registry = inject(MatIconRegistry);
+      const sanitizer = inject(DomSanitizer);
+
+      for (const name of ['logo', 'invoice', 'warehouse']) {
+        registry.addSvgIcon(
+          name,
+          sanitizer.bypassSecurityTrustResourceUrl(`assets/icons/${name}.svg`),
+        );
+      }
+    }),
+  ],
+};
+```
+
+Two requirements are easy to miss.
+
+**`provideHttpClient()` must be in your providers.** The registry fetches the SVG
+over HTTP. Without it you get a runtime error saying `HttpClient` is not
+provided.
+
+**The URL must go through `DomSanitizer`.** `addSvgIcon` takes a
+`SafeResourceUrl`, not a string, because the registry injects the fetched file
+into the DOM as markup. Calling `bypassSecurityTrustResourceUrl` says you trust
+the source. Only pass it a URL you control. Never pass user input.
+
+### Namespaces and icon sets
+
+Group related icons so names cannot collide:
+
+```ts
+registry.addSvgIconInNamespace(
+  'brand',
+  'logo',
+  sanitizer.bypassSecurityTrustResourceUrl('assets/brand/logo.svg'),
+);
+```
+
+```html
+<mat-icon svgIcon="brand:logo"></mat-icon>
+```
+
+For many icons, register a single sprite file whose `<svg>` root contains one
+`<svg id="...">` per icon:
+
+```ts
+registry.addSvgIconSet(sanitizer.bypassSecurityTrustResourceUrl('assets/icons/sprite.svg'));
+```
+
+Then reference each by its id, with no extra registration.
+
+For icons you have as markup instead of a file, use the literal variants, which
+take `SafeHtml` from `bypassSecurityTrustHtml`:
+
+```ts
+registry.addSvgIconLiteral('dot', sanitizer.bypassSecurityTrustHtml('<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6"/></svg>'));
+```
+
+For a naming convention instead of a list, register a resolver that maps any
+name to a URL on demand:
+
+```ts
+registry.addSvgIconResolver((name, namespace) =>
+  namespace === 'app'
+    ? sanitizer.bypassSecurityTrustResourceUrl(`assets/icons/${name}.svg`)
+    : null,
+);
+```
+
+### Making SVGs themeable
+
+An SVG with `fill="#333333"` baked into its paths will never follow your theme.
+`<mat-icon>` sets `fill: currentColor` on the SVG it renders, so strip the fills
+from the file and let the paths inherit:
+
+```xml
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <path d="M12 2 2 22h20z" />
+</svg>
+```
+
+No `fill`, no `width`, no `height`. The icon now takes its colour from CSS like a
+font icon.
+
+## Sizing
+
+`<mat-icon>` is 24 by 24 pixels with a 24 pixel font size. Change it by setting
+all three properties together:
+
+```scss
+.icon-lg {
+  width: 32px;
+  height: 32px;
+  font-size: 32px;
+}
+```
+
+Setting only `font-size` grows the glyph out of its 24 pixel box and it gets
+clipped, because the host has `overflow: hidden`.
+
+To size an icon to the surrounding text, use the `inline` input instead:
+
+```html
+<p>Press <mat-icon inline>save</mat-icon> to keep your changes.</p>
+```
+
+`inline` swaps the fixed dimensions for `font-size: inherit`, `width: inherit`,
+and `height: inherit`, so the icon scales with the paragraph and sits on the text
+baseline.
+
+Do not resize icons inside Material components. An icon in a button, form field,
+or list item is already sized by that component's tokens, and overriding it
+breaks the alignment.
+
+## Colouring
+
+The icon inherits `color` from its parent, so you usually colour the element
+around it:
+
+```scss
+.status-error {
+  color: var(--mat-sys-error);
+}
+```
+
+```html
+<span class="status-error">
+  <mat-icon>error</mat-icon>
+  Upload failed
+</span>
+```
+
+For a direct override, use the component's overrides mixin:
+
+```scss
+.nav-icon {
+  @include mat.icon-overrides((color: var(--mat-sys-primary)));
+}
+```
+
+Use a system variable, not a literal colour, so the icon follows the theme and
+the dark mode switch.
+
+The `color` input, as in `<mat-icon color="primary">`, is a Material 2 API. It
+has no effect under Material 3 theming. Ignore it.
+
+## The aria-hidden and aria-label rules
+
+`<mat-icon>` sets `aria-hidden="true"` on itself unless you supply an
+`aria-hidden` attribute in the template. That default is usually correct, and it
+leads to three cases.
+
+Decorative icon next to text that already says it: do nothing. The default
+hides it from assistive technology and the adjacent text carries the meaning.
+
+```html
+<button matButton="filled">
+  <mat-icon>save</mat-icon>
+  Save
+</button>
+```
+
+A screen reader announces "Save, button". Adding a label here would make it
+announce "Save Save, button".
+
+Icon on its own inside a control: put the label on the control, not on the
+icon.
+
+```html
+<button matIconButton aria-label="Delete invoice">
+  <mat-icon>delete</mat-icon>
+</button>
+```
+
+The user operates the button, so the button carries the name. The icon stays
+hidden.
+
+Icon on its own, conveying information, outside a control: only here does the
+icon itself need a name. Override the default and label it:
+
+```html
+<mat-icon aria-hidden="false" aria-label="Verified account">verified</mat-icon>
+```
+
+**Both attributes are required.** `aria-label` alone does nothing while
+`aria-hidden="true"` is in place, because a hidden element is not announced at
+all.
+
+Often better: keep the icon hidden and put the meaning in visually hidden text
+next to it. The announcement then reads as part of the sentence instead of as a
+separate image.
+
+Two more rules.
+
+Never rely on an icon alone to convey a status. Colour and shape are not
+available to everyone. Pair the icon with text, or with an accessible name.
+
+Never put an icon inside a control with no other label and no `aria-label`. It is
+the most common accessibility bug in Material apps, and the Accessibility panel
+catches it every time.
+
+## API you will use
+
+| Name | Type | What it does |
+| --- | --- | --- |
+| Content | ligature text | The icon name for a ligature font |
+| `fontIcon` | `string` | The icon name as an attribute instead of content |
+| `fontSet` | `string` | The font's CSS class, or a registered alias |
+| `svgIcon` | `string` | A registered SVG name, optionally `namespace:name` |
+| `inline` | `boolean` | Sizes the icon to the surrounding font instead of 24px |
+| `aria-hidden` | `string` | Defaults to `"true"`; set `"false"` to expose the icon |
+| `aria-label` | `string` | The accessible name, only meaningful with `aria-hidden="false"` |
+
+`MatIconRegistry` methods:
+
+| Method | Use it for |
+| --- | --- |
+| `addSvgIcon(name, url, options?)` | One SVG file, one name |
+| `addSvgIconInNamespace(ns, name, url, options?)` | The same, grouped under a namespace |
+| `addSvgIconLiteral(name, html)` | Markup you already have in hand |
+| `addSvgIconSet(url, options?)` | A sprite file holding many icons by id |
+| `addSvgIconResolver(fn)` | Resolving names to URLs on demand |
+| `setDefaultFontSetClass(...classes)` | Changing the default icon font app-wide |
+| `registerFontClassAlias(alias, classes)` | Giving a font's classes a short name |
+
+## Common mistakes
+
+1. Only setting `font-size`. The host stays 24px with `overflow: hidden` and
+   the glyph is clipped. Set `width`, `height`, and `font-size` together, or use
+   `inline`.
+2. `addSvgIcon` without `provideHttpClient()`. The registry cannot fetch the
+   file and throws at runtime.
+3. Passing a plain string URL to `addSvgIcon`. It needs a `SafeResourceUrl`
+   from `DomSanitizer.bypassSecurityTrustResourceUrl`.
+4. `aria-label` without `aria-hidden="false"`. The icon is hidden by default,
+   so the label is never announced.
+5. Labelling a decorative icon. Inside a button that already has text, a
+   label on the icon makes the announcement repeat itself.
+6. Registering SVG icons in a component constructor. Every instance
+   re-registers them. Do it once with `provideAppInitializer`.
+7. Hardcoded `fill` in the SVG file. The icon ignores `currentColor` and
+   stays the wrong colour in dark mode.
+
+## Related
+
+- [Theming](?path=/docs/foundations-theming--docs)
+- [Dark Mode](?path=/docs/foundations-dark-mode--docs)
+- [Button](?path=/docs/buttons-and-indicators-button--docs)

@@ -1,0 +1,145 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as CheckboxStories from './checkbox.stories';
+
+<Meta of={CheckboxStories} />
+
+# Checkbox
+
+**Import:** `import { MatCheckboxModule } from '@angular/material/checkbox';`
+
+`<mat-checkbox>` is a component that carries its own label. Use it for a yes/no
+answer that takes effect when the form is submitted, or for picking several
+items out of a short list.
+
+```html
+<mat-checkbox [(ngModel)]="remember">Remember this device</mat-checkbox>
+```
+
+It is not a `MatFormFieldControl`, so it never goes inside a
+`<mat-form-field>`. The content you project is the label.
+
+## Try it
+
+<Example of={CheckboxStories.Playground} />
+<Controls of={CheckboxStories.Playground} />
+
+## States
+
+`indeterminate` is a third visual state, not a third value. The underlying
+`checked` is still a boolean, and clicking an indeterminate box resolves it to
+checked.
+
+<Example of={CheckboxStories.States} />
+
+Setting `checked` in code clears `indeterminate`, so the parent-child pattern
+below needs no extra bookkeeping.
+
+## Label position
+
+The label sits after the box by default. `labelPosition="before"` moves it
+ahead, which lines up checkboxes down a right-hand edge in a settings list.
+
+<Example of={CheckboxStories.LabelPosition} />
+
+Keep one position for the whole screen. Mixed positions make the column of
+boxes impossible to scan.
+
+## A parent checkbox
+
+In the usual "select all" pattern, the parent is checked when every child is and
+indeterminate when only some are. Derive both from the list with `computed` and
+there is no state to keep in sync.
+
+<Example of={CheckboxStories.IndeterminateParent} />
+
+```ts
+readonly allChecked = computed(() => this.topics().every((t) => t.on));
+readonly someChecked = computed(
+  () => this.topics().some((t) => t.on) && !this.topics().every((t) => t.on),
+);
+```
+
+```html
+<mat-checkbox
+  [checked]="allChecked()"
+  [indeterminate]="someChecked()"
+  (change)="setAll($event.checked)">
+  Notify me about everything
+</mat-checkbox>
+```
+
+## In reactive forms
+
+A checkbox binds to a boolean control. For "you must accept this", use
+`Validators.requiredTrue`. Plain `Validators.required` passes on `false` in some
+setups.
+
+<Example of={CheckboxStories.InReactiveForms} />
+
+```ts
+readonly form = this.fb.nonNullable.group({
+  terms: [false, Validators.requiredTrue],
+  newsletter: [true],
+});
+```
+
+```html
+<form [formGroup]="form">
+  <mat-checkbox formControlName="terms">I accept the terms of service</mat-checkbox>
+</form>
+```
+
+For a group of checkboxes that produce an array, keep a `FormGroup` of booleans
+and map it to an array on submit. A `FormArray` of booleans works too but is
+harder to name.
+
+## API you will use
+
+| Name | Type | What it does |
+| --- | --- | --- |
+| `checked` | `boolean` | Current state. Two-way bindable as `[(checked)]`. |
+| `indeterminate` | `boolean` | Draws the dash. Cleared as soon as `checked` is set. |
+| `labelPosition` | `'after' \| 'before'` | Which side the label sits on. |
+| `disabled` | `boolean` | Greys it out and removes it from the tab order. |
+| `disabledInteractive` | `boolean` | Keeps a disabled checkbox focusable for a tooltip. |
+| `required` | `boolean` | Sets `aria-required`. Does not validate on its own. |
+| `change` | `EventEmitter<MatCheckboxChange>` | Fires on user interaction with `{ source, checked }`. |
+| `indeterminateChange` | `EventEmitter<boolean>` | Fires when the dash state changes. |
+
+## Accessibility
+
+The projected content becomes the accessible name, and the component renders a
+real `<input type="checkbox">` underneath, so Space toggles and the state is
+announced. `indeterminate` maps to `aria-checked="mixed"`.
+
+What you still supply:
+
+- Label text on every checkbox. A bare `<mat-checkbox></mat-checkbox>` needs an
+  `aria-label`.
+- A `<fieldset>` and `<legend>`, or a heading with `aria-labelledby`, around a
+  group of related checkboxes so the group has a name.
+- An error message near the group, not only on one box, when the group as a
+  whole is invalid.
+
+## Common mistakes
+
+1. Putting it inside `<mat-form-field>`. It is not a form field control and
+   the field throws. The checkbox is already labelled.
+2. `Validators.required` for a terms box. Use `Validators.requiredTrue`, which
+   fails on `false`.
+3. Treating `indeterminate` as a value. It is presentation only. The value
+   people submit is `checked`.
+4. `(change)` to update a model that is already bound. With `formControlName`
+   or `[(ngModel)]` the value is already tracked; `(change)` is for side
+   effects.
+5. A checkbox that applies instantly. If the change takes effect on click
+   rather than on submit, use
+   [Slide Toggle](?path=/docs/form-controls-slide-toggle--docs).
+
+## Related
+
+- [Slide Toggle](?path=/docs/form-controls-slide-toggle--docs) for settings that apply immediately
+- [Radio](?path=/docs/form-controls-radio--docs) for one choice out of several
+- [Select](?path=/docs/form-controls-select--docs) when the list is long
+- [Putting It Together](?path=/docs/form-controls-putting-it-together--docs) for the full form

@@ -1,0 +1,148 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as SnackBarStories from './snack-bar.stories';
+
+<Meta of={SnackBarStories} />
+
+# Snack bar
+
+**Import:** `import { MatSnackBarModule } from '@angular/material/snack-bar';`
+
+A snack bar is a short message at the edge of the screen that confirms something
+already happened. It does not block the page or wait for an answer.
+If you need an answer, open a [dialog](?path=/docs/popups-and-modals-dialog--docs).
+
+```ts
+snackBar.open('Draft saved', 'Undo', { duration: 4000 });
+```
+
+## Try it
+
+<Example of={SnackBarStories.Playground} />
+<Controls of={SnackBarStories.Playground} />
+
+## Message and action
+
+`open()` takes a message, an optional action label, and a config. You get at
+most one action button. With no label, the snackbar is text only.
+
+<Example of={SnackBarStories.MessageAndAction} />
+
+```ts
+const ref = this.snackBar.open('Message archived', 'Undo', { duration: 6000 });
+ref.onAction().subscribe(() => this.restore());
+```
+
+`onAction()` fires when the button is clicked. `afterDismissed()` fires either
+way and tells you which happened through `dismissedByAction`.
+
+## Duration
+
+`duration` is in milliseconds. Four to six seconds is enough to read a short
+message and reach the action button. Without `duration`, the snackbar stays
+until you call `dismiss()`. Do that only for an error the user must acknowledge.
+
+## Position
+
+Position is set per call, so you can move a snackbar away from a floating action
+button on one screen and leave it centred on another.
+
+<Example of={SnackBarStories.Position} />
+
+```ts
+snackBar.open('Saved', undefined, {
+  horizontalPosition: 'end',
+  verticalPosition: 'top',
+});
+```
+
+`horizontalPosition` accepts `start`, `center`, `end`, `left` and `right`.
+Prefer `start` and `end`, which follow the text direction.
+
+## Custom content
+
+When a string is not enough, write a component and open it with
+`openFromComponent`. The three directives keep Material's layout.
+
+<Example of={SnackBarStories.CustomComponent} />
+
+```ts
+@Component({
+  selector: 'app-upload-snack-bar',
+  imports: [MatSnackBarModule, MatButtonModule],
+  template: `
+    <span matSnackBarLabel>{{ data.file }} uploaded</span>
+    <span matSnackBarActions>
+      <button matButton matSnackBarAction (click)="ref.dismissWithAction()">View</button>
+    </span>
+  `,
+})
+export class UploadSnackBar {
+  readonly ref = inject<MatSnackBarRef<UploadSnackBar>>(MatSnackBarRef);
+  readonly data = inject<{ file: string }>(MAT_SNACK_BAR_DATA);
+}
+```
+
+```ts
+snackBar.openFromComponent(UploadSnackBar, {
+  duration: 5000,
+  data: { file: 'report-q3.pdf' },
+  panelClass: 'app-snack-bar-success',
+});
+```
+
+`panelClass` lands on the snackbar container, which lives in the overlay
+container at the end of `<body>`. Define that class in your global stylesheet.
+In the component's own styles, view encapsulation throws it away.
+
+## One at a time
+
+Only one snackbar shows at a time. Every `open()` call dismisses the current one
+first, so a loop over failed requests shows only the last failure.
+
+<Example of={SnackBarStories.NoStacking} />
+
+Queue the messages yourself, or collapse them into one summary
+("3 uploads failed"). Do not stack snackbars by opening several overlays. That
+covers the screen and breaks the screen reader announcement order.
+
+## API you will use
+
+| Member | Type | What it does |
+| --- | --- | --- |
+| `snackBar.open(message, action?, config?)` | `MatSnackBarRef<TextOnlySnackBar>` | Shows a text snackbar |
+| `snackBar.openFromComponent(Component, config?)` | `MatSnackBarRef<T>` | Shows your component as the body |
+| `config.duration` | `number` | Milliseconds before auto dismiss |
+| `config.horizontalPosition` / `verticalPosition` | `'start' \| 'center' \| 'end'` / `'top' \| 'bottom'` | Where it appears |
+| `config.panelClass` | `string \| string[]` | Class on the container, for theming |
+| `config.politeness` | `'polite' \| 'assertive' \| 'off'` | How screen readers announce it |
+| `ref.onAction()` | `Observable<void>` | Emits when the action button is clicked |
+| `ref.afterDismissed()` | `Observable<MatSnackBarDismiss>` | Emits with `dismissedByAction` |
+
+## Accessibility
+
+The snackbar is announced through the CDK live announcer, so a screen reader
+reads the message without moving focus.
+
+- `politeness` defaults to `polite`. Use `assertive` only for errors that stop
+  the user, because it interrupts whatever is being read.
+- With `openFromComponent`, set `announcementMessage` in the config. The
+  announcer cannot read your component, so without it nothing is announced.
+- Focus stays where it was, so keyboard users cannot reach the action button
+  quickly. Never make the snackbar the only place a critical action lives.
+- A timed snackbar is unreachable for someone who reads slowly. Keep `duration`
+  at 4000 or more, and offer the same action elsewhere in the UI.
+
+## Common mistakes
+
+1. **Using a snackbar to ask a question.** It disappears. Use a dialog for anything that needs a decision.
+2. **Opening one per item in a loop.** Only the last survives. Summarise instead.
+3. **`panelClass` styles in the component's stylesheet.** The container is outside your component, so the styles never apply. Put them in global styles.
+4. **Two action buttons.** The layout supports one. A second gets no accessible reading order, and Material does not space it.
+5. **`duration: 1500`.** Too short to read the message and reach the button. Start at 4000.
+
+## Related
+
+- [Dialog](?path=/docs/popups-and-modals-dialog--docs) when the user has to answer
+- [Bottom Sheet](?path=/docs/popups-and-modals-bottom-sheet--docs) for a list of actions on mobile
+- [CDK Overlay](?path=/docs/popups-and-modals-cdk-overlay--docs) for the layer underneath

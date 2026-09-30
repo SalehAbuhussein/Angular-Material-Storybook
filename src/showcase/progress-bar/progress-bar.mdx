@@ -1,0 +1,128 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as ProgressBarStories from './progress-bar.stories';
+
+<Meta of={ProgressBarStories} />
+
+# Progress bar
+
+**Import:** `import { MatProgressBarModule } from '@angular/material/progress-bar';`
+
+A horizontal bar for work that takes long enough to need explaining. It fills the
+width of its container, so the container decides how wide it is.
+
+```html
+<mat-progress-bar mode="determinate" [value]="percent()" />
+```
+
+## Try it
+
+<Example of={ProgressBarStories.Playground} />
+<Controls of={ProgressBarStories.Playground} />
+
+## The four modes
+
+<Example of={ProgressBarStories.Modes} />
+
+| Mode | Use it when | Inputs that matter |
+| --- | --- | --- |
+| `determinate` | You know the percentage | `value` |
+| `indeterminate` | Work is running, duration unknown | none |
+| `buffer` | Some of the work is loaded ahead of what is done | `value`, `bufferValue` |
+| `query` | The request is out, nothing has come back yet | none |
+
+`determinate` is the default, so a bar with no `mode` and no `value` sits empty
+at zero.
+
+## Determinate
+
+`value` is a number from 0 to 100, not a fraction. Bind it to a signal and the
+bar animates between values. `animationEnd` fires when that fill animation
+lands, which is handy for chaining a "done" state. It does not fire in
+`indeterminate` or `query`, where the animation never ends.
+
+<Example of={ProgressBarStories.Determinate} />
+
+```ts
+@Component({
+  selector: 'app-upload',
+  imports: [MatProgressBarModule],
+  template: `<mat-progress-bar mode="determinate" [value]="percent()" />`,
+})
+export class Upload {
+  readonly percent = signal(0);
+}
+```
+
+## Buffer
+
+`buffer` draws two tracks: the solid fill is `value`, the lighter fill is
+`bufferValue`. It only makes sense when your data has two numbers, such
+as a video that has played 30% and buffered 55%.
+
+<Example of={ProgressBarStories.Buffer} />
+
+## Query
+
+<Example of={ProgressBarStories.Query} />
+
+The bar sweeps backwards, which reads as "we are still asking". Swap to
+`indeterminate` or `determinate` once the first byte arrives.
+
+## Placing it in a layout
+
+<Example of={ProgressBarStories.UnderAHeader} />
+
+The bar is a few pixels tall and fills its container. Render it in a fixed slot,
+such as directly under a header, so it does not push content down when it
+appears. Toggling it with `@if` in the middle of a column causes a layout jump.
+
+## Progress bar or spinner?
+
+Use a bar when the work belongs to a region or the whole page: uploading, saving
+a long form, loading a route. Use a
+[spinner](?path=/docs/buttons-and-indicators-progress-spinner--docs) when the
+work belongs to one small control, such as a button that is submitting.
+
+If the operation finishes in under a second, show nothing. A flash of progress is
+worse than a short pause.
+
+## API you will use
+
+| Name | Type | What it does |
+| --- | --- | --- |
+| `mode` | `'determinate' \| 'indeterminate' \| 'buffer' \| 'query'` | Which animation and which inputs apply. Default `determinate` |
+| `value` | `number` | Percentage complete, 0 to 100. Used in `determinate` and `buffer` |
+| `bufferValue` | `number` | Percentage loaded ahead. Used in `buffer` only |
+| `animationEnd` | `EventEmitter<{ value: number }>` | Fires when the determinate fill animation finishes |
+| `color` | `'primary' \| 'accent' \| 'warn'` | M2 themes only. In M3, style with CSS custom properties |
+
+## Accessibility
+
+The component sets `role="progressbar"`, `aria-valuemin="0"`, and
+`aria-valuemax="100"`, and mirrors `value` into `aria-valuenow` in the
+determinate modes. In `indeterminate` and `query` it drops `aria-valuenow`, which
+tells assistive technology the amount is unknown.
+
+It cannot supply a name. Add `aria-label`, or point `aria-labelledby` at the
+heading the bar belongs to.
+
+```html
+<mat-progress-bar mode="indeterminate" aria-label="Importing contacts" />
+```
+
+For a long operation, also announce the outcome in a live region when it
+finishes. The bar disappearing is not an announcement.
+
+## Common mistakes
+
+1. A fraction in `value`: `0.45` renders as almost empty. The scale is 0 to 100.
+2. Setting `value` in `indeterminate` mode: it is ignored, and the bar keeps sweeping. Switch `mode` as well.
+3. No accessible name: `role="progressbar"` with no label announces nothing useful. Add `aria-label`.
+4. `buffer` for a single number: the second track implies data you do not have. Use `determinate`.
+5. Toggling the bar inside flowing content: the layout jumps every time. Reserve the space, or place the bar on a container edge.
+
+## Related
+
+- [Progress Spinner](?path=/docs/buttons-and-indicators-progress-spinner--docs) for control-level loading
+- [Button](?path=/docs/buttons-and-indicators-button--docs) for disabling actions while work runs

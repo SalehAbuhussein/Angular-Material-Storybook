@@ -1,0 +1,19 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 280px;
+  padding: 8px;
+  border-radius: var(--mat-sys-corner-medium);
+  background: var(--mat-sys-surface-container-low);
+}
+.list--horizontal { flex-direction: row; width: auto; }
+.item {
+  padding: 12px 16px;
+  border-radius: var(--mat-sys-corner-small);
+  background: var(--mat-sys-surface-container-high);
+  color: var(--mat-sys-on-surface);
+  cursor: move;
+}
+.cdk-drag-preview { box-shadow: var(--mat-sys-level3); }
+.cdk-drag-placeholder { opacity: 0.3; }

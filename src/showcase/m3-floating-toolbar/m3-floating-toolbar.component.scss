@@ -1,0 +1,92 @@
+:host {
+  display: block;
+  width: min(480px, 92vw);
+  --m3-spring: cubic-bezier(0.42, 1.67, 0.21, 0.9);
+}
+.frame {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--mat-sys-corner-extra-large);
+  border: 1px solid var(--mat-sys-outline-variant);
+  background: var(--mat-sys-surface);
+}
+.scroll {
+  height: 100%;
+  overflow-y: auto;
+}
+article {
+  padding: 24px 24px 120px;
+  font: var(--mat-sys-body-large);
+  color: var(--mat-sys-on-surface);
+}
+h2 {
+  margin: 0 0 12px;
+  font: var(--mat-sys-headline-small);
+}
+p {
+  margin: 0 0 16px;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.dock {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transform: translateX(-50%);
+  transition: transform 350ms var(--m3-spring);
+}
+.dock--hidden {
+  transform: translate(-50%, 140%);
+}
+.bar {
+  display: flex;
+  gap: 4px;
+  padding: 8px;
+  border-radius: var(--mat-sys-corner-full);
+  background: var(--mat-sys-surface-container);
+  color: var(--mat-sys-on-surface-variant);
+  box-shadow: var(--mat-sys-level3);
+}
+.bar--vibrant {
+  background: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+}
+.tool {
+  color: inherit;
+  transition: border-radius 250ms var(--m3-spring);
+}
+/* Selected tool: a filled square-ish shape, the M3 selected state for icon buttons. */
+.tool--on {
+  border-radius: var(--mat-sys-corner-medium);
+  background: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+}
+.bar--vibrant .tool--on {
+  background: var(--mat-sys-surface-container-lowest);
+  color: var(--mat-sys-on-surface);
+}
+.fab {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border: 0;
+  border-radius: var(--mat-sys-corner-large);
+  background: var(--mat-sys-tertiary-container);
+  color: var(--mat-sys-on-tertiary-container);
+  box-shadow: var(--mat-sys-level3);
+  cursor: pointer;
+}
+.fab:focus-visible {
+  outline: 2px solid var(--mat-sys-primary);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .dock,
+  .tool {
+    transition: none;
+  }
+}

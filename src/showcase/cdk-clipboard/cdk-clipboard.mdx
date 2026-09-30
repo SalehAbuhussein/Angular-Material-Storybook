@@ -1,0 +1,164 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as ClipboardStories from './cdk-clipboard.stories';
+
+<Meta of={ClipboardStories} />
+
+# Clipboard
+
+**Import:** `import { ClipboardModule } from '@angular/cdk/clipboard';`
+(the `Clipboard` service is injected, not imported into a component)
+
+`cdkCopyToClipboard` takes the string to copy, creates a hidden textarea, selects
+it, copies, and removes it. No permissions prompt, no async API, no polyfill. The
+one rule: the copy has to happen inside a user gesture such as a click.
+
+```html
+<button matButton [cdkCopyToClipboard]="command">Copy</button>
+```
+
+## Try it
+
+<Example of={ClipboardStories.Playground} />
+<Controls of={ClipboardStories.Playground} />
+
+## The directive
+
+Put it on the control people click. It works on any element, but use a real
+`<button>` so keyboard users get it too.
+
+<Example of={ClipboardStories.CopyWithTheDirective} />
+
+```html
+<button matIconButton aria-label="Copy the install command"
+        [cdkCopyToClipboard]="command">
+  <mat-icon>content_copy</mat-icon>
+</button>
+```
+
+An icon-only copy button has no visible label, so `aria-label` is not optional.
+
+## Saying that it worked
+
+A copy is invisible. Nothing on screen changes, so people click again because
+they are not sure. `cdkCopyToClipboardCopied` emits a boolean. Confirm with a
+snackbar, a swapped icon, or both.
+
+<Example of={ClipboardStories.CopyFeedback} />
+
+```ts
+private readonly snackBar = inject(MatSnackBar);
+
+onCopied(success: boolean) {
+  this.snackBar.open(success ? 'API key copied' : 'Copy failed', 'Dismiss', {
+    duration: 3000,
+  });
+}
+```
+
+```html
+<button matIconButton [cdkCopyToClipboard]="apiKey"
+        (cdkCopyToClipboardCopied)="onCopied($event)">
+```
+
+The event fires with `false` when the browser refuses, which is common for long
+strings. Do not assume success.
+
+## The Clipboard service
+
+When the text is built in code, inject `Clipboard` and call `copy()`. It returns
+whether the copy succeeded.
+
+<Example of={ClipboardStories.TheClipboardService} />
+
+```ts
+import { Clipboard } from '@angular/cdk/clipboard';
+
+private readonly clipboard = inject(Clipboard);
+
+copyAsCsv() {
+  const csv = ['name,team', ...rows.map((r) => `${r.name},${r.team}`)].join('\n');
+  const success = this.clipboard.copy(csv);
+}
+```
+
+The directive uses the same code path, so the gesture rule applies: call it from
+a click handler, not from a timer or an HTTP response.
+
+## Large text and PendingCopy
+
+Copying writes the text into a textarea and selects it. For a long string that
+layout takes so long that the browser no longer treats the copy as part of the
+click, and refuses.
+
+`beginCopy()` splits the two steps. It returns a `PendingCopy` that has already
+done the DOM work, so `copy()` is cheap and can be retried. Call `destroy()` when
+you finish, whether or not the copy worked.
+
+<Example of={ClipboardStories.LargeTextWithPendingCopy} />
+
+```ts
+const pending = this.clipboard.beginCopy(largeText);
+let remaining = 3;
+
+const attempt = () => {
+  const copied = pending.copy();
+  if (!copied && --remaining) {
+    setTimeout(attempt);
+    return;
+  }
+  pending.destroy();
+};
+
+attempt();
+```
+
+The directive has this built in: `cdkCopyToClipboardAttempts` sets the number of
+tries, capped at 50. Use the service only when you need the outcome of each
+attempt.
+
+## API you will use
+
+| Name | Kind | What it does |
+| --- | --- | --- |
+| `cdkCopyToClipboard` | directive input | The text to copy |
+| `cdkCopyToClipboardAttempts` | directive input | Retries for long text, default `1` |
+| `cdkCopyToClipboardCopied` | directive output | Emits `boolean`, whether it worked |
+| `Clipboard.copy(text)` | service method | Copies now, returns `boolean` |
+| `Clipboard.beginCopy(text)` | service method | Returns a `PendingCopy` |
+| `PendingCopy.copy()` | method | Finishes a prepared copy, returns `boolean` |
+| `PendingCopy.destroy()` | method | Required cleanup of the hidden textarea |
+| `CDK_COPY_TO_CLIPBOARD_CONFIG` | injection token | Default `attempts` for the whole app |
+
+## Accessibility
+
+The CDK copies. It adds nothing visual or semantic, so you supply:
+
+- An accessible name on the button. `aria-label="Copy the install command"`
+  beats "Copy" when there are several on the page.
+- Confirmation that is not colour or an icon alone. A snackbar is announced, and
+  a swapped icon is not.
+- An announcement for screen reader users if you do not use a snackbar. Inject
+  `LiveAnnouncer` and announce "API key copied".
+- A visible alternative. Keep the text selectable so people can copy it by hand
+  when the button fails.
+
+## Common mistakes
+
+1. **No feedback.** The most common one. The button looks broken, so people
+   click it repeatedly.
+2. **Assuming it succeeded.** `copy()` returns a boolean and the output emits
+   one. Long strings do fail.
+3. **Copying outside a user gesture.** After an HTTP response or in a
+   `setTimeout` chain the browser blocks the copy. Prepare with `beginCopy()`
+   during the click instead.
+4. **Forgetting `pending.destroy()`.** The hidden textarea stays in the DOM, once
+   per copy.
+5. **Putting the directive on a `<div>`.** No keyboard access and no focus. Use a
+   `<button>`.
+
+## Related
+
+- [Accessibility](?path=/docs/cdk-accessibility--docs) for announcing the copy with `LiveAnnouncer`
+- [Snack Bar](?path=/docs/popups-and-modals-snack-bar--docs) for the confirmation message
+- [Button](?path=/docs/buttons-and-indicators-button--docs) for the control you attach it to

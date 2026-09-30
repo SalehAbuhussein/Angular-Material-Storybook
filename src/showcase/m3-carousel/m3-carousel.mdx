@@ -1,0 +1,58 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as Stories from './m3-carousel.stories';
+
+<Meta of={Stories} />
+
+# Carousel
+
+A row of items where several show at once, in different sizes. M3 calls the
+default layout multi-browse: one large item, one medium, one small. The small
+one at the edge hints that there is more, so people know to swipe.
+
+## Try it
+
+Step through with the arrow buttons, the arrow keys, a swipe, or a sideways
+trackpad scroll. The large item shrinks away and the next one grows into its
+place.
+
+<Example of={Stories.Playground} />
+<Controls of={Stories.Playground} />
+
+## Layouts
+
+| `layout` | Visible items | Use it for |
+| --- | --- | --- |
+| `multi-browse` | Large, medium, small | Browsing many items, such as photos or products |
+| `hero` | One large, one sliver | Featured content where one item matters most |
+| `full-screen` | One | Stories and onboarding, one item at a time |
+
+<Example of={Stories.Hero} />
+
+## How the sizing works
+
+Every item is a flex child with `flex-basis: 0`. The component gives each
+visible item a `flex-grow` from the layout, and hidden items get 0:
+
+```ts
+const LAYOUTS = {
+  'multi-browse': [6, 3, 1.2],
+  hero: [8, 1.3],
+  'full-screen': [1],
+};
+```
+
+Moving forward only changes which items get which number. The CSS transition
+on `flex-grow` resizes them smoothly without measuring anything.
+
+The gap between items is a `margin-right` on each item, not `gap` on the row.
+A hidden item with `flex-grow: 0` still gets a `gap` on both sides, but its
+margin can go to 0.
+
+## Accessibility
+
+- The carousel is `aria-roledescription="carousel"` and focusable, so the arrow keys work once it has focus.
+- Each item is a group with `aria-roledescription="slide"` and a label such as "3 of 8, Old town".
+- Items out of view are `inert`, so Tab never lands inside something you cannot see.
+- The position counter is `aria-live`, so screen readers hear where they are after each step.
+- The previous and next buttons are disabled at each end rather than wrapping around.

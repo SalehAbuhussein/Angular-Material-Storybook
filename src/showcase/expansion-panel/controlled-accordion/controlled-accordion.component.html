@@ -1,0 +1,26 @@
+<div class="docs-demo" style="width: 420px">
+  <mat-accordion>
+    @for (step of steps; track step.id; let i = $index) {
+      <mat-expansion-panel
+        [expanded]="open() === i"
+        (opened)="open.set(i)"
+        (closed)="collapse(i)"
+        hideToggle
+      >
+        <mat-expansion-panel-header>
+          <mat-panel-title>Step {{ i + 1 }}. {{ step.title }}</mat-panel-title>
+        </mat-expansion-panel-header>
+        <p>{{ step.body }}</p>
+        <mat-action-row>
+          @if (i > 0) {
+            <button matButton (click)="open.set(i - 1)">Back</button>
+          }
+          @if (i < steps.length - 1) {
+            <button matButton="filled" (click)="open.set(i + 1)">Next</button>
+          }
+        </mat-action-row>
+      </mat-expansion-panel>
+    }
+  </mat-accordion>
+  <p>Open step: {{ open() < 0 ? 'none' : open() + 1 }}</p>
+</div>

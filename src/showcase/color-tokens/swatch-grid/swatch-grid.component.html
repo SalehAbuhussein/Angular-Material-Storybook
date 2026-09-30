@@ -1,0 +1,22 @@
+<div class="grid">
+  @for (s of swatches(); track s.token) {
+    <div class="tile">
+      <div
+        class="chip"
+        [style.background]="'var(--mat-sys-' + s.token + ')'"
+        [style.color]="s.on ? 'var(--mat-sys-' + s.on + ')' : null"
+      >
+        @if (s.on) {
+          <span class="sample">Aa The quick brown fox</span>
+        }
+      </div>
+      <div class="caption">
+        <code>--mat-sys-{{ s.token }}</code>
+        @if (s.on) {
+          <code class="on">text: --mat-sys-{{ s.on }}</code>
+        }
+        <span class="note">{{ s.note }}</span>
+      </div>
+    </div>
+  }
+</div>

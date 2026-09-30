@@ -1,0 +1,25 @@
+<div class="docs-demo">
+  <div class="docs-demo docs-demo--row">
+    <button matButton="outlined" (click)="use('reposition')">reposition</button>
+    <button matButton="outlined" (click)="use('close')">close</button>
+    <button matButton="outlined" (click)="use('block')">block</button>
+  </div>
+  <p>Active: <code>{{ active() }}</code>. Open the panel, then scroll the box.</p>
+
+  <div class="docs-surface" cdkScrollable style="height: 160px; overflow: auto; padding: 16px">
+    <div style="height: 80px"></div>
+    <button matButton="filled" cdkOverlayOrigin #origin="cdkOverlayOrigin" (click)="isOpen.set(!isOpen())">
+      Toggle panel
+    </button>
+    <div style="height: 300px"></div>
+  </div>
+
+  <ng-template
+    cdkConnectedOverlay
+    [cdkConnectedOverlayOrigin]="origin"
+    [cdkConnectedOverlayOpen]="isOpen()"
+    [cdkConnectedOverlayScrollStrategy]="strategy()"
+    (detach)="isOpen.set(false)">
+    <div class="docs-overlay-panel"><p>Scroll the box behind me</p></div>
+  </ng-template>
+</div>

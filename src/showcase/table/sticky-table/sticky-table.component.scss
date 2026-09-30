@@ -1,0 +1,16 @@
+.sticky-frame {
+  max-height: 260px;
+  overflow: auto;
+}
+table {
+  width: 100%;
+  min-width: 760px;
+}
+td.mat-column-notes {
+  min-width: 360px;
+}
+.mat-mdc-header-cell,
+td.mat-column-version,
+td.mat-column-actions {
+  background: var(--mat-sys-surface-container-low);
+}

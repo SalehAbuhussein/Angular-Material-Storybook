@@ -1,0 +1,10 @@
+.docs-overlay-panel {
+  min-width: 200px;
+  padding: 8px 0;
+  border-radius: var(--mat-sys-corner-extra-small);
+  background: var(--mat-sys-surface-container);
+  color: var(--mat-sys-on-surface);
+  box-shadow: var(--mat-sys-level2);
+  font: var(--mat-sys-body-medium);
+}
+.docs-overlay-panel p { margin: 0; padding: 8px 16px; }

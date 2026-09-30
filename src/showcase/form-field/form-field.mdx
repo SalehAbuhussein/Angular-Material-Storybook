@@ -1,0 +1,162 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as FormFieldStories from './form-field.stories';
+
+<Meta of={FormFieldStories} />
+
+# Form field
+
+**Import:** `import { MatFormFieldModule } from '@angular/material/form-field';`
+
+`<mat-form-field>` is the frame around a control. It owns the floating label,
+the fill or outline decoration, the hint line, and the error line. It does not
+own the control, so you always put something inside it.
+
+```html
+<mat-form-field>
+  <mat-label>Project name</mat-label>
+  <input matInput />
+  <mat-hint>Shown to everyone on the team</mat-hint>
+</mat-form-field>
+```
+
+Only four controls can live inside: `matInput` (on `input`, `textarea`, or a
+native `select`), `<mat-select>`, `<mat-chip-grid>`, and
+`<mat-date-range-input>`. Anything else throws
+`getMatFormFieldMissingControlError` at runtime.
+
+## Try it
+
+<Example of={FormFieldStories.Playground} />
+<Controls of={FormFieldStories.Playground} />
+
+## Fill or outline
+
+Material 3 has two appearances. `legacy` and `standard` are gone, and there is
+no `<mat-form-field appearance="none">`.
+
+`fill` is the default and reads as a solid tinted block. `outline` draws a
+border, which works better on a coloured surface or on a dense form where solid
+blocks fight each other. Choose one for the whole application.
+
+<Example of={FormFieldStories.Appearances} />
+
+## Prefixes and suffixes
+
+Each comes in two flavours that differ only in spacing. Use
+`matIconPrefix` / `matIconSuffix` for a `<mat-icon>` or an icon button, and
+`matTextPrefix` / `matTextSuffix` for text like a currency symbol.
+
+<Example of={FormFieldStories.PrefixAndSuffix} />
+
+```html
+<mat-form-field appearance="outline">
+  <mat-label>Search</mat-label>
+  <mat-icon matIconPrefix>search</mat-icon>
+  <input matInput />
+</mat-form-field>
+```
+
+`matPrefix` and `matSuffix` still work and behave like the icon variants.
+
+## Hints
+
+A field can show two hints at once. The default one is left aligned; add
+`align="end"` for the right one. A character counter is the usual reason to use
+both.
+
+<Example of={FormFieldStories.Hints} />
+
+```html
+<mat-form-field>
+  <mat-label>Bio</mat-label>
+  <input matInput maxlength="60" #bio />
+  <mat-hint>A sentence about you</mat-hint>
+  <mat-hint align="end">{{ bio.value.length }} / 60</mat-hint>
+</mat-form-field>
+```
+
+Two hints with the same alignment throw
+`getMatFormFieldDuplicatedHintError`.
+
+## subscriptSizing
+
+The hint and error line is called the subscript. By default
+(`subscriptSizing="fixed"`) the field reserves that line even when it is empty,
+so an error never pushes the rest of the form down. `dynamic` collapses it and
+gives you the space back, at the cost of layout shift.
+
+<Example of={FormFieldStories.SubscriptSizing} />
+
+Use `fixed` for forms and `dynamic` for a single field in a toolbar or filter
+bar where vertical space matters.
+
+## Errors
+
+`<mat-error>` replaces the hints once the control is in an error state. You do
+not write the show condition. The field asks the control's `ErrorStateMatcher`,
+and the default one fires when the control is invalid and either touched or
+inside a submitted form.
+
+<Example of={FormFieldStories.ErrorState} />
+
+With more than one validator, put an `@if` inside so only the relevant message
+renders:
+
+```html
+<mat-error>
+  @if (form.controls.email.hasError('required')) {
+    An email address is required
+  } @else if (form.controls.email.hasError('email')) {
+    That is not a valid email address
+  }
+</mat-error>
+```
+
+## API you will use
+
+| Name | Type | What it does |
+| --- | --- | --- |
+| `appearance` | `'fill' \| 'outline'` | Which decoration to draw. Defaults to `fill`. |
+| `floatLabel` | `'auto' \| 'always'` | `auto` floats on focus or value; `always` keeps it up. |
+| `subscriptSizing` | `'fixed' \| 'dynamic'` | Reserve the hint/error line, or collapse it. |
+| `hideRequiredMarker` | `boolean` | Hides the asterisk added by `required`. |
+| `hintLabel` | `string` | Shorthand for a single left-aligned `<mat-hint>`. |
+| `<mat-label>` | content | The floating label. Prefer it over `placeholder`. |
+| `<mat-hint align>` | `'start' \| 'end'` | Which side of the subscript line the hint sits on. |
+| `<mat-error>` | content | Shown in place of the hints while the control is in error. |
+
+## Accessibility
+
+The field wires `<mat-label>` to the control with `for`/`id`, so clicking the
+label focuses the input and a screen reader announces the label as the
+control's name. Hints and errors are linked through `aria-describedby`, and
+errors are announced when they appear.
+
+What you still supply:
+
+- A `<mat-label>` on every field. Without it the control has no accessible name.
+- An `aria-label` on any icon button in a prefix or suffix.
+- Error text that says how to fix the problem, not only that something is wrong.
+
+## Common mistakes
+
+1. A plain `<input>` without `matInput`. The field throws
+   `getMatFormFieldMissingControlError`. Add the `matInput` directive.
+2. `placeholder` instead of `<mat-label>`. The placeholder vanishes once someone
+   types, leaving the field unlabelled for anyone who looks away mid-form. Use
+   `<mat-label>` and add `placeholder` only as an example value.
+3. Wrapping a checkbox, radio group, or slide toggle in a form field. Those are
+   not `MatFormFieldControl` implementations. They carry their own label.
+4. A fixed `width` on the `<input>` instead of the field. Size the
+   `<mat-form-field>`; it is the block-level element that owns the layout.
+5. Expecting `<mat-error>` to show immediately. It waits for the control to be
+   touched or the form to be submitted. See
+   [Putting It Together](?path=/docs/form-controls-putting-it-together--docs).
+
+## Related
+
+- [Input](?path=/docs/form-controls-input--docs) for the control that goes inside
+- [Select](?path=/docs/form-controls-select--docs) for the dropdown variant
+- [Datepicker](?path=/docs/form-controls-datepicker--docs) for date fields
+- [Putting It Together](?path=/docs/form-controls-putting-it-together--docs) for the full form pattern

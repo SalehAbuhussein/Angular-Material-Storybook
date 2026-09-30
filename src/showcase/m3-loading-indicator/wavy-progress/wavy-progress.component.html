@@ -1,0 +1,16 @@
+<svg
+  [attr.viewBox]="'0 0 ' + width() + ' 16'"
+  [style.width.px]="width()"
+  height="16"
+  role="progressbar"
+  [attr.aria-label]="label()"
+  [attr.aria-valuenow]="value()"
+  aria-valuemin="0"
+  aria-valuemax="100"
+>
+  <path class="track" [attr.d]="track()" />
+  <path class="wave" [attr.d]="wave()" />
+  @if (value() !== null) {
+    <circle class="stop" [attr.cx]="width() - 2" cy="8" r="2" />
+  }
+</svg>

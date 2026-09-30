@@ -1,0 +1,19 @@
+<div class="docs-surface">
+  <mat-paginator
+    [length]="length()"
+    [pageSize]="pageSize()"
+    [pageSizeOptions]="pageSizeOptions()"
+    [hidePageSize]="hidePageSize()"
+    [showFirstLastButtons]="showFirstLastButtons()"
+    [disabled]="disabled()"
+    aria-label="Select page of tickets"
+    (page)="last.set($event)"
+  />
+  <p class="log">
+    @if (last(); as event) {
+      pageIndex {{ event.pageIndex }}, pageSize {{ event.pageSize }}, length {{ event.length }}
+    } @else {
+      Move through the pages to see the page event.
+    }
+  </p>
+</div>

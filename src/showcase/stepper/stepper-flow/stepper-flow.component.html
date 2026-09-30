@@ -1,0 +1,22 @@
+<div class="docs-surface" style="width: 560px; padding: 16px">
+  <mat-stepper linear #stepper (selectionChange)="current.set($event.selectedIndex)">
+    <mat-step label="Review" [completed]="reviewed()">
+      <p style="font: var(--mat-sys-body-medium)">Confirm the order before it ships.</p>
+      <button matButton="filled" (click)="reviewed.set(true); stepper.next()">Looks good</button>
+    </mat-step>
+
+    <mat-step label="Ship" [completed]="shipped()">
+      <p style="font: var(--mat-sys-body-medium)">Hand the parcel to the courier.</p>
+      <button matButton matStepperPrevious>Back</button>
+      <button matButton="filled" (click)="shipped.set(true); stepper.next()">Mark shipped</button>
+    </mat-step>
+
+    <mat-step label="Done">
+      <p style="font: var(--mat-sys-body-medium)">
+        <mat-icon style="vertical-align: middle">check_circle</mat-icon>
+        Order complete. Step index {{ current() }}.
+      </p>
+      <button matButton="outlined" (click)="restart(stepper)">Start over</button>
+    </mat-step>
+  </mat-stepper>
+</div>

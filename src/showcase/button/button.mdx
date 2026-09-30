@@ -1,0 +1,79 @@
+import { Meta, Canvas, Controls, Story } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as ButtonStories from './button.stories';
+
+<Meta of={ButtonStories} />
+
+# Button
+
+**Import:** `import { MatButtonModule } from '@angular/material/button';`
+
+Angular Material has no `<mat-button>` element. Buttons are native `<button>` and
+`<a>` elements with a directive attached, so they keep native keyboard behaviour,
+form submission, and focus handling for free.
+
+```html
+<button matButton="filled">Save</button>
+```
+
+## Try it
+
+Change `appearance` in the controls below and watch the same markup switch look.
+
+<Example of={ButtonStories.Playground} />
+<Controls of={ButtonStories.Playground} />
+
+## The five appearances
+
+Pick by emphasis. As a rule of thumb, use one filled button per screen region to
+mark the single action you want people to take.
+
+| Appearance | Directive value | Use it for |
+| --- | --- | --- |
+| Text | `matButton` (no value) | Low-priority actions, dialog "Cancel" |
+| Outlined | `matButton="outlined"` | Secondary action next to a filled one |
+| Tonal | `matButton="tonal"` | Medium emphasis on a coloured surface |
+| Elevated | `matButton="elevated"` | Action floating over content or an image |
+| Filled | `matButton="filled"` | The primary action |
+
+<Example of={ButtonStories.Appearances} />
+
+## Icon buttons
+
+`matIconButton` renders a circular target sized for touch. The icon carries no
+text, so the accessible name has to come from `aria-label`. Without it a screen
+reader announces "button" and nothing else.
+
+<Example of={ButtonStories.IconButtons} />
+
+```html
+<button matIconButton aria-label="Delete item">
+  <mat-icon>delete</mat-icon>
+</button>
+```
+
+## Icon plus label
+
+Put `<mat-icon>` first inside the button. Angular Material adds the spacing.
+
+<Example of={ButtonStories.WithIcon} />
+
+## Buttons versus links
+
+<Example of={ButtonStories.LinkButtons} />
+
+Use `<a>` when the action changes the URL and `<button>` when it changes state.
+Screen reader users navigate by links and by buttons separately, so the wrong
+element hides the control from one of those lists.
+
+## Common mistakes
+
+1. `<div matButton>`: the directive does not add keyboard or focus support to a div. Use a real `<button>`.
+2. Missing `type`: a `<button>` inside a `<form>` defaults to `type="submit"`. Add `type="button"` for anything that is not the submit action.
+3. `disabled` on an `<a>`: anchors ignore `disabled`. Use `[disabled]` with `matButton` on a `<button>`, or remove the `href`.
+4. Two filled buttons side by side: people can no longer tell which action is primary.
+
+## Related
+
+- [Button Toggle](?path=/docs/form-controls-button-toggle--docs) for a set of mutually exclusive choices
+- [Progress Spinner](?path=/docs/buttons-and-indicators-progress-spinner--docs) for showing a button's action is running

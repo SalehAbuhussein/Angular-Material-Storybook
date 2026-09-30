@@ -1,0 +1,14 @@
+<mat-form-field appearance="outline" class="docs-field">
+  <mat-label>Email</mat-label>
+  <input matInput type="email" [formControl]="control" />
+  <mat-error>Enter a valid email address</mat-error>
+</mat-form-field>
+
+<table class="docs-state">
+  <tbody>
+    <tr><th>valid</th><td>{{ state().valid }}</td></tr>
+    <tr><th>touched</th><td>{{ state().touched }}</td></tr>
+    <tr><th>dirty</th><td>{{ state().dirty }}</td></tr>
+    <tr><th>error shown</th><td>{{ state().showing }}</td></tr>
+  </tbody>
+</table>

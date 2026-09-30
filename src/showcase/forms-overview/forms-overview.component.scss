@@ -1,0 +1,29 @@
+.docs-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: stretch;
+  max-width: 420px;
+  padding: 24px;
+  border-radius: var(--mat-sys-corner-medium);
+  background: var(--mat-sys-surface-container-low);
+  color: var(--mat-sys-on-surface);
+}
+h3 { margin: 0 0 8px; font: var(--mat-sys-title-medium); }
+.docs-passwords { display: flex; flex-direction: column; }
+.docs-fieldset { border: none; margin: 0; padding: 0; }
+.docs-fieldset legend { font: var(--mat-sys-title-small); padding: 0 0 8px; }
+.docs-column { display: flex; flex-direction: column; gap: 4px; }
+.docs-actions { display: flex; gap: 8px; margin-top: 8px; }
+.docs-error {
+  color: var(--mat-sys-error);
+  font: var(--mat-sys-body-small);
+  margin: 0 0 8px 16px;
+}
+.docs-result {
+  background: var(--mat-sys-surface-container-high);
+  border-radius: var(--mat-sys-corner-small);
+  padding: 12px;
+  margin: 0;
+  overflow-x: auto;
+}

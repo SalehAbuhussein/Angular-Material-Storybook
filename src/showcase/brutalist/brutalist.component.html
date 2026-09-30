@@ -1,0 +1,106 @@
+<div class="brut" [class.brut--acid]="accent() === 'acid'" [class.brut--hot]="accent() === 'hot'"
+     [class.brut--sky]="accent() === 'sky'" [style.height.px]="height()">
+  <header class="bar">
+    <div class="mark">
+      <span class="mark__box">OP</span>
+      <span class="mark__text">OPS&nbsp;CONSOLE</span>
+    </div>
+
+    <mat-button-toggle-group
+      class="tog"
+      hideSingleSelectionIndicator
+      [value]="scope()"
+      (valueChange)="scope.set($event)"
+      aria-label="Job scope">
+      <mat-button-toggle value="all">ALL</mat-button-toggle>
+      <mat-button-toggle value="running">RUNNING</mat-button-toggle>
+      <mat-button-toggle value="failed">FAILED</mat-button-toggle>
+    </mat-button-toggle-group>
+
+    <button matButton="filled" class="shout" (click)="deploy()">
+      <mat-icon>bolt</mat-icon> DEPLOY
+    </button>
+  </header>
+
+  @if (deploying()) {
+    <mat-progress-bar mode="indeterminate" class="bar-prog" aria-label="Deploying" />
+  }
+
+  <div class="grid">
+    <mat-card class="slab slab--big">
+      <div class="slab__label">ACTIVE JOBS</div>
+      <div class="slab__num">{{ counts().running }}</div>
+      <div class="slab__foot">{{ counts().queued }} QUEUED</div>
+    </mat-card>
+
+    <mat-card class="slab">
+      <div class="slab__label">FAILURES / 24H</div>
+      <div class="slab__num">{{ counts().failed }}</div>
+      <div class="slab__foot">-2 VS YESTERDAY</div>
+    </mat-card>
+
+    <mat-card class="slab">
+      <div class="slab__label">P95 LATENCY</div>
+      <div class="slab__num">412<span class="unit">MS</span></div>
+      <div class="slab__foot">WITHIN BUDGET</div>
+    </mat-card>
+
+    <mat-card class="slab slab--ctl">
+      <div class="slab__label">CONTROLS</div>
+      <mat-slide-toggle [ngModel]="autoRetry()" (ngModelChange)="autoRetry.set($event)">
+        AUTO RETRY
+      </mat-slide-toggle>
+      <mat-checkbox [ngModel]="verbose()" (ngModelChange)="verbose.set($event)">
+        VERBOSE LOGS
+      </mat-checkbox>
+    </mat-card>
+  </div>
+
+  <mat-card class="panel">
+    <div class="panel__head">
+      <h2>JOB QUEUE</h2>
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="find">
+        <input
+          matInput
+          [ngModel]="query()"
+          (ngModelChange)="query.set($event)"
+          placeholder="FILTER"
+          aria-label="Filter jobs" />
+      </mat-form-field>
+    </div>
+
+    <table mat-table [dataSource]="rows()" class="tbl">
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef>JOB</th>
+        <td mat-cell *matCellDef="let j">{{ j.name }}</td>
+      </ng-container>
+      <ng-container matColumnDef="owner">
+        <th mat-header-cell *matHeaderCellDef>TEAM</th>
+        <td mat-cell *matCellDef="let j">{{ j.owner }}</td>
+      </ng-container>
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>STATUS</th>
+        <td mat-cell *matCellDef="let j">
+          <mat-chip [disableRipple]="true" [class]="'tag tag--' + j.status.toLowerCase()">
+            {{ j.status }}
+          </mat-chip>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="runtime">
+        <th mat-header-cell *matHeaderCellDef>RUNTIME</th>
+        <td mat-cell *matCellDef="let j">{{ j.runtime }}</td>
+      </ng-container>
+      <ng-container matColumnDef="act">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let j">
+          <button matButton="outlined" class="mini" (click)="kill(j)">KILL</button>
+        </td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="cols"></tr>
+      <tr mat-row *matRowDef="let row; columns: cols"></tr>
+      <tr class="none" *matNoDataRow>
+        <td [attr.colspan]="cols.length">NOTHING MATCHES THAT FILTER.</td>
+      </tr>
+    </table>
+  </mat-card>
+</div>

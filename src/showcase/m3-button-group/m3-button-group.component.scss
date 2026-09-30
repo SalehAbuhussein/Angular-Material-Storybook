@@ -1,0 +1,93 @@
+:host {
+  display: inline-block;
+  --m3-spring: cubic-bezier(0.42, 1.67, 0.21, 0.9);
+}
+.group {
+  display: flex;
+  gap: 12px;
+}
+.group--connected {
+  gap: 2px;
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex: 1 1 auto;
+  height: var(--h);
+  padding: 0 var(--pad);
+  border: 0;
+  border-radius: calc(var(--h) / 2);
+  background: var(--mat-sys-surface-container-high);
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-label-large);
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    padding 300ms var(--m3-spring),
+    border-radius 300ms var(--m3-spring),
+    background-color 150ms,
+    color 150ms;
+}
+.group--sm { --h: 40px; --pad: 16px; --inner: 8px; }
+.group--md { --h: 56px; --pad: 24px; --inner: 8px; }
+.group--lg { --h: 96px; --pad: 48px; --inner: 16px; }
+.group--lg .btn {
+  font: var(--mat-sys-headline-small);
+}
+.group--lg mat-icon {
+  width: 32px;
+  height: 32px;
+  font-size: 32px;
+}
+.btn:focus-visible {
+  outline: 2px solid var(--mat-sys-primary);
+  outline-offset: 2px;
+}
+.btn--on {
+  background: var(--mat-sys-primary);
+  color: var(--mat-sys-on-primary);
+}
+
+/* Standard: the pressed button grows and squares off, its neighbours give way. */
+.group--standard .btn:active {
+  padding: 0 calc(var(--pad) * 1.5);
+  border-radius: var(--inner);
+}
+.group--standard:has(.btn:active) .btn:not(:active) {
+  padding: 0 calc(var(--pad) * 0.75);
+}
+/* A selected standard toggle is square, an unselected one is round. */
+.group--standard .btn--on {
+  border-radius: calc(var(--h) / 4);
+}
+
+/* Connected: small inner corners, the selected button becomes a pill. */
+.group--connected .btn {
+  border-radius: var(--inner);
+  background: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+}
+.group--connected .btn:first-child {
+  border-top-left-radius: calc(var(--h) / 2);
+  border-bottom-left-radius: calc(var(--h) / 2);
+}
+.group--connected .btn:last-child {
+  border-top-right-radius: calc(var(--h) / 2);
+  border-bottom-right-radius: calc(var(--h) / 2);
+}
+.group--connected .btn--on {
+  border-radius: calc(var(--h) / 2);
+  background: var(--mat-sys-secondary);
+  color: var(--mat-sys-on-secondary);
+}
+.group--connected .btn:active {
+  border-radius: calc(var(--inner) / 2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn {
+    transition: background-color 150ms, color 150ms;
+  }
+}

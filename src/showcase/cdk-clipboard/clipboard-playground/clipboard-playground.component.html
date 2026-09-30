@@ -1,0 +1,18 @@
+<div class="docs-demo">
+  <p class="value">{{ text() }}</p>
+  <button
+    matButton="filled"
+    [cdkCopyToClipboard]="text()"
+    [cdkCopyToClipboardAttempts]="attempts()"
+    (cdkCopyToClipboardCopied)="copied.set($event)"
+  >
+    Copy
+  </button>
+  <p class="log">
+    @if (copied() === null) {
+      Nothing copied yet.
+    } @else {
+      Last attempt reported: {{ copied() ? 'success' : 'failure' }}
+    }
+  </p>
+</div>

@@ -1,0 +1,78 @@
+:host { display: block; }
+
+.page {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  overflow: hidden;
+  background: var(--mat-sys-surface-container-lowest);
+  color: var(--mat-sys-on-surface);
+}
+
+.bar { gap: 12px; background: var(--mat-sys-surface); }
+.bar__title { font: var(--mat-sys-title-medium); }
+.spacer { flex: 1 1 auto; }
+.search { width: 240px; }
+
+.offline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--mat-sys-tertiary-container);
+  color: var(--mat-sys-on-tertiary-container);
+  font: var(--mat-sys-body-medium);
+}
+.offline button { margin-left: auto; }
+
+.body { flex: 1; min-height: 0; overflow: auto; padding: 20px 24px; }
+.card { max-width: 720px; }
+
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 56px 24px;
+  text-align: center;
+}
+.state h2 { margin: 0; font: var(--mat-sys-title-large); }
+.state p { margin: 0; max-width: 46ch; }
+.state__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.state__icon {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+  color: var(--mat-sys-on-surface-variant);
+}
+.state__icon--error { color: var(--mat-sys-error); }
+
+.muted { color: var(--mat-sys-on-surface-variant); font: var(--mat-sys-body-medium); }
+.tiny { font: var(--mat-sys-body-small); margin-top: 8px; }
+
+.skeletons { display: flex; flex-direction: column; gap: 4px; max-width: 720px; }
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+}
+.skeleton__line {
+  height: 12px;
+  border-radius: var(--mat-sys-corner-extra-small);
+  background: var(--mat-sys-surface-container-highest);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+.skeleton__line--title { width: 42%; }
+.skeleton__line--sub { width: 26%; height: 10px; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+/* Someone who asked for less motion gets a flat placeholder instead. */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton__line { animation: none; }
+}

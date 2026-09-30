@@ -1,0 +1,145 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as SliderStories from './slider.stories';
+
+<Meta of={SliderStories} />
+
+# Slider
+
+**Import:** `import { MatSliderModule } from '@angular/material/slider';`
+
+`<mat-slider>` is a wrapper, not the control. The value lives on a native
+`<input>` inside it carrying `matSliderThumb`. So `min`, `max`, `step`, and
+`discrete` go on the slider, while `value`, `ngModel`, and `formControlName` go
+on the input.
+
+```html
+<mat-slider min="0" max="100" step="5">
+  <input matSliderThumb [(ngModel)]="volume" aria-label="Volume" />
+</mat-slider>
+```
+
+A `<mat-slider>` with no thumb input renders nothing you can drag.
+
+## Try it
+
+<Example of={SliderStories.Playground} />
+<Controls of={SliderStories.Playground} />
+
+## The minimum
+
+<Example of={SliderStories.Basic} />
+
+The slider has no intrinsic width worth relying on. Give it one in CSS.
+
+## Discrete and tick marks
+
+`discrete` shows the value bubble above the thumb while dragging.
+`showTickMarks` draws a dot at every step, which only makes sense when the steps
+are few enough to count.
+
+<Example of={SliderStories.DiscreteAndTicks} />
+
+```html
+<mat-slider min="0" max="10" step="1" discrete showTickMarks>
+  <input matSliderThumb value="4" aria-label="Rating" />
+</mat-slider>
+```
+
+## displayWith
+
+The bubble shows the raw number by default. `displayWith` formats it in the
+unit the number means. It changes the label only; the control value stays a
+number.
+
+<Example of={SliderStories.DisplayWith} />
+
+```ts
+format = (value: number) => `${value} min`;
+```
+
+```html
+<mat-slider discrete [displayWith]="format">
+```
+
+Declare it as a property. A method call in the template creates a new function
+reference on every pass.
+
+## Range slider
+
+Two inputs make a range: `matSliderStartThumb` and `matSliderEndThumb`. They
+cannot cross, so the start value is always the smaller one.
+
+<Example of={SliderStories.RangeSlider} />
+
+```html
+<mat-slider min="0" max="500" step="10" discrete>
+  <input matSliderStartThumb [(ngModel)]="start" aria-label="Minimum price" />
+  <input matSliderEndThumb [(ngModel)]="end" aria-label="Maximum price" />
+</mat-slider>
+```
+
+There is no single "range value". Each thumb is its own control, so a reactive
+form needs two controls.
+
+## In reactive forms
+
+`formControlName` goes on the thumb input.
+
+<Example of={SliderStories.InReactiveForms} />
+
+```html
+<form [formGroup]="form">
+  <mat-slider min="0" max="100" step="5" discrete>
+    <input matSliderThumb formControlName="volume" aria-labelledby="volume-label" />
+  </mat-slider>
+</form>
+```
+
+## API you will use
+
+| Name | Where | What it does |
+| --- | --- | --- |
+| `min` / `max` | `<mat-slider>` | Bounds. Default 0 and 100. |
+| `step` | `<mat-slider>` | Increment. Default 1. |
+| `discrete` | `<mat-slider>` | Shows the value bubble while dragging. |
+| `showTickMarks` | `<mat-slider>` | A dot per step along the track. |
+| `displayWith` | `<mat-slider>` | `(value: number) => string` for the bubble text. |
+| `value` | thumb input | The value. Two-way bindable as `[(value)]`. |
+| `valueChange` | thumb input | Emits the new value on user input. |
+| `dragStart` / `dragEnd` | thumb input | `MatSliderDragEvent`, for expensive work you want to defer. |
+
+## Accessibility
+
+Each thumb is a native `<input type="range">`, so arrow keys, Page Up/Down, and
+Home/End all work, and the value is announced as you move.
+
+What you still supply:
+
+- A label per thumb. `aria-label` or `aria-labelledby` on the input, not on
+  `<mat-slider>`.
+- Distinct labels on a range slider: "Minimum price" and "Maximum price", not
+  "Price" twice.
+- A visible readout when the exact number matters. Do not rely on the bubble;
+  it only appears while dragging.
+- A `step` that people can land on. A 0-to-1000 slider with `step="1"` takes a
+  thousand key presses to cross.
+
+## Common mistakes
+
+1. `<mat-slider>` with no thumb input. Nothing renders. The
+   `<input matSliderThumb>` child is required.
+2. `formControlName` on `<mat-slider>`. It goes on the thumb input. The
+   wrapper is not a form control.
+3. `min` and `max` on the input. They belong on `<mat-slider>`; on the input
+   they are ignored.
+4. A slider for a precise number. Nobody drags to exactly 37. Pair it with a
+   number input, or use one instead.
+5. Treating a range as one value. Two thumbs means two controls. Validate
+   the relationship between them yourself if it matters.
+
+## Related
+
+- [Input](?path=/docs/form-controls-input--docs) for exact numeric entry
+- [Button Toggle](?path=/docs/form-controls-button-toggle--docs) for a few discrete levels
+- [Form Field](?path=/docs/form-controls-form-field--docs) for labelled fields around the slider

@@ -1,0 +1,439 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Foundations/Theming" />
+
+# Theming
+
+One Sass mixin, `mat.theme()`, produces every colour, font, shape, elevation, and
+density value Angular Material uses. It emits them as CSS custom properties on
+whatever selector you include it in. Components read those properties at
+runtime, and so can your own CSS.
+
+You set the values component styles were written against instead of overriding
+the styles. Nothing you write depends on a class name that might change in the
+next release.
+
+## The real styles.scss, line by line
+
+This is the file in this repository, close to what `ng add @angular/material`
+generates.
+
+```scss
+@use '@angular/material' as mat;
+
+html {
+  height: 100%;
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$azure-palette,
+        tertiary: mat.$blue-palette,
+      ),
+      typography: Roboto,
+      density: 0,
+    )
+  );
+}
+
+body {
+  color-scheme: light;
+  background-color: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-medium);
+  margin: 0;
+  height: 100%;
+}
+```
+
+`@use '@angular/material' as mat;` loads the Sass entry point. Unlike `@import`,
+`@use` namespaces the members under `mat` and evaluates the file exactly once no
+matter how many of your files use it.
+
+`html { ... }` is the selector the variables land on. Put the mixin on the
+highest element you can, because a CSS variable is only visible to that element
+and its descendants. The CDK appends overlay components (dialog, menu, select
+panel, tooltip) to `<body>`, not to the component that opened them, so a theme
+scoped to a feature component will not reach them.
+
+`color` takes a map with `primary` and optionally `tertiary`, or a bare palette.
+Material derives the primary, secondary, neutral, neutral variant, and error
+roles from `primary`. `tertiary` overrides only the tertiary roles, used for
+accents that need to contrast with primary.
+
+A bare palette is used for both:
+
+```scss
+@include mat.theme((color: mat.$violet-palette));
+```
+
+`typography: Roboto` sets the font family for every type scale token. It accepts
+a family name or a map, covered in
+[Typography](?path=/docs/foundations-typography--docs).
+
+`density: 0` is the default comfortable spacing. Negative values down to -5
+tighten components. See [Density](?path=/docs/foundations-density--docs).
+
+Each key is optional. Omit `color` and no colour variables are emitted, which is
+how you write a theme that only changes density for one region.
+
+`color-scheme: light` on `body` switches between the light and dark values. For
+dark mode it is the most important line in the file, as the next section shows.
+
+The three `var(--mat-sys-...)` lines apply the theme to the page itself. The
+mixin themes Material components, not your `body`. Without these lines your page
+background stays white while the components go dark.
+
+## Every colour is a light-dark() pair
+
+By default `mat.theme()` uses the theme type `color-scheme`, so it emits each
+colour token once, as a CSS `light-dark()` function holding both values:
+
+```css
+--mat-sys-primary: light-dark(#005cbb, #abc7ff);
+--mat-sys-surface: light-dark(#faf9fd, #111318);
+```
+
+The browser picks one based on the `color-scheme` in effect, so flipping
+`color-scheme` on `body` switches the whole application with no second
+stylesheet, class toggle, or re-render.
+
+For one fixed appearance, pass `theme-type`:
+
+```scss
+@include mat.theme(
+  (
+    color: (
+      primary: mat.$azure-palette,
+      theme-type: dark,
+    ),
+  )
+);
+```
+
+Valid values are `light`, `dark`, and `color-scheme` (the default). With `light`
+or `dark`, the tokens are plain colours and `color-scheme` no longer affects
+them. [Dark Mode](?path=/docs/foundations-dark-mode--docs) covers the trade-off.
+
+## Prebuilt palettes
+
+Twelve palettes ship with the library, each a full set of tones from 0 to 100
+plus matching secondary, neutral, neutral variant, and error ramps:
+
+```scss
+mat.$red-palette      mat.$green-palette         mat.$blue-palette
+mat.$yellow-palette   mat.$cyan-palette          mat.$magenta-palette
+mat.$orange-palette   mat.$chartreuse-palette    mat.$spring-green-palette
+mat.$azure-palette    mat.$violet-palette        mat.$rose-palette
+```
+
+Any of them works as `primary` or `tertiary`. The four pairs the `ng add`
+schematic offers are Azure/Blue, Rose/Red, Magenta/Violet, and Cyan/Orange.
+
+These are hue families. `mat.$azure-palette` is not your company's blue. When the
+brand matters, generate a palette.
+
+## No define-colors in the Material 3 API
+
+An old tutorial with `mat.define-theme()`, `mat.define-colors()`,
+`mat.define-typography()`, and `mat.all-component-themes()` is Material 2
+documentation. Those functions still exist for migration, but Material 3 uses
+the single `mat.theme()` call and nothing else.
+
+Drop two other Material 2 habits. `color="primary"` and `color="accent"` inputs
+no longer change anything on most components; colour variants come from Sass
+now. And you do not need `mat.core()`.
+
+## Generate a palette from a brand colour
+
+Run the schematic:
+
+```bash
+ng generate @angular/material:theme-color
+```
+
+It asks for:
+
+- a primary hex colour
+- optional secondary, tertiary, neutral, neutral variant, and error colours
+  (leave them blank and Material derives them)
+- whether to generate high contrast override mixins
+- which directory to write to
+- whether to emit Sass or CSS
+
+You can answer up front instead:
+
+```bash
+ng generate @angular/material:theme-color \
+  --primaryColor=#7b4dff \
+  --directory=src/styles \
+  --includeHighContrast=true
+```
+
+The result is `src/styles/_theme-colors.scss`, with the generated tone ramps and
+two exported variables, `$primary-palette` and `$tertiary-palette`. Point your
+theme at them:
+
+```scss
+@use '@angular/material' as mat;
+@use './styles/theme-colors' as theme;
+
+html {
+  @include mat.theme(
+    (
+      color: (
+        primary: theme.$primary-palette,
+        tertiary: theme.$tertiary-palette,
+      ),
+      typography: Roboto,
+      density: 0,
+    )
+  );
+}
+```
+
+Do not hand-edit the generated file. Rerun the schematic when the brand colour
+changes.
+
+If you answered yes to high contrast, the file also exports a
+`high-contrast-overrides($theme-type)` mixin built on `mat.theme-overrides()`.
+Apply it inside a forced-colours or user-preference query:
+
+```scss
+@media (prefers-contrast: more) {
+  html {
+    @include theme.high-contrast-overrides(color-scheme);
+  }
+}
+```
+
+## Overriding individual tokens
+
+For a one-off change to a system value, `mat.theme-overrides()` sets any system
+token directly:
+
+```scss
+html {
+  @include mat.theme-overrides(
+    (
+      primary: #6750a4,
+      on-primary: #ffffff,
+      corner-medium: 4px,
+    )
+  );
+}
+```
+
+It only accepts names in the system token set, so it silently ignores a typo
+instead of emitting a broken variable. Use it sparingly. Changing `primary`
+without also changing `on-primary`, `primary-container`, and
+`on-primary-container` gives you unreadable text.
+
+## Per-component overrides
+
+When one component needs to differ, use its `overrides` mixin. Every component
+has one named after it: `mat.button-overrides()`, `mat.card-overrides()`,
+`mat.form-field-overrides()`, `mat.toolbar-overrides()`, and so on.
+
+```scss
+@use '@angular/material' as mat;
+
+.brand-cta {
+  @include mat.button-overrides(
+    (
+      filled-container-color: var(--mat-sys-tertiary),
+      filled-label-text-color: var(--mat-sys-on-tertiary),
+      filled-container-shape: 4px,
+    )
+  );
+}
+```
+
+```html
+<div class="brand-cta">
+  <button matButton="filled">Start trial</button>
+</div>
+```
+
+The token names drop the component prefix. The CSS variable
+`--mat-button-filled-container-color` is written as `filled-container-color`
+inside `mat.button-overrides()`.
+
+Three rules for these mixins:
+
+Apply them to an ancestor, not to the component element itself. The mixin emits
+custom properties, which inherit, so a wrapper class is the reliable place for
+them.
+
+Include them at the root for an app-wide change:
+
+```scss
+:root {
+  @include mat.card-overrides((elevated-container-color: var(--mat-sys-surface-container)));
+}
+```
+
+Prefer a system variable to a literal. `var(--mat-sys-tertiary)` keeps the
+override inside the theme, so it still switches with dark mode. A hex value
+does not.
+
+To find the token names for a component, read
+`node_modules/@angular/material/<component>/_m3-<component>.scss`. The `base`,
+`color`, `typography`, and `density` maps in that file are the complete list.
+
+## System variables you will use
+
+`mat.theme()` emits these names, all prefixed `--mat-sys-`. Use them in your own
+components so your UI follows the theme and the dark mode switch.
+
+### Surfaces and text
+
+| Variable | Use it for |
+| --- | --- |
+| `--mat-sys-surface` | The default page or panel background |
+| `--mat-sys-on-surface` | Body text on that background |
+| `--mat-sys-on-surface-variant` | Secondary text, icons, helper text |
+| `--mat-sys-surface-container-lowest` | The lightest raised surface |
+| `--mat-sys-surface-container-low` | A card sitting on the page |
+| `--mat-sys-surface-container` | The standard container fill |
+| `--mat-sys-surface-container-high` | A container that needs to stand out |
+| `--mat-sys-surface-container-highest` | The most prominent container fill |
+| `--mat-sys-surface-dim` / `--mat-sys-surface-bright` | Dimmed and brightened variants of the surface |
+| `--mat-sys-inverse-surface` / `--mat-sys-inverse-on-surface` | Snackbar-style inverted panels |
+| `--mat-sys-outline` | Borders and dividers that should be visible |
+| `--mat-sys-outline-variant` | Subtle dividers |
+| `--mat-sys-scrim` | The dim layer behind a modal |
+| `--mat-sys-shadow` | The colour shadows are drawn in |
+
+### Accent roles
+
+Each of primary, secondary, tertiary, and error comes as a set of four.
+
+| Variable | Use it for |
+| --- | --- |
+| `--mat-sys-primary` | Filled buttons, active states, the main accent |
+| `--mat-sys-on-primary` | Text and icons drawn on `primary` |
+| `--mat-sys-primary-container` | A tinted block that is not full strength |
+| `--mat-sys-on-primary-container` | Text on `primary-container` |
+
+Replace `primary` with `secondary`, `tertiary`, or `error` for the other three.
+There are also `--mat-sys-primary-fixed`, `--mat-sys-primary-fixed-dim`,
+`--mat-sys-on-primary-fixed`, and `--mat-sys-on-primary-fixed-variant`, which
+keep the same value in both light and dark, and `--mat-sys-inverse-primary`.
+
+### Shape, elevation, and state
+
+| Variable | Value |
+| --- | --- |
+| `--mat-sys-corner-none` | `0` |
+| `--mat-sys-corner-extra-small` | `4px` |
+| `--mat-sys-corner-small` | `8px` |
+| `--mat-sys-corner-medium` | `12px` |
+| `--mat-sys-corner-large` | `16px` |
+| `--mat-sys-corner-extra-large` | `28px` |
+| `--mat-sys-corner-full` | `9999px` |
+| `--mat-sys-level0` to `--mat-sys-level5` | Complete `box-shadow` values, not numbers |
+| `--mat-sys-hover-state-layer-opacity` | `0.08` |
+| `--mat-sys-focus-state-layer-opacity` | `0.12` |
+| `--mat-sys-pressed-state-layer-opacity` | `0.12` |
+| `--mat-sys-dragged-state-layer-opacity` | `0.16` |
+
+There are directional corner variants too, such as `--mat-sys-corner-large-top`
+and `--mat-sys-corner-large-start`, which expand to four-value radii for sheets
+and side panels.
+
+Typography variables are covered in
+[Typography](?path=/docs/foundations-typography--docs).
+
+## Using them in your own components
+
+Style your components against the variables Material uses and they stay in step
+with the theme:
+
+```scss
+.stat-card {
+  background: var(--mat-sys-surface-container-low);
+  color: var(--mat-sys-on-surface);
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--mat-sys-corner-large);
+  box-shadow: var(--mat-sys-level1);
+  padding: 16px;
+}
+
+.stat-card__label {
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-label-medium);
+  letter-spacing: var(--mat-sys-label-medium-tracking);
+}
+
+.stat-card__value {
+  color: var(--mat-sys-primary);
+  font: var(--mat-sys-display-small);
+}
+```
+
+That component now follows palette changes, font changes, and the light and dark
+switch with no more CSS.
+
+For common cases, include the ready-made utility classes once:
+
+```scss
+@include mat.system-classes();
+```
+
+That emits `.mat-bg-surface-container`, `.mat-text-on-surface-variant`,
+`.mat-font-title-md`, `.mat-corner-lg`, `.mat-shadow-2`, and their siblings, each
+a one-line wrapper around the matching variable.
+
+## Themed regions
+
+The mixin writes to whatever selector contains it, so a region can carry its own
+theme:
+
+```scss
+.marketing-banner {
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$magenta-palette,
+        theme-type: dark,
+      ),
+    )
+  );
+
+  background: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+}
+```
+
+Everything inside `.marketing-banner`, Material components included, now uses the
+magenta dark palette. The rest of the page is untouched.
+
+Overlay content is the exception. A dialog, menu, select panel, or tooltip opened
+from inside that region renders in the CDK overlay container attached to
+`<body>`, so it inherits the root theme. When a dialog has to match a themed
+region, pass a `panelClass` when you open it and apply the same theme block to
+that class.
+
+## Common mistakes
+
+1. Hardcoded hex colours in component styles. They look right in light mode
+   and become unreadable in dark mode. Use a `--mat-sys-` variable.
+2. Overriding Material's internal classes. Selectors such as
+   `.mat-mdc-button .mdc-button__label` are private and change between releases.
+   Use `mat.<component>-overrides()`.
+3. Theming a feature component instead of `html`. Overlays escape to
+   `<body>`, so dialogs and menus come out unthemed. Theme the root and scope
+   only intentional exceptions.
+4. Changing `primary` without its companions. Set `on-primary`,
+   `primary-container`, and `on-primary-container` together or you break
+   contrast.
+5. Forgetting the body styles. `mat.theme()` themes components, not your
+   page. Set `background-color`, `color`, and `font` on `body` yourself.
+6. Expecting `color="accent"` to do something. That is Material 2. Material 3
+   sets colour variants in Sass.
+
+## Related
+
+- [Typography](?path=/docs/foundations-typography--docs)
+- [Density](?path=/docs/foundations-density--docs)
+- [Dark Mode](?path=/docs/foundations-dark-mode--docs)

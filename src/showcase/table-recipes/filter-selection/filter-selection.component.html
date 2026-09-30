@@ -1,0 +1,56 @@
+<div class="docs-surface">
+  <div class="toolbar">
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Filter members</mat-label>
+      <input matInput [placeholder]="filterPlaceholder()" (keyup)="applyFilter($event)" />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+    <span class="count">{{ selection.selected.length }} selected</span>
+  </div>
+
+  <table mat-table [dataSource]="dataSource">
+    <ng-container matColumnDef="select">
+      <th mat-header-cell *matHeaderCellDef>
+        @if (allowMultiple()) {
+          <mat-checkbox
+            [checked]="allSelected()"
+            [indeterminate]="someSelected()"
+            (change)="toggleAll()"
+            aria-label="Select all members"
+          />
+        }
+      </th>
+      <td mat-cell *matCellDef="let row">
+        <mat-checkbox
+          [checked]="selection.isSelected(row)"
+          (change)="toggleRow(row)"
+          [attr.aria-label]="'Select ' + row.name"
+        />
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="name">
+      <th mat-header-cell *matHeaderCellDef>Name</th>
+      <td mat-cell *matCellDef="let row">{{ row.name }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="team">
+      <th mat-header-cell *matHeaderCellDef>Team</th>
+      <td mat-cell *matCellDef="let row">{{ row.team }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="role">
+      <th mat-header-cell *matHeaderCellDef>Role</th>
+      <td mat-cell *matCellDef="let row">{{ row.role }}</td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="columns"></tr>
+    <tr mat-row *matRowDef="let row; columns: columns" [class.row--selected]="selection.isSelected(row)"></tr>
+
+    <tr class="mat-row" *matNoDataRow>
+      <td class="mat-cell empty" [attr.colspan]="columns.length">
+        No member matches "{{ dataSource.filter }}".
+      </td>
+    </tr>
+  </table>
+</div>

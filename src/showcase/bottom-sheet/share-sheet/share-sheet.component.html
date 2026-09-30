@@ -1,0 +1,9 @@
+<h2 class="docs-sheet-title">Share {{ data.fileName }}</h2>
+<mat-nav-list>
+  @for (target of data.targets; track target.id) {
+    <a mat-list-item href="#" (click)="pick($event, target.id)">
+      <mat-icon matListItemIcon>{{ target.icon }}</mat-icon>
+      <span matListItemTitle>{{ target.label }}</span>
+    </a>
+  }
+</mat-nav-list>

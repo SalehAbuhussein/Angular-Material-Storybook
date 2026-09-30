@@ -1,0 +1,7 @@
+<div class="row">
+  @for (c of corners; track c) {
+    <div class="box" [style.border-radius]="'var(--mat-sys-corner-' + c + ')'">
+      <code>corner-{{ c }}</code>
+    </div>
+  }
+</div>

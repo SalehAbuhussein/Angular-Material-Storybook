@@ -1,0 +1,10 @@
+<h2 mat-dialog-title>Release notes</h2>
+<mat-dialog-content>
+  <p>Version {{ data.version }} is live. Autofocus, focus trapping and focus
+    restoration are handled for you.</p>
+  <p>Press Escape or click the backdrop to close, unless disableClose is on.</p>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button matButton [mat-dialog-close]="'dismissed'">Later</button>
+  <button matButton="filled" [mat-dialog-close]="'read'">Got it</button>
+</mat-dialog-actions>

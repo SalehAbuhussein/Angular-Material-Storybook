@@ -1,0 +1,154 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import { Example } from '../../../.storybook/code-tabs';
+import * as DashboardStories from './dashboard.stories';
+
+<Meta of={DashboardStories} />
+
+# Dashboard
+
+An overview screen: a row of numbers, one chart, a feed, and a table preview.
+Most admin apps open on it, and it turns into a grid of mismatched cards if you
+do not decide the structure first.
+
+## Try it
+
+Switch the range in the toolbar or from the control panel. The totals, the
+percentage changes, the chart and the heading all recalculate from one signal.
+
+<Example of={DashboardStories.Playground} />
+<Controls of={DashboardStories.Playground} />
+
+## The layout skeleton
+
+Three regions, declared once with CSS grid template areas:
+
+```scss
+.grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 2fr 1fr;
+  grid-template-areas:
+    'chart activity'
+    'table activity';
+}
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: 1fr;
+    grid-template-areas: 'chart' 'table' 'activity';
+  }
+}
+```
+
+Named areas are worth the extra lines. The narrow layout is not the wide one
+stacked: activity drops below the table, because on a phone the table matters
+more than the feed. With `grid-template-areas` that reorder is one line, and the
+markup never moves.
+
+The KPI row is a separate grid that needs no breakpoints:
+
+```scss
+grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+```
+
+Four cards on a wide screen, two on a tablet, one on a phone. Use `auto-fit`
+whenever the items are interchangeable.
+
+## The state model
+
+One signal drives the screen:
+
+```ts
+readonly range = signal<RangeKey>(30);
+
+readonly kpis = computed(() => {
+  const factor = this.range() / 30;
+  return KPIS.map((k) => ({ ...k, value: Math.round(k.base * factor) }));
+});
+
+readonly chart = computed(() => series(this.range(), this.range()));
+```
+
+Nothing writes to `kpis` or `chart`. They are derived, so the heading cannot say
+"90 days" while the chart still shows 7. If one click calls `.set()` on two
+signals, one of them should probably be a `computed`.
+
+<Example of={DashboardStories.SevenDays} />
+
+## Loading without a layout jump
+
+The refresh button flips a `loading` signal. The progress bar appears above the
+KPI row and the cards dim, but nothing is removed from the DOM:
+
+```html
+@if (loading()) {
+  <mat-progress-bar mode="indeterminate" aria-label="Loading dashboard data" />
+}
+<section class="kpis" [class.kpis--loading]="loading()">
+```
+
+Swapping the cards for a spinner would collapse the page height and bounce the
+scroll position. Dimming them keeps every box where it was.
+
+## Chart placeholder
+
+The bars are plain divs with a bound height, not a charting library. The same
+technique works in production for a sparkline or a small bar chart, with no
+dependency and no bundle cost.
+
+```html
+<div class="chart" role="img" [attr.aria-label]="chartLabel()">
+  @for (point of chart(); track $index) {
+    <div class="chart__bar" [style.height.%]="point"></div>
+  }
+</div>
+```
+
+Switch to a charting library when you need axes, tooltips and legends. Keep the
+`role="img"` and the label either way.
+
+<Example of={DashboardStories.NinetyDays} />
+
+## Responsive behaviour
+
+<Example of={DashboardStories.Narrow} />
+
+This screen uses media queries, not `BreakpointObserver`, because nothing here
+changes in TypeScript. Use `BreakpointObserver` when a breakpoint has to change
+component inputs, as the
+[App Shell](?path=/docs/full-layouts-app-shell--docs) does when it switches the
+sidenav between `side` and `over`. Use CSS when only the layout changes.
+
+## API you will use
+
+| Member | Type | What it does |
+| --- | --- | --- |
+| `mat-card` with `appearance="outlined"` | `'raised' \| 'outlined' \| 'filled'` | A border instead of a shadow. Calmer when a screen has many cards. |
+| `mat-card-header` / `mat-card-title` | content slots | The title row. Push actions right with `margin-left: auto`. |
+| `mat-button-toggle-group` | `[value]`, `(valueChange)` | The range switch. A segmented control, not a set of buttons. |
+| `mat-progress-bar` | `mode="indeterminate"` | Unknown duration. Use `determinate` only when you know the percentage. |
+| `mat-list` with `matListItemTitle` / `matListItemLine` / `matListItemIcon` | content slots | Two line list items with a leading icon. |
+| `mat-table` with `[dataSource]` | plain array | A preview table needs no `MatTableDataSource`. Add it when you need sorting, filtering or paging. |
+
+## Accessibility
+
+- The KPI row is a `<section aria-label="Key metrics">`, so it is reachable as a landmark instead of an unnamed run of cards.
+- The chart is `role="img"` with an `aria-label` that states the range and the number of points. A screen reader gets the summary instead of 90 empty divs.
+- `mat-progress-bar` has its own `role="progressbar"` but no name. Add the `aria-label` yourself.
+- The status pill is text, not colour alone. Someone who cannot see the red container still reads "Refunded".
+- One `<h1>` per screen. The card titles are not headings here. If you make them headings, keep the order unbroken.
+
+## Common mistakes
+
+1. **Making the KPI numbers a signal you `set()` alongside the range.** They fall out of sync the first time a code path updates one and not the other. Derive them with `computed`.
+2. **Replacing content with a spinner on refresh.** The page height collapses and the scroll jumps. Overlay or dim instead.
+3. **A grid of `mat-card` with no named areas.** It looks fine until the first breakpoint, when the order you want cannot be expressed without reordering the markup.
+4. **`color` on `mat-toolbar` or `mat-card`.** It is a Material 2 input and does nothing under an M3 theme. Set `background` from `--mat-sys-*` instead.
+5. **Hardcoding chart colours.** Bind to `var(--mat-sys-primary)` and the chart follows the theme and the dark mode switch.
+
+## Related
+
+- [App Shell](?path=/docs/full-layouts-app-shell--docs) for the frame this screen sits inside
+- [Data Table Page](?path=/docs/full-layouts-data-table-page--docs) for the full version of the orders table
+- [Card](?path=/docs/layout-card--docs), [List](?path=/docs/layout-list--docs), [Table](?path=/docs/data-table-table--docs)
+- [Color and Variables](?path=/docs/foundations-color-and-variables--docs) for the tokens used throughout

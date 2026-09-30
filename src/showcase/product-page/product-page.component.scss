@@ -1,0 +1,362 @@
+:host {
+  display: block;
+  height: 100%;
+  container-type: inline-size;
+  background: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-medium);
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---- Shell: bottom bar when compact, rail when wide ---- */
+.shell {
+  position: relative;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  height: 100%;
+}
+.nav {
+  order: 2;
+  display: flex;
+  justify-content: space-around;
+  padding: 12px 8px 16px;
+  background: var(--mat-sys-surface-container);
+}
+.nav__logo {
+  display: none;
+}
+.nav__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-label-medium);
+  cursor: pointer;
+}
+.nav__indicator {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 32px;
+  border-radius: var(--mat-sys-corner-full);
+  overflow: hidden;
+}
+.nav__item[aria-current='page'] {
+  color: var(--mat-sys-on-surface);
+  font-weight: 700;
+}
+.nav__item[aria-current='page'] .nav__indicator {
+  background: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+}
+.nav__item:focus-visible {
+  outline: none;
+}
+.nav__item:focus-visible .nav__indicator {
+  outline: 2px solid var(--mat-sys-primary);
+}
+.nav__label {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- Main: one grid, two arrangements ---- */
+.main {
+  overflow-y: auto;
+  display: grid;
+  grid-template-areas: 'title' 'crumbs' 'gallery' 'info';
+  align-content: start;
+  gap: 16px;
+  padding: 8px 16px 96px;
+}
+.titlebar {
+  grid-area: title;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.titlebar h1 {
+  flex: 1;
+  margin: 0;
+  font: var(--mat-sys-title-large);
+}
+.price {
+  margin: 0;
+  font: var(--mat-sys-title-large);
+}
+.crumbs {
+  grid-area: crumbs;
+}
+.crumbs ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font: var(--mat-sys-label-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.gallery {
+  grid-area: gallery;
+  /* A scroll container has no minimum height, so the grid squeezes it when
+     the page is taller than the frame. Hold it at one square tile: 78% of
+     the width inside the 16px side padding. */
+  min-height: calc((100cqw - 32px) * 0.78);
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  border-radius: var(--mat-sys-corner-extra-large);
+}
+.gallery:focus-visible {
+  outline: 2px solid var(--mat-sys-primary);
+  outline-offset: 2px;
+}
+.shot {
+  position: relative;
+  flex: 0 0 78%;
+  aspect-ratio: 1;
+  scroll-snap-align: start;
+  overflow: hidden;
+  border-radius: var(--mat-sys-corner-extra-large);
+  background-color: var(--mat-sys-surface-container-high);
+}
+/* A studio backdrop: lighter behind the blouse, falling off to the edges. */
+.shot--full {
+  padding: 6% 0 2%;
+  background: radial-gradient(
+    ellipse 70% 60% at 50% 40%,
+    var(--mat-sys-surface-container-lowest),
+    var(--mat-sys-surface-container-high)
+  );
+}
+
+.info {
+  grid-area: info;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+.desc {
+  margin: 0;
+  font: var(--mat-sys-body-large);
+}
+.field {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+.field__label {
+  flex: 0 0 40px;
+  font: var(--mat-sys-label-large);
+}
+mat-chip-listbox {
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  /* Lighter outlines than the default, so the selected size stands out. */
+  --mat-chip-outline-color: var(--mat-sys-outline-variant);
+}
+mat-chip-listbox ::ng-deep .mdc-evolution-chip-set__chips {
+  flex-wrap: nowrap;
+}
+.swatches {
+  display: flex;
+  gap: 12px;
+}
+.swatch {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: border-radius 200ms;
+}
+.swatch input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.swatch__dot {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  border: 1px solid var(--mat-sys-outline-variant);
+}
+/* Selected swatch squares off, the same shape change M3 uses for selection. */
+.swatch--on {
+  border-radius: var(--mat-sys-corner-medium);
+  outline: 2px solid var(--mat-sys-on-surface);
+  outline-offset: 3px;
+}
+.swatch:has(input:focus-visible) {
+  outline: 3px solid var(--mat-sys-primary);
+  outline-offset: 3px;
+}
+.swatch-name {
+  font: var(--mat-sys-label-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+.actions {
+  display: flex;
+  gap: 8px;
+}
+.add {
+  flex: 1;
+  height: 56px;
+  border-radius: var(--mat-sys-corner-large);
+}
+.fav {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--mat-sys-corner-large);
+  background: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+}
+/* Flat, tonal panels as in the M3 example: no shadow, rounded on every side. */
+.panels {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  --mat-expansion-container-background-color: var(--mat-sys-surface-container-low);
+}
+.panels mat-expansion-panel.panel {
+  box-shadow: none;
+  border-radius: var(--mat-sys-corner-large);
+}
+.review p {
+  margin: 4px 0 0;
+  color: var(--mat-sys-on-surface-variant);
+}
+.stars {
+  display: inline-flex;
+  color: var(--mat-sys-primary);
+}
+.stars mat-icon {
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+}
+
+/* The floating basket: a pill with the latest items in it, above the bottom bar. */
+.basket {
+  position: absolute;
+  right: 16px;
+  bottom: 96px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px 8px 12px;
+  border: 0;
+  border-radius: var(--mat-sys-corner-large);
+  background: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+  box-shadow: var(--mat-sys-level3);
+  font: var(--mat-sys-label-large);
+  cursor: pointer;
+  overflow: hidden;
+}
+.basket:focus-visible {
+  outline: 2px solid var(--mat-sys-primary);
+  outline-offset: 2px;
+}
+.basket__thumb {
+  width: 34px;
+  height: 38px;
+  padding: 2px;
+  border-radius: var(--mat-sys-corner-small);
+  background: var(--mat-sys-surface-container-lowest);
+}
+
+/* ---- Wide: rail on the left, gallery and details side by side ---- */
+@container (min-width: 720px) {
+  .shell {
+    grid-template-columns: 88px minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+  }
+  .nav {
+    order: 0;
+    flex-direction: column;
+    justify-content: center;
+    gap: 12px;
+    padding: 20px 0;
+    position: relative;
+    background: var(--mat-sys-surface);
+  }
+  .nav__logo {
+    display: block;
+    position: absolute;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--mat-sys-on-surface-variant);
+  }
+  .nav__indicator {
+    width: 56px;
+  }
+  .main {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto auto 1fr;
+    grid-template-areas:
+      'gallery crumbs'
+      'gallery title'
+      'gallery info';
+    column-gap: 24px;
+    padding: 24px 24px 24px 0;
+  }
+  .back {
+    display: none;
+  }
+  .titlebar {
+    align-items: baseline;
+  }
+  .titlebar h1 {
+    font: var(--mat-sys-display-small);
+  }
+  .gallery {
+    flex-direction: column;
+    overflow: visible;
+  }
+  .shot {
+    flex: none;
+  }
+  .gallery {
+    min-height: 0;
+  }
+  .shot--full {
+    aspect-ratio: 3 / 4;
+  }
+  .basket {
+    right: 24px;
+    bottom: 24px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .swatch {
+    transition: none;
+  }
+}
