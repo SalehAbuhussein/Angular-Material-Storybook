@@ -132,17 +132,6 @@ schematic offers are Azure/Blue, Rose/Red, Magenta/Violet, and Cyan/Orange.
 These are hue families. `mat.$azure-palette` is not your company's blue. When the
 brand matters, generate a palette.
 
-## No define-colors in the Material 3 API
-
-An old tutorial with `mat.define-theme()`, `mat.define-colors()`,
-`mat.define-typography()`, and `mat.all-component-themes()` is Material 2
-documentation. Those functions still exist for migration, but Material 3 uses
-the single `mat.theme()` call and nothing else.
-
-Drop two other Material 2 habits. `color="primary"` and `color="accent"` inputs
-no longer change anything on most components; colour variants come from Sass
-now. And you do not need `mat.core()`.
-
 ## Generate a palette from a brand colour
 
 Run the schematic:
