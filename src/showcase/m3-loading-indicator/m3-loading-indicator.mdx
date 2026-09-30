@@ -41,11 +41,44 @@ the whole thing as it goes.
 
 ## Wavy progress bar
 
-The other new progress style. The filled part is a moving sine wave and the
-track stays flat, with a gap between them. Give it a `value` from 0 to
-100 for determinate progress, or leave it out for indeterminate.
+The other new progress style. The filled part is a rolling sine wave and the
+track stays flat, with a gap between them. Give it a `value` from 0 to 100 for
+determinate progress, or leave it out for indeterminate.
 
 <Example of={Stories.WavyProgressBar} />
+<Controls of={Stories.WavyProgressBar} />
+
+Three details keep it smooth:
+
+- The wave tapers to a flat line at both ends, so its tips meet the track instead of bobbing up and down.
+- A new `value` is not a jump. The fill glides to it, at the same speed whatever the frame rate.
+- The indeterminate segment's head and tail each ease in and out, and each sweep restarts where both ends are hidden, so the loop has no visible seam.
+
+### Use it in your own app
+
+The `wavy-progress/` folder is self-contained, so copy it as is. The bar fills
+the width of its container.
+
+| Input | Default | What it does |
+| --- | --- | --- |
+| `value` | `null` | 0 to 100 for determinate, `null` for indeterminate |
+| `label` | `'Loading'` | The accessible name |
+| `amplitude` | `3` | Wave height above and below the centre line, in px |
+| `wavelength` | `40` | Length of one wave, in px |
+| `thickness` | `4` | Stroke width of the wave and the track, in px |
+| `speed` | `0.8` | Waves per second; `0` keeps it still |
+| `showStop` | `true` | The dot at the end of a determinate bar |
+
+Recolour it with two CSS variables, which default to Material tokens:
+
+```css
+m3-wavy-progress {
+  --m3-wavy-progress-indicator-color: var(--mat-sys-tertiary);
+  --m3-wavy-progress-track-color: var(--mat-sys-tertiary-container);
+}
+```
+
+<Example of={Stories.WavyProgressCustom} />
 
 ## Accessibility
 

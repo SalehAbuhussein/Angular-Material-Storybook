@@ -1,16 +1,15 @@
 <svg
-  [attr.viewBox]="'0 0 ' + width() + ' 16'"
-  [style.width.px]="width()"
-  height="16"
+  [attr.viewBox]="'0 0 ' + width() + ' ' + height()"
+  [attr.height]="height()"
   role="progressbar"
   [attr.aria-label]="label()"
   [attr.aria-valuenow]="value()"
   aria-valuemin="0"
   aria-valuemax="100"
 >
-  <path class="track" [attr.d]="track()" />
-  <path class="wave" [attr.d]="wave()" />
-  @if (value() !== null) {
-    <circle class="stop" [attr.cx]="width() - 2" cy="8" r="2" />
+  <path class="track" [attr.d]="track()" [attr.stroke-width]="thickness()" />
+  <path class="wave" [attr.d]="wave()" [attr.stroke-width]="thickness()" />
+  @if (value() !== null && showStop()) {
+    <circle class="stop" [attr.cx]="width() - thickness() / 2" [attr.cy]="centerY()" [attr.r]="thickness() / 2" />
   }
 </svg>

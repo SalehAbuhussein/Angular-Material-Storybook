@@ -1,12 +1,49 @@
-import { Component, Injector, OnDestroy, OnInit, afterNextRender, inject, input, signal } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  Injector,
+  OnDestroy,
+  OnInit,
+  afterNextRender,
+  computed,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
 
-import { prefersReducedMotion } from '../m3-loading-indicator.utils';
-import { clampPercent, sine, trackPath } from './wavy-progress.utils';
+import {
+  DEFAULT_AMPLITUDE,
+  DEFAULT_SPEED,
+  DEFAULT_THICKNESS,
+  DEFAULT_WAVELENGTH,
+  GAP,
+  SWEEP_SECONDS,
+  VALUE_EASING,
+} from './wavy-progress.constants';
+import type { Span } from './wavy-progress.types';
+import {
+  approach,
+  barHeight,
+  clampPercent,
+  prefersReducedMotion,
+  sweepSpan,
+  trackPath,
+  wavePath,
+} from './wavy-progress.utils';
 
 /**
- * The M3 wavy progress indicator: a linear bar whose filled part is a moving
+ * The M3 wavy progress indicator: a linear bar whose filled part is a rolling
  * wave. Pass `value` from 0 to 100 for determinate progress, or leave it null
  * for an indeterminate one.
+ *
+ * It is self-contained, so the folder can be copied into any app. It fills
+ * the width of its container, and its colours come from two CSS variables that
+ * default to Material tokens:
+ *
+ *   m3-wavy-progress {
+ *     --m3-wavy-progress-indicator-color: var(--mat-sys-tertiary);
+ *     --m3-wavy-progress-track-color: var(--mat-sys-surface-container-highest);
+ *   }
  */
 @Component({
   selector: 'm3-wavy-progress',
@@ -15,14 +52,27 @@ import { clampPercent, sine, trackPath } from './wavy-progress.utils';
 })
 export class WavyProgress implements OnInit, OnDestroy {
   readonly value = input<number | null>(null);
-  readonly width = input(320);
-  readonly label = input('Uploading');
+  readonly label = input('Loading');
+  readonly amplitude = input(DEFAULT_AMPLITUDE);
+  readonly wavelength = input(DEFAULT_WAVELENGTH);
+  readonly thickness = input(DEFAULT_THICKNESS);
+  /** Waves per second that roll along the bar. 0 keeps the wave still. */
+  readonly speed = input(DEFAULT_SPEED);
+  /** The dot at the end of a determinate bar that marks 100%. */
+  readonly showStop = input(true);
 
+  readonly width = signal(0);
+  readonly height = computed(() => barHeight(this.amplitude(), this.thickness()));
+  readonly centerY = computed(() => this.height() / 2);
   readonly wave = signal('');
   readonly track = signal('');
 
+  _host = inject<ElementRef<HTMLElement>>(ElementRef);
   _injector = inject(Injector);
   _frame = 0;
+  _resize?: ResizeObserver;
+  /** The filled width drawn right now; it glides toward the value instead of jumping. */
+  _shownTo = 0;
 
   ngOnInit(): void {
     this.initComponent();
@@ -30,40 +80,62 @@ export class WavyProgress implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     cancelAnimationFrame(this._frame);
+    this._resize?.disconnect();
   }
 
-  /** Starts the wave loop once the bar is on screen. */
+  /** Measures the container, then starts the animation loop. */
   initComponent(): void {
-    this._initAnimation();
+    afterNextRender(
+      () => {
+        this._initWidth();
+        this._initLoop();
+      },
+      { injector: this._injector },
+    );
   }
 
-  _initAnimation(): void {
-    afterNextRender(() => this._startLoop(), { injector: this._injector });
+  /** The bar fills its container, so it tracks the host's width as it resizes. */
+  _initWidth(): void {
+    const host = this._host.nativeElement;
+    this.width.set(host.clientWidth);
+    this._resize = new ResizeObserver(() => this.width.set(host.clientWidth));
+    this._resize.observe(host);
   }
 
-  /** Moves the wave and redraws the track around it on every animation frame. */
-  _startLoop(): void {
+  /** Rolls the wave and redraws the bar on every animation frame. */
+  _initLoop(): void {
     const reduce = prefersReducedMotion();
     const start = performance.now();
+    let last = start;
     const tick = (now: number) => {
+      // A frame timestamp can be a hair earlier than performance.now() was at start.
       const t = Math.max(0, now - start) / 1000;
-      const w = this.width();
-      const phase = reduce ? 0 : t * 2 * Math.PI * 0.8;
-      let from = 0;
-      let to: number;
-      const v = this.value();
-      if (v === null) {
-        // A segment that sweeps across and wraps around.
-        const p = (t * 0.6) % 1.4;
-        from = Math.max(0, (p - 0.4) * w);
-        to = Math.min(w, p * w);
-      } else {
-        to = (clampPercent(v) / 100) * w;
-      }
-      this.wave.set(sine(from, to, phase));
-      this.track.set(trackPath(from, to, w, 6));
+      const dt = Math.max(0, now - last) / 1000;
+      last = now;
+      this._draw(t, dt, reduce);
       this._frame = requestAnimationFrame(tick);
     };
     this._frame = requestAnimationFrame(tick);
+  }
+
+  _draw(t: number, dt: number, reduce: boolean): void {
+    const span = this._span(t, dt, reduce);
+    const phase = reduce ? 0 : t * 2 * Math.PI * this.speed();
+    const shape = { amplitude: this.amplitude(), wavelength: this.wavelength(), phase, centerY: this.centerY() };
+    const inset = this.thickness() / 2;
+    this.wave.set(wavePath(span, shape));
+    this.track.set(trackPath(span, this.width(), GAP, this.centerY(), inset));
+  }
+
+  /** The part of the bar the wave covers at time `t`. */
+  _span(t: number, dt: number, reduce: boolean): Span {
+    const w = this.width();
+    const v = this.value();
+    if (v === null) {
+      return reduce ? { from: 0, to: w * 0.4 } : sweepSpan((t / SWEEP_SECONDS) % 1, w);
+    }
+    const target = (clampPercent(v) / 100) * w;
+    this._shownTo = reduce ? target : approach(this._shownTo, target, dt, VALUE_EASING);
+    return { from: 0, to: this._shownTo };
   }
 }

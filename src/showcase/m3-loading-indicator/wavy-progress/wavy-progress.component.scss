@@ -1,21 +1,26 @@
+// Override these two to recolour the bar; they default to Material tokens.
 :host {
+  --m3-wavy-progress-indicator-color: var(--mat-sys-primary);
+  --m3-wavy-progress-track-color: var(--mat-sys-secondary-container);
   display: block;
+  width: 100%;
 }
 svg {
-  max-width: 100%;
+  display: block;
+  width: 100%;
   overflow: visible;
 }
 path {
   fill: none;
-  stroke-width: 4;
   stroke-linecap: round;
+  stroke-linejoin: round;
 }
 .wave {
-  stroke: var(--mat-sys-primary);
+  stroke: var(--m3-wavy-progress-indicator-color);
 }
 .track {
-  stroke: var(--mat-sys-secondary-container);
+  stroke: var(--m3-wavy-progress-track-color);
 }
 .stop {
-  fill: var(--mat-sys-primary);
+  fill: var(--m3-wavy-progress-indicator-color);
 }
