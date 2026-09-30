@@ -112,40 +112,92 @@
   color: var(--mat-sys-on-surface-variant);
 }
 
+/* ---- Photo carousel (M3 multi-browse): large, medium, small ---- */
 .gallery {
   grid-area: gallery;
-  /* A scroll container has no minimum height, so the grid squeezes it when
-     the page is taller than the frame. Hold it at one square tile: 78% of
-     the width inside the 16px side padding. */
-  min-height: calc((100cqw - 32px) * 0.78);
   display: flex;
+  flex-direction: column;
   gap: 8px;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: none;
-  border-radius: var(--mat-sys-corner-extra-large);
+  min-width: 0;
+  outline: none;
+  touch-action: pan-y;
+  user-select: none;
 }
-.gallery:focus-visible {
+.gallery:focus-visible .gallery__track {
   outline: 2px solid var(--mat-sys-primary);
-  outline-offset: 2px;
+  outline-offset: 3px;
 }
-.shot {
+/* A fixed height from the component's own width, so the grid cannot squeeze it. */
+.gallery__track {
+  display: flex;
+  height: calc((100cqw - 32px) * 0.95);
+}
+/* Each slide grows by its position; the gap is a margin so hidden slides take no space. */
+.slide {
   position: relative;
-  flex: 0 0 78%;
-  aspect-ratio: 1;
-  scroll-snap-align: start;
+  flex: 0 1 0;
+  min-width: 0;
+  margin-right: 8px;
   overflow: hidden;
   border-radius: var(--mat-sys-corner-extra-large);
-  background-color: var(--mat-sys-surface-container-high);
-}
-/* A studio backdrop: lighter behind the blouse, falling off to the edges. */
-.shot--full {
-  padding: 6% 0 2%;
+  /* A studio backdrop: lighter behind the blouse, falling off to the edges. */
   background: radial-gradient(
-    ellipse 70% 60% at 50% 40%,
+    ellipse 75% 65% at 50% 42%,
     var(--mat-sys-surface-container-lowest),
     var(--mat-sys-surface-container-high)
   );
+  cursor: pointer;
+  transition:
+    flex-grow 500ms cubic-bezier(0.2, 0, 0, 1),
+    margin 500ms cubic-bezier(0.2, 0, 0, 1),
+    opacity 250ms;
+}
+.slide--large {
+  flex-grow: 6;
+  cursor: default;
+}
+.slide--medium {
+  flex-grow: 1.6;
+  margin-right: 0;
+}
+.slide--small,
+.slide--hidden {
+  flex-grow: 0;
+  margin-right: 0;
+  opacity: 0;
+}
+.slide__label {
+  position: absolute;
+  left: 16px;
+  bottom: 14px;
+  padding: 4px 12px;
+  border-radius: var(--mat-sys-corner-full);
+  background: color-mix(in srgb, var(--mat-sys-surface) 85%, transparent);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-label-large);
+  white-space: nowrap;
+  transition: opacity 200ms;
+}
+/* Only the large photo is labelled; the smaller ones are a hint there is more. */
+.slide:not(.slide--large) .slide__label {
+  opacity: 0;
+}
+.gallery__controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.gallery__count {
+  margin-right: auto;
+  font: var(--mat-sys-label-large);
+  color: var(--mat-sys-on-surface-variant);
+}
+.gallery__nav {
+  background: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+}
+.gallery__nav:disabled {
+  background: color-mix(in srgb, var(--mat-sys-on-surface) 12%, transparent);
 }
 
 .info {
@@ -336,18 +388,18 @@ mat-chip-listbox ::ng-deep .mdc-evolution-chip-set__chips {
   .titlebar h1 {
     font: var(--mat-sys-display-small);
   }
-  .gallery {
-    flex-direction: column;
-    overflow: visible;
+  /* Wide: taller photos and the third, small slide comes into view. The
+     gallery column is half of what is left after the 88px rail and gaps. */
+  .gallery__track {
+    height: clamp(360px, calc((100cqw - 136px) / 2 * 0.85), 600px);
   }
-  .shot {
-    flex: none;
+  .slide--medium {
+    flex-grow: 2.2;
+    margin-right: 8px;
   }
-  .gallery {
-    min-height: 0;
-  }
-  .shot--full {
-    aspect-ratio: 3 / 4;
+  .slide--small {
+    flex-grow: 1;
+    opacity: 1;
   }
   .basket {
     right: 24px;
@@ -356,7 +408,9 @@ mat-chip-listbox ::ng-deep .mdc-evolution-chip-set__chips {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .swatch {
+  .swatch,
+  .slide,
+  .slide__label {
     transition: none;
   }
 }

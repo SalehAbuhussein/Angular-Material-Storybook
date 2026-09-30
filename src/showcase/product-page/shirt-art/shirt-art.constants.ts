@@ -9,3 +9,10 @@ export const SHIRT_BODY_PATH =
 
 /** The y position of each button down the placket. */
 export const BUTTON_ROWS = [132, 168, 204, 240, 276, 312];
+
+/** The blouse folded flat: a rectangle with the collar at the top. */
+export const FOLDED_BODY_PATH =
+  'M120 118 Q120 108 130 108 L270 108 Q280 108 280 118 L280 312 Q280 322 270 322 L130 322 Q120 322 120 312 Z';
+
+/** Button positions on the folded blouse. */
+export const FOLDED_BUTTON_ROWS = [162, 198, 234, 270, 306];

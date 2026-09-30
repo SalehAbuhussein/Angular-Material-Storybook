@@ -14,16 +14,28 @@ import {
   SHOTS,
   SIZES,
   STARTING_BASKET,
+  SWIPE_THRESHOLD,
+  VISIBLE_AT_END,
 } from './product-page.constants';
 import type { BasketItem } from './product-page.types';
-import { addedMessage, hiddenCount, lastItems, swatchValue, withoutLast } from './product-page.utils';
+import {
+  addedMessage,
+  clamp,
+  hiddenCount,
+  lastItems,
+  slideSize,
+  swatchValue,
+  swipeStep,
+  withoutLast,
+} from './product-page.utils';
 
 /**
- * A product page in the style of the Material 3 shopping example. Under 720px
- * of its own width it shows a top bar, a swipeable gallery and a bottom
- * navigation bar. Wider, it switches to a navigation rail with the gallery and
- * the details side by side. The switch is a container query, so it works in
- * any frame.
+ * A product page in the style of the Material 3 shopping example. The photos
+ * are an M3 multi-browse carousel: one large photo, a medium one and, when
+ * there is room, a small one. Under 720px of its own width the page shows a
+ * top bar and a bottom navigation bar; wider, a navigation rail with the
+ * photos and the details side by side. The switch is a container query, so it
+ * works in any frame.
  */
 @Component({
   selector: 'demo-product-page',
@@ -58,7 +70,13 @@ export class ProductPage implements OnInit {
   readonly basketExtra = computed(() => hiddenCount(this.basket(), BASKET_PREVIEW_COUNT));
   readonly swatchOf = (name: string) => swatchValue(COLORS, name);
 
+  /** Index of the photo shown large. */
+  readonly start = signal(0);
+  readonly lastStart = SHOTS.length - VISIBLE_AT_END;
+  readonly sizeOf = (index: number) => slideSize(index, this.start());
+
   _snackBar = inject(MatSnackBar);
+  _dragStartX = 0;
 
   ngOnInit(): void {
     this.initComponent();
@@ -75,6 +93,26 @@ export class ProductPage implements OnInit {
     const item: BasketItem = { size: this.size(), color: this.color() };
     this.basket.update((items) => [...items, item]);
     this._offerUndo(item);
+  }
+
+  /** Moves the carousel one photo forward or back, stopping at either end. */
+  go(step: number): void {
+    this.show(this.start() + step);
+  }
+
+  /** Brings a photo to the large slot, as when someone taps a smaller one. */
+  show(index: number): void {
+    this.start.set(clamp(index, 0, this.lastStart));
+  }
+
+  dragStart(event: PointerEvent): void {
+    this._dragStartX = event.clientX;
+  }
+
+  /** A sideways drag past the threshold moves one photo, like a swipe. */
+  dragEnd(event: PointerEvent): void {
+    const step = swipeStep(event.clientX - this._dragStartX, SWIPE_THRESHOLD);
+    if (step) this.go(step);
   }
 
   _initSelection(): void {

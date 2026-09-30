@@ -48,3 +48,8 @@ export const Phone: Story = {
 export const Tablet: Story = {
   render: () => ({ template: frame(900, 700, `<demo-product-page [showReviews]="true" />`) }),
 };
+
+/** A desktop window: the same two columns with more room, and all three photo sizes in view. */
+export const Desktop: Story = {
+  render: () => ({ template: frame(1280, 800, `<demo-product-page [showReviews]="true" />`) }),
+};

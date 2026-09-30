@@ -35,13 +35,42 @@
       </ol>
     </nav>
 
-    <div class="gallery" tabindex="0" aria-label="Product photos" role="region">
-      @for (s of shots; track s.kind) {
-        <div class="shot" [class]="'shot shot--' + s.kind" role="img" [attr.aria-label]="s.alt + ', ' + color()">
-          <demo-shirt-art [color]="swatchOf(color())" [view]="s.view" [crop]="s.kind !== 'full'" />
-        </div>
-      }
-    </div>
+    <section
+      class="gallery"
+      aria-roledescription="carousel"
+      aria-label="Product photos"
+      tabindex="0"
+      (keydown.arrowright)="go(1)"
+      (keydown.arrowleft)="go(-1)"
+      (pointerdown)="dragStart($event)"
+      (pointerup)="dragEnd($event)"
+    >
+      <div class="gallery__track">
+        @for (s of shots; track s.id; let i = $index) {
+          <div
+            [class]="'slide slide--' + sizeOf(i)"
+            role="group"
+            aria-roledescription="slide"
+            [attr.aria-label]="i + 1 + ' of ' + shots.length + ', ' + s.alt + ', ' + color()"
+            [attr.aria-hidden]="sizeOf(i) === 'hidden'"
+            [attr.inert]="sizeOf(i) === 'hidden' ? '' : null"
+            (click)="show(i)"
+          >
+            <demo-shirt-art [color]="swatchOf(color())" [pose]="s.pose" [view]="s.view" [crop]="s.crop" />
+            <span class="slide__label">{{ s.label }}</span>
+          </div>
+        }
+      </div>
+      <div class="gallery__controls">
+        <span class="gallery__count" aria-live="polite">{{ start() + 1 }} / {{ shots.length }}</span>
+        <button matIconButton class="gallery__nav" aria-label="Previous photo" [disabled]="start() === 0" (click)="go(-1)">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+        <button matIconButton class="gallery__nav" aria-label="Next photo" [disabled]="start() === lastStart" (click)="go(1)">
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+      </div>
+    </section>
 
     <div class="info">
       <p class="desc">

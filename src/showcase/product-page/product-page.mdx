@@ -27,18 +27,40 @@ takes it back out.
 
 <Example of={ProductStories.Phone} />
 
-Top bar with back, title and price. The gallery swipes sideways with
-`scroll-snap-type: x mandatory`, and each photo is 78% wide so the next one
-peeks in to show there is more to swipe. Navigation sits in a bottom bar.
+Top bar with back, title and price. The photo carousel shows one large photo
+and a slim peek of the next, which tells people there is more to swipe.
+Navigation sits in a bottom bar.
 
-## Tablet
+## Tablet and desktop
 
 <Example of={ProductStories.Tablet} />
 
+<Example of={ProductStories.Desktop} />
+
 The bottom bar becomes a navigation rail, and the page splits into two columns:
-photos stacked on the left, details on the right. The title grows to
-`display-small`, and the back button goes away because the rail already shows
-where you are.
+photos on the left, details on the right. The carousel now has room for all
+three sizes: large, medium and small. The title grows to `display-small`, and
+the back button goes away because the rail already shows where you are.
+
+## Photo carousel
+
+The photos follow the M3 multi-browse carousel: the photo in front is large,
+the next is medium and the one after is small. Step through them with the
+arrow buttons, the keyboard arrows or a swipe, or tap a smaller photo to bring
+it to the front.
+
+Each photo is a flex item whose `flex-grow` comes from its position, so moving
+forward only changes a class and the CSS transition resizes them:
+
+```scss
+.slide--large { flex-grow: 6; }
+.slide--medium { flex-grow: 1.6; }   /* 2.2 when wide */
+.slide--small { flex-grow: 0; }      /* 1 when wide */
+```
+
+On a phone the small slot collapses to nothing, so you see one large photo and
+a peek. The track has a fixed height worked out from the page's own width, so
+the grid can never squeeze it.
 
 ## One grid, two arrangements
 
@@ -99,15 +121,17 @@ without extra code.
 | Basket pill | `primary-container`, `on-primary-container`, `level3` |
 | Title | `title-large` on the phone, `display-small` on the tablet |
 
-The photos are one SVG drawing of the blouse, so the story needs no image files.
-Each shot is a different `viewBox` on the same drawing, and the fabric follows
-the colour you pick. In a real app, swap `<demo-shirt-art>` for `<img>` tags.
+The photos are an SVG drawing of the blouse in three poses (front, back and
+folded), so the story needs no image files. The collar close-up is the front
+pose framed on the top half. The fabric follows the colour you pick. In a real
+app, swap `<demo-shirt-art>` for `<img>` tags.
 
 ## Accessibility
 
 - The breadcrumb is a `<nav aria-label="Breadcrumb">` with an `<ol>`, and the `›` separators are `aria-hidden`.
-- The gallery is a focusable region, so keyboard users can scroll it with the arrow keys.
-- Each photo has `role="img"` and an `aria-label` describing it.
+- The carousel is `aria-roledescription="carousel"` and focusable, so the arrow keys move it once it has focus.
+- Each photo is a group with `aria-roledescription="slide"` and a label such as "2 of 4, The blouse on a hanger, seen from the back, Peach".
+- Photos out of view are `inert`, so Tab never lands on something you cannot see, and the "2 / 4" counter is `aria-live`.
 - The swatch radios carry their color name as visually hidden text, and the chosen name also shows next to them.
 - The basket's label includes the item count, since the thumbnails mean nothing to a screen reader.
 

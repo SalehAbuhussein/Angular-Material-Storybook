@@ -15,29 +15,64 @@
     </linearGradient>
   </defs>
 
-  <!-- Hanger -->
-  <path d="M200 40 q12 0 12 11 q0 9 -12 13" class="hook" />
-  <path d="M142 92 L200 64 L258 92" class="hanger" />
-
-  <!-- Body and sleeves -->
-  <path [attr.d]="body" [attr.fill]="'url(#' + patternId + 'p)'" class="edge" />
-  <!-- Cuffs -->
-  <path d="M66 238 Q80 247 97 244 L100 232 Q83 235 69 226 Z" [style.fill]="base()" class="edge" />
-  <path d="M334 238 Q320 247 303 244 L300 232 Q317 235 331 226 Z" [style.fill]="base()" class="edge" />
-  <!-- Yoke seam and pocket -->
-  <path d="M124 112 Q200 126 276 112" class="seam" />
-  <rect x="146" y="150" width="34" height="38" rx="3" [attr.fill]="'url(#' + patternId + 'p)'" class="edge" />
-  <path d="M146 158 L180 158" class="seam" />
-  <!-- Placket -->
-  <rect x="193" y="108" width="14" height="236" [style.fill]="base()" class="edge" />
-  <!-- Inside of the collar, then the two collar points -->
-  <path d="M168 80 Q200 68 232 80 Q200 94 168 80 Z" [style.fill]="inside()" />
-  <path d="M168 79 L201 112 L180 120 L158 90 Z" [attr.fill]="'url(#' + patternId + 'p)'" class="edge" />
-  <path d="M232 79 L199 112 L220 120 L242 90 Z" [attr.fill]="'url(#' + patternId + 'p)'" class="edge" />
-  <!-- Buttons -->
-  @for (y of buttons; track y) {
-    <circle cx="200" [attr.cy]="y" r="3.6" class="btn" />
+  @switch (pose()) {
+    @case ('folded') {
+      <!-- Shadow on the table -->
+      <ellipse cx="200" cy="330" rx="96" ry="9" class="shadow" />
+      <!-- Folded body, and the edges where the sleeves fold behind -->
+      <path [attr.d]="foldedBody" [attr.fill]="'url(#' + patternId + 'p)'" class="edge" />
+      <path d="M150 150 L150 322 M250 150 L250 322" class="fold" />
+      <!-- Pocket and placket -->
+      <rect x="146" y="176" width="34" height="38" rx="3" [attr.fill]="'url(#' + patternId + 'p)'" class="edge" />
+      <path d="M146 184 L180 184" class="seam" />
+      <rect x="193" y="138" width="14" height="184" [style.fill]="base()" class="edge" />
+      <!-- Collar -->
+      <path d="M168 108 Q200 96 232 108 Q200 122 168 108 Z" [style.fill]="inside()" />
+      <path d="M168 107 L201 140 L180 148 L158 118 Z" [attr.fill]="'url(#' + patternId + 'p)'" class="edge" />
+      <path d="M232 107 L199 140 L220 148 L242 118 Z" [attr.fill]="'url(#' + patternId + 'p)'" class="edge" />
+      @for (y of foldedButtons; track y) {
+        <circle cx="200" [attr.cy]="y" r="3.6" class="btn" />
+      }
+      <path [attr.d]="foldedBody" [attr.fill]="'url(#' + patternId + 's)'" />
+    }
+    @case ('back') {
+      <!-- Hanger -->
+      <path d="M200 40 q12 0 12 11 q0 9 -12 13" class="hook" />
+      <path d="M142 92 L200 64 L258 92" class="hanger" />
+      <!-- Body and sleeves, cuffs -->
+      <path [attr.d]="body" [attr.fill]="'url(#' + patternId + 'p)'" class="edge" />
+      <path d="M66 238 Q80 247 97 244 L100 232 Q83 235 69 226 Z" [style.fill]="base()" class="edge" />
+      <path d="M334 238 Q320 247 303 244 L300 232 Q317 235 331 226 Z" [style.fill]="base()" class="edge" />
+      <!-- Back yoke and a centre pleat, no buttons -->
+      <path d="M124 116 Q200 130 276 116" class="seam" />
+      <path d="M200 124 L200 340 M192 124 L192 150 M208 124 L208 150" class="fold" />
+      <!-- The collar band seen from behind -->
+      <path d="M168 80 Q200 70 232 80 L230 94 Q200 104 170 94 Z" [attr.fill]="'url(#' + patternId + 'p)'" class="edge" />
+      <path [attr.d]="body" [attr.fill]="'url(#' + patternId + 's)'" />
+    }
+    @default {
+      <!-- Hanger -->
+      <path d="M200 40 q12 0 12 11 q0 9 -12 13" class="hook" />
+      <path d="M142 92 L200 64 L258 92" class="hanger" />
+      <!-- Body and sleeves, cuffs -->
+      <path [attr.d]="body" [attr.fill]="'url(#' + patternId + 'p)'" class="edge" />
+      <path d="M66 238 Q80 247 97 244 L100 232 Q83 235 69 226 Z" [style.fill]="base()" class="edge" />
+      <path d="M334 238 Q320 247 303 244 L300 232 Q317 235 331 226 Z" [style.fill]="base()" class="edge" />
+      <!-- Yoke seam and pocket -->
+      <path d="M124 112 Q200 126 276 112" class="seam" />
+      <rect x="146" y="150" width="34" height="38" rx="3" [attr.fill]="'url(#' + patternId + 'p)'" class="edge" />
+      <path d="M146 158 L180 158" class="seam" />
+      <!-- Placket -->
+      <rect x="193" y="108" width="14" height="236" [style.fill]="base()" class="edge" />
+      <!-- Inside of the collar, then the two collar points -->
+      <path d="M168 80 Q200 68 232 80 Q200 94 168 80 Z" [style.fill]="inside()" />
+      <path d="M168 79 L201 112 L180 120 L158 90 Z" [attr.fill]="'url(#' + patternId + 'p)'" class="edge" />
+      <path d="M232 79 L199 112 L220 120 L242 90 Z" [attr.fill]="'url(#' + patternId + 'p)'" class="edge" />
+      @for (y of buttons; track y) {
+        <circle cx="200" [attr.cy]="y" r="3.6" class="btn" />
+      }
+      <!-- Soft light from the left, over everything -->
+      <path [attr.d]="body" [attr.fill]="'url(#' + patternId + 's)'" />
+    }
   }
-  <!-- Soft light from the left, over everything -->
-  <path [attr.d]="body" [attr.fill]="'url(#' + patternId + 's)'" />
 </svg>

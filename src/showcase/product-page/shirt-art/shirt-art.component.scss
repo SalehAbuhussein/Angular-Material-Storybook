@@ -30,6 +30,14 @@ svg {
   stroke: #9a9a9a;
   stroke-width: 3;
 }
+.fold {
+  fill: none;
+  stroke: rgb(0 0 0 / 0.14);
+  stroke-width: 1.2;
+}
+.shadow {
+  fill: rgb(0 0 0 / 0.12);
+}
 .btn {
   fill: #f6f4ee;
   stroke: rgb(0 0 0 / 0.35);

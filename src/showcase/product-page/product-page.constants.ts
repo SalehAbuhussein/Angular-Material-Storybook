@@ -16,12 +16,19 @@ export const DESTINATIONS: Destination[] = [
   { icon: 'emoji_objects', label: 'Objects' },
 ];
 
-// One drawing, three crops: the whole blouse, the collar, the pocket.
+// Each shot shows the whole blouse or a close-up that still reads as a shirt.
 export const SHOTS: Shot[] = [
-  { kind: 'full', view: '40 28 320 334', alt: 'The blouse on a hanger, seen from the front' },
-  { kind: 'collar', view: '150 76 100 100', alt: 'Close-up of the collar and top button' },
-  { kind: 'detail', view: '136 136 96 72', alt: 'Detail of the pocket and placket buttons' },
+  { id: 'front', label: 'Front', pose: 'front', view: '40 28 320 334', crop: false, alt: 'The blouse on a hanger, seen from the front' },
+  { id: 'back', label: 'Back', pose: 'back', view: '40 28 320 334', crop: false, alt: 'The blouse on a hanger, seen from the back' },
+  { id: 'collar', label: 'Collar', pose: 'front', view: '100 46 200 176', crop: false, alt: 'Close-up of the collar, yoke and pocket' },
+  { id: 'folded', label: 'Folded', pose: 'folded', view: '96 84 208 262', crop: false, alt: 'The blouse folded flat' },
 ];
+
+/** How many photos the carousel keeps in view; the last start shows the final two. */
+export const VISIBLE_AT_END = 2;
+
+/** A swipe shorter than this, in pixels, is treated as a tap. */
+export const SWIPE_THRESHOLD = 40;
 
 export const STARTING_BASKET: BasketItem[] = [
   { size: '04', color: 'Aqua' },

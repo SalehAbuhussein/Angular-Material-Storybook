@@ -1,12 +1,21 @@
 import { Component, OnInit, computed, input } from '@angular/core';
 
-import { BUTTON_ROWS, DEFAULT_COLOR, FULL_VIEW, SHIRT_BODY_PATH } from './shirt-art.constants';
+import {
+  BUTTON_ROWS,
+  DEFAULT_COLOR,
+  FOLDED_BODY_PATH,
+  FOLDED_BUTTON_ROWS,
+  FULL_VIEW,
+  SHIRT_BODY_PATH,
+} from './shirt-art.constants';
 import { collarShade, fabricBase, fabricStripe, nextArtId } from './shirt-art.utils';
+import type { ShirtPose } from './shirt-art.types';
 
 /**
  * A pinstriped blouse drawn in SVG, standing in for product photos. The fabric
  * takes `color`: a light tint for the base, a darker shade for the stripes.
- * `view` crops the drawing, which is how one drawing becomes three shots.
+ * `pose` picks the front, the back or the blouse folded flat, and `view`
+ * crops the drawing, so a few poses and crops make a full set of shots.
  */
 @Component({
   selector: 'demo-shirt-art',
@@ -15,11 +24,14 @@ import { collarShade, fabricBase, fabricStripe, nextArtId } from './shirt-art.ut
 })
 export class ShirtArt implements OnInit {
   readonly color = input(DEFAULT_COLOR);
+  readonly pose = input<ShirtPose>('front');
   readonly view = input(FULL_VIEW);
   readonly crop = input(false);
 
   readonly body = SHIRT_BODY_PATH;
   readonly buttons = BUTTON_ROWS;
+  readonly foldedBody = FOLDED_BODY_PATH;
+  readonly foldedButtons = FOLDED_BUTTON_ROWS;
   patternId = '';
 
   readonly base = computed(() => fabricBase(this.color()));
